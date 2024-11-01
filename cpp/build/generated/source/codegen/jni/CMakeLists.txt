@@ -10,7 +10,7 @@ file(GLOB react_codegen_SRCS CONFIGURE_DEPENDS *.cpp react/renderer/components/R
 
 add_library(
   react_codegen_RNTurboLndSpec
-  SHARED
+  OBJECT
   ${react_codegen_SRCS}
 )
 
@@ -19,23 +19,10 @@ target_include_directories(react_codegen_RNTurboLndSpec PUBLIC . react/renderer/
 target_link_libraries(
   react_codegen_RNTurboLndSpec
   fbjni
-  folly_runtime
-  glog
   jsi
-  react_codegen_rncore
-  react_debug
-  react_nativemodule_core
-  react_render_componentregistry
-  react_render_core
-  react_render_debug
-  react_render_graphics
-  react_render_imagemanager
-  react_render_mapbuffer
-  react_utils
-  rrc_image
-  rrc_view
-  turbomodulejsijni
-  yoga
+  # We need to link different libraries based on whether we are building rncore or not, that's necessary
+  # because we want to break a circular dependency between react_codegen_rncore and reactnative
+  reactnative
 )
 
 target_compile_options(
