@@ -151,7 +151,7 @@ export type SetScoresRequest = Message<"autopilotrpc.SetScoresRequest"> & {
   heuristic: string;
 
   /**
-   * 
+   *
    * A map from hex-encoded public keys to scores. Scores must be in the range
    * [0.0, 1.0].
    *
@@ -189,7 +189,7 @@ export const SetScoresResponseSchema: GenMessage<SetScoresResponse> = /*@__PURE_
  */
 export const Autopilot: GenService<{
   /**
-   * 
+   * lncli: `autopilot status`
    * Status returns whether the daemon's autopilot agent is active.
    *
    * @generated from rpc autopilotrpc.Autopilot.Status
@@ -200,7 +200,7 @@ export const Autopilot: GenService<{
     output: typeof StatusResponseSchema;
   },
   /**
-   * 
+   *
    * ModifyStatus is used to modify the status of the autopilot agent, like
    * enabling or disabling it.
    *
@@ -212,7 +212,7 @@ export const Autopilot: GenService<{
     output: typeof ModifyStatusResponseSchema;
   },
   /**
-   * 
+   * lncli: `autopilot query`
    * QueryScores queries all available autopilot heuristics, in addition to any
    * active combination of these heruristics, for the scores they would give to
    * the given nodes.
@@ -225,7 +225,7 @@ export const Autopilot: GenService<{
     output: typeof QueryScoresResponseSchema;
   },
   /**
-   * 
+   *
    * SetScores attempts to set the scores used by the running autopilot agent,
    * if the external scoring heuristic is enabled.
    *

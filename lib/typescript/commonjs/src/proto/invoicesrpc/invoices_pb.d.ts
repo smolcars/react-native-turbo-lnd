@@ -1,5 +1,5 @@
 import type { GenEnum, GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv2";
-import type { InvoiceSchema, RouteHint } from "../lightning_pb";
+import type { Invoice, InvoiceSchema, RouteHint } from "../lightning_pb";
 import type { Message } from "@bufbuild/protobuf";
 /**
  * Describes the file invoicesrpc/invoices.proto.
@@ -141,8 +141,9 @@ export type AddHoldInvoiceResp = Message<"invoicesrpc.AddHoldInvoiceResp"> & {
     addIndex: bigint;
     /**
      *
-     * The payment address of the generated invoice. This value should be used
-     * in all payments for this invoice as we require it for end to end
+     * The payment address of the generated invoice. This is also called
+     * the payment secret in specifications (e.g. BOLT 11). This value should
+     * be used in all payments for this invoice as we require it for end to end
      * security.
      *
      * @generated from field: bytes payment_addr = 3;
@@ -239,6 +240,114 @@ export type LookupInvoiceMsg = Message<"invoicesrpc.LookupInvoiceMsg"> & {
  */
 export declare const LookupInvoiceMsgSchema: GenMessage<LookupInvoiceMsg>;
 /**
+ * CircuitKey is a unique identifier for an HTLC.
+ *
+ * @generated from message invoicesrpc.CircuitKey
+ */
+export type CircuitKey = Message<"invoicesrpc.CircuitKey"> & {
+    /**
+     * The id of the channel that the is part of this circuit.
+     *
+     * @generated from field: uint64 chan_id = 1;
+     */
+    chanId: bigint;
+    /**
+     * The index of the incoming htlc in the incoming channel.
+     *
+     * @generated from field: uint64 htlc_id = 2;
+     */
+    htlcId: bigint;
+};
+/**
+ * Describes the message invoicesrpc.CircuitKey.
+ * Use `create(CircuitKeySchema)` to create a new message.
+ */
+export declare const CircuitKeySchema: GenMessage<CircuitKey>;
+/**
+ * @generated from message invoicesrpc.HtlcModifyRequest
+ */
+export type HtlcModifyRequest = Message<"invoicesrpc.HtlcModifyRequest"> & {
+    /**
+     * The invoice the intercepted HTLC is attempting to settle. The HTLCs in
+     * the invoice are only HTLCs that have already been accepted or settled,
+     * not including the current intercepted HTLC.
+     *
+     * @generated from field: lnrpc.Invoice invoice = 1;
+     */
+    invoice?: Invoice;
+    /**
+     * The unique identifier of the HTLC of this intercepted HTLC.
+     *
+     * @generated from field: invoicesrpc.CircuitKey exit_htlc_circuit_key = 2;
+     */
+    exitHtlcCircuitKey?: CircuitKey;
+    /**
+     * The amount in milli-satoshi that the exit HTLC is attempting to pay.
+     *
+     * @generated from field: uint64 exit_htlc_amt = 3;
+     */
+    exitHtlcAmt: bigint;
+    /**
+     * The absolute expiry height of the exit HTLC.
+     *
+     * @generated from field: uint32 exit_htlc_expiry = 4;
+     */
+    exitHtlcExpiry: number;
+    /**
+     * The current block height.
+     *
+     * @generated from field: uint32 current_height = 5;
+     */
+    currentHeight: number;
+    /**
+     * The wire message custom records of the exit HTLC.
+     *
+     * @generated from field: map<uint64, bytes> exit_htlc_wire_custom_records = 6;
+     */
+    exitHtlcWireCustomRecords: {
+        [key: string]: Uint8Array;
+    };
+};
+/**
+ * Describes the message invoicesrpc.HtlcModifyRequest.
+ * Use `create(HtlcModifyRequestSchema)` to create a new message.
+ */
+export declare const HtlcModifyRequestSchema: GenMessage<HtlcModifyRequest>;
+/**
+ * @generated from message invoicesrpc.HtlcModifyResponse
+ */
+export type HtlcModifyResponse = Message<"invoicesrpc.HtlcModifyResponse"> & {
+    /**
+     * The circuit key of the HTLC that the client wants to modify.
+     *
+     * @generated from field: invoicesrpc.CircuitKey circuit_key = 1;
+     */
+    circuitKey?: CircuitKey;
+    /**
+     * The modified amount in milli-satoshi that the exit HTLC is paying. This
+     * value can be different from the actual on-chain HTLC amount, in case the
+     * HTLC carries other valuable items, as can be the case with custom channel
+     * types.
+     *
+     * @generated from field: optional uint64 amt_paid = 2;
+     */
+    amtPaid?: bigint;
+    /**
+     * This flag indicates whether the HTLCs associated with the invoices should
+     * be cancelled. The interceptor client may set this field if some
+     * unexpected behavior is encountered. Setting this will ignore the amt_paid
+     * field.
+     *
+     * @generated from field: bool cancel_set = 3;
+     */
+    cancelSet: boolean;
+};
+/**
+ * Describes the message invoicesrpc.HtlcModifyResponse.
+ * Use `create(HtlcModifyResponseSchema)` to create a new message.
+ */
+export declare const HtlcModifyResponseSchema: GenMessage<HtlcModifyResponse>;
+/**
  * @generated from enum invoicesrpc.LookupModifier
  */
 export declare enum LookupModifier {
@@ -292,7 +401,7 @@ export declare const Invoices: GenService<{
         output: typeof InvoiceSchema;
     };
     /**
-     *
+     * lncli: `cancelinvoice`
      * CancelInvoice cancels a currently open invoice. If the invoice is already
      * canceled, this call will succeed. If the invoice is already settled, it will
      * fail.
@@ -305,7 +414,7 @@ export declare const Invoices: GenService<{
         output: typeof CancelInvoiceRespSchema;
     };
     /**
-     *
+     * lncli: `addholdinvoice`
      * AddHoldInvoice creates a hold invoice. It ties the invoice to the hash
      * supplied in the request.
      *
@@ -317,7 +426,7 @@ export declare const Invoices: GenService<{
         output: typeof AddHoldInvoiceRespSchema;
     };
     /**
-     *
+     * lncli: `settleinvoice`
      * SettleInvoice settles an accepted invoice. If the invoice is already
      * settled, this call will succeed.
      *
@@ -330,7 +439,7 @@ export declare const Invoices: GenService<{
     };
     /**
      *
-     * LookupInvoiceV2 attempts to look up at invoice. An invoice can be refrenced
+     * LookupInvoiceV2 attempts to look up at invoice. An invoice can be referenced
      * using either its payment hash, payment address, or set ID.
      *
      * @generated from rpc invoicesrpc.Invoices.LookupInvoiceV2
@@ -339,6 +448,20 @@ export declare const Invoices: GenService<{
         methodKind: "unary";
         input: typeof LookupInvoiceMsgSchema;
         output: typeof InvoiceSchema;
+    };
+    /**
+     *
+     * HtlcModifier is a bidirectional streaming RPC that allows a client to
+     * intercept and modify the HTLCs that attempt to settle the given invoice. The
+     * server will send HTLCs of invoices to the client and the client can modify
+     * some aspects of the HTLC in order to pass the invoice acceptance tests.
+     *
+     * @generated from rpc invoicesrpc.Invoices.HtlcModifier
+     */
+    htlcModifier: {
+        methodKind: "bidi_streaming";
+        input: typeof HtlcModifyResponseSchema;
+        output: typeof HtlcModifyRequestSchema;
     };
 }>;
 //# sourceMappingURL=invoices_pb.d.ts.map

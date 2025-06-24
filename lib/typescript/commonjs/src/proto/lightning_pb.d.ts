@@ -535,7 +535,8 @@ export type SendRequest = Message<"lnrpc.SendRequest"> & {
     destFeatures: FeatureBit[];
     /**
      *
-     * The payment address of the generated invoice.
+     * The payment address of the generated invoice.  This is also called
+     * payment secret in specifications (e.g. BOLT 11).
      *
      * @generated from field: bytes payment_addr = 16;
      */
@@ -968,6 +969,12 @@ export type EstimateFeeRequest = Message<"lnrpc.EstimateFeeRequest"> & {
      * @generated from field: bool spend_unconfirmed = 4;
      */
     spendUnconfirmed: boolean;
+    /**
+     * The strategy to use for selecting coins during fees estimation.
+     *
+     * @generated from field: lnrpc.CoinSelectionStrategy coin_selection_strategy = 5;
+     */
+    coinSelectionStrategy: CoinSelectionStrategy;
 };
 /**
  * Describes the message lnrpc.EstimateFeeRequest.
@@ -1058,6 +1065,12 @@ export type SendManyRequest = Message<"lnrpc.SendManyRequest"> & {
      * @generated from field: bool spend_unconfirmed = 8;
      */
     spendUnconfirmed: boolean;
+    /**
+     * The strategy to use for selecting coins during sending many requests.
+     *
+     * @generated from field: lnrpc.CoinSelectionStrategy coin_selection_strategy = 9;
+     */
+    coinSelectionStrategy: CoinSelectionStrategy;
 };
 /**
  * Describes the message lnrpc.SendManyRequest.
@@ -1121,9 +1134,8 @@ export type SendCoinsRequest = Message<"lnrpc.SendCoinsRequest"> & {
     satPerByte: bigint;
     /**
      *
-     * If set, then the amount field will be ignored, and lnd will attempt to
-     * send all the coins under control of the internal wallet to the specified
-     * address.
+     * If set, the amount field should be unset. It indicates lnd will send all
+     * wallet coins or all selected coins to the specified address.
      *
      * @generated from field: bool send_all = 6;
      */
@@ -1147,6 +1159,18 @@ export type SendCoinsRequest = Message<"lnrpc.SendCoinsRequest"> & {
      * @generated from field: bool spend_unconfirmed = 9;
      */
     spendUnconfirmed: boolean;
+    /**
+     * The strategy to use for selecting coins.
+     *
+     * @generated from field: lnrpc.CoinSelectionStrategy coin_selection_strategy = 10;
+     */
+    coinSelectionStrategy: CoinSelectionStrategy;
+    /**
+     * A list of selected outpoints as inputs for the transaction.
+     *
+     * @generated from field: repeated lnrpc.OutPoint outpoints = 11;
+     */
+    outpoints: OutPoint[];
 };
 /**
  * Describes the message lnrpc.SendCoinsRequest.
@@ -1782,6 +1806,13 @@ export type Channel = Message<"lnrpc.Channel"> & {
      * @generated from field: string memo = 36;
      */
     memo: string;
+    /**
+     *
+     * Custom channel data that might be populated in custom channels.
+     *
+     * @generated from field: bytes custom_channel_data = 37;
+     */
+    customChannelData: Uint8Array;
 };
 /**
  * Describes the message lnrpc.Channel.
@@ -2478,7 +2509,10 @@ export type GetInfoResponse = Message<"lnrpc.GetInfoResponse"> & {
      */
     testnet: boolean;
     /**
-     * A list of active chains the node is connected to
+     *
+     * A list of active chains the node is connected to. This will only
+     * ever contain a single entry since LND will only ever have a single
+     * chain backend during its lifetime.
      *
      * @generated from field: repeated lnrpc.Chain chains = 16;
      */
@@ -2518,6 +2552,35 @@ export type GetInfoResponse = Message<"lnrpc.GetInfoResponse"> & {
  * Use `create(GetInfoResponseSchema)` to create a new message.
  */
 export declare const GetInfoResponseSchema: GenMessage<GetInfoResponse>;
+/**
+ * @generated from message lnrpc.GetDebugInfoRequest
+ */
+export type GetDebugInfoRequest = Message<"lnrpc.GetDebugInfoRequest"> & {};
+/**
+ * Describes the message lnrpc.GetDebugInfoRequest.
+ * Use `create(GetDebugInfoRequestSchema)` to create a new message.
+ */
+export declare const GetDebugInfoRequestSchema: GenMessage<GetDebugInfoRequest>;
+/**
+ * @generated from message lnrpc.GetDebugInfoResponse
+ */
+export type GetDebugInfoResponse = Message<"lnrpc.GetDebugInfoResponse"> & {
+    /**
+     * @generated from field: map<string, string> config = 1;
+     */
+    config: {
+        [key: string]: string;
+    };
+    /**
+     * @generated from field: repeated string log = 2;
+     */
+    log: string[];
+};
+/**
+ * Describes the message lnrpc.GetDebugInfoResponse.
+ * Use `create(GetDebugInfoResponseSchema)` to create a new message.
+ */
+export declare const GetDebugInfoResponseSchema: GenMessage<GetDebugInfoResponse>;
 /**
  * @generated from message lnrpc.GetRecoveryInfoRequest
  */
@@ -2560,9 +2623,11 @@ export declare const GetRecoveryInfoResponseSchema: GenMessage<GetRecoveryInfoRe
  */
 export type Chain = Message<"lnrpc.Chain"> & {
     /**
-     * The blockchain the node is on (eg bitcoin, litecoin)
+     * Deprecated. The chain is now always assumed to be bitcoin.
+     * The blockchain the node is on (must be bitcoin)
      *
-     * @generated from field: string chain = 1;
+     * @generated from field: string chain = 1 [deprecated = true];
+     * @deprecated
      */
     chain: string;
     /**
@@ -2614,6 +2679,43 @@ export type ChannelOpenUpdate = Message<"lnrpc.ChannelOpenUpdate"> & {
  */
 export declare const ChannelOpenUpdateSchema: GenMessage<ChannelOpenUpdate>;
 /**
+ * @generated from message lnrpc.CloseOutput
+ */
+export type CloseOutput = Message<"lnrpc.CloseOutput"> & {
+    /**
+     * The amount in satoshi of this close output. This amount is the final
+     * commitment balance of the channel and the actual amount paid out on chain
+     * might be smaller due to subtracted fees.
+     *
+     * @generated from field: int64 amount_sat = 1;
+     */
+    amountSat: bigint;
+    /**
+     * The pkScript of the close output.
+     *
+     * @generated from field: bytes pk_script = 2;
+     */
+    pkScript: Uint8Array;
+    /**
+     * Whether this output is for the local or remote node.
+     *
+     * @generated from field: bool is_local = 3;
+     */
+    isLocal: boolean;
+    /**
+     * The TLV encoded custom channel data records for this output, which might
+     * be set for custom channels.
+     *
+     * @generated from field: bytes custom_channel_data = 4;
+     */
+    customChannelData: Uint8Array;
+};
+/**
+ * Describes the message lnrpc.CloseOutput.
+ * Use `create(CloseOutputSchema)` to create a new message.
+ */
+export declare const CloseOutputSchema: GenMessage<CloseOutput>;
+/**
  * @generated from message lnrpc.ChannelCloseUpdate
  */
 export type ChannelCloseUpdate = Message<"lnrpc.ChannelCloseUpdate"> & {
@@ -2625,6 +2727,26 @@ export type ChannelCloseUpdate = Message<"lnrpc.ChannelCloseUpdate"> & {
      * @generated from field: bool success = 2;
      */
     success: boolean;
+    /**
+     * The local channel close output. If the local channel balance was dust to
+     * begin with, this output will not be set.
+     *
+     * @generated from field: lnrpc.CloseOutput local_close_output = 3;
+     */
+    localCloseOutput?: CloseOutput;
+    /**
+     * The remote channel close output. If the remote channel balance was dust
+     * to begin with, this output will not be set.
+     *
+     * @generated from field: lnrpc.CloseOutput remote_close_output = 4;
+     */
+    remoteCloseOutput?: CloseOutput;
+    /**
+     * Any additional outputs that might be added for custom channel types.
+     *
+     * @generated from field: repeated lnrpc.CloseOutput additional_outputs = 5;
+     */
+    additionalOutputs: CloseOutput[];
 };
 /**
  * Describes the message lnrpc.ChannelCloseUpdate.
@@ -2692,6 +2814,14 @@ export type CloseChannelRequest = Message<"lnrpc.CloseChannelRequest"> & {
      * @generated from field: uint64 max_fee_per_vbyte = 7;
      */
     maxFeePerVbyte: bigint;
+    /**
+     * If true, then the rpc call will not block while it awaits a closing txid.
+     * Consequently this RPC call will not return a closing txid if this value
+     * is set.
+     *
+     * @generated from field: bool no_wait = 8;
+     */
+    noWait: boolean;
 };
 /**
  * Describes the message lnrpc.CloseChannelRequest.
@@ -2717,6 +2847,12 @@ export type CloseStatusUpdate = Message<"lnrpc.CloseStatusUpdate"> & {
          */
         value: ChannelCloseUpdate;
         case: "chanClose";
+    } | {
+        /**
+         * @generated from field: lnrpc.InstantUpdate close_instant = 4;
+         */
+        value: InstantUpdate;
+        case: "closeInstant";
     } | {
         case: undefined;
         value?: undefined;
@@ -2745,6 +2881,15 @@ export type PendingUpdate = Message<"lnrpc.PendingUpdate"> & {
  * Use `create(PendingUpdateSchema)` to create a new message.
  */
 export declare const PendingUpdateSchema: GenMessage<PendingUpdate>;
+/**
+ * @generated from message lnrpc.InstantUpdate
+ */
+export type InstantUpdate = Message<"lnrpc.InstantUpdate"> & {};
+/**
+ * Describes the message lnrpc.InstantUpdate.
+ * Use `create(InstantUpdateSchema)` to create a new message.
+ */
+export declare const InstantUpdateSchema: GenMessage<InstantUpdate>;
 /**
  * @generated from message lnrpc.ReadyForPsbtFunding
  */
@@ -2825,6 +2970,12 @@ export type BatchOpenChannelRequest = Message<"lnrpc.BatchOpenChannelRequest"> &
      * @generated from field: string label = 6;
      */
     label: string;
+    /**
+     * The strategy to use for selecting coins during batch opening channels.
+     *
+     * @generated from field: lnrpc.CoinSelectionStrategy coin_selection_strategy = 7;
+     */
+    coinSelectionStrategy: CoinSelectionStrategy;
 };
 /**
  * Describes the message lnrpc.BatchOpenChannelRequest.
@@ -3710,7 +3861,15 @@ export declare const PendingHTLCSchema: GenMessage<PendingHTLC>;
 /**
  * @generated from message lnrpc.PendingChannelsRequest
  */
-export type PendingChannelsRequest = Message<"lnrpc.PendingChannelsRequest"> & {};
+export type PendingChannelsRequest = Message<"lnrpc.PendingChannelsRequest"> & {
+    /**
+     * Indicates whether to include the raw transaction hex for
+     * waiting_close_channels.
+     *
+     * @generated from field: bool include_raw_tx = 1;
+     */
+    includeRawTx: boolean;
+};
 /**
  * Describes the message lnrpc.PendingChannelsRequest.
  * Use `create(PendingChannelsRequestSchema)` to create a new message.
@@ -3838,6 +3997,13 @@ export type PendingChannelsResponse_PendingChannel = Message<"lnrpc.PendingChann
      * @generated from field: string memo = 13;
      */
     memo: string;
+    /**
+     *
+     * Custom channel data that might be populated in custom channels.
+     *
+     * @generated from field: bytes custom_channel_data = 34;
+     */
+    customChannelData: Uint8Array;
 };
 /**
  * Describes the message lnrpc.PendingChannelsResponse.PendingChannel.
@@ -3930,6 +4096,13 @@ export type PendingChannelsResponse_WaitingCloseChannel = Message<"lnrpc.Pending
      * @generated from field: string closing_txid = 4;
      */
     closingTxid: string;
+    /**
+     * The raw hex encoded bytes of the closing transaction. Included if
+     * include_raw_tx in the request is true.
+     *
+     * @generated from field: string closing_tx_hex = 5;
+     */
+    closingTxHex: string;
 };
 /**
  * Describes the message lnrpc.PendingChannelsResponse.WaitingCloseChannel.
@@ -4231,6 +4404,14 @@ export type WalletBalanceRequest = Message<"lnrpc.WalletBalanceRequest"> & {
      * @generated from field: string account = 1;
      */
     account: string;
+    /**
+     * The minimum number of confirmations each one of your outputs used for the
+     * funding transaction must satisfy. If this is not specified, the default
+     * value of 1 is used.
+     *
+     * @generated from field: int32 min_confs = 2;
+     */
+    minConfs: number;
 };
 /**
  * Describes the message lnrpc.WalletBalanceRequest.
@@ -4371,6 +4552,14 @@ export type ChannelBalanceResponse = Message<"lnrpc.ChannelBalanceResponse"> & {
      * @generated from field: lnrpc.Amount pending_open_remote_balance = 8;
      */
     pendingOpenRemoteBalance?: Amount;
+    /**
+     *
+     * Custom channel data that might be populated if there are custom channels
+     * present.
+     *
+     * @generated from field: bytes custom_channel_data = 9;
+     */
+    customChannelData: Uint8Array;
 };
 /**
  * Describes the message lnrpc.ChannelBalanceResponse.
@@ -4412,6 +4601,9 @@ export type QueryRoutesRequest = Message<"lnrpc.QueryRoutesRequest"> & {
      * not add any additional block padding on top of final_ctlv_delta. This
      * padding of a few blocks needs to be added manually or otherwise failures may
      * happen when a block comes in while the payment is in flight.
+     *
+     * Note: must not be set if making a payment to a blinded path (delta is
+     * set by the aggregate parameters provided by blinded_payment_paths)
      *
      * @generated from field: int32 final_cltv_delta = 4;
      */
@@ -4513,11 +4705,22 @@ export type QueryRoutesRequest = Message<"lnrpc.QueryRoutesRequest"> & {
     routeHints: RouteHint[];
     /**
      *
+     * An optional blinded path(s) to reach the destination. Note that the
+     * introduction node must be provided as the first hop in the route.
+     *
+     * @generated from field: repeated lnrpc.BlindedPaymentPath blinded_payment_paths = 19;
+     */
+    blindedPaymentPaths: BlindedPaymentPath[];
+    /**
+     *
      * Features assumed to be supported by the final node. All transitive feature
      * dependencies must also be set properly. For a given feature bit pair, either
      * optional or remote may be set, but not both. If this field is nil or empty,
      * the router will try to load destination features from the graph as a
      * fallback.
+     *
+     * Note: must not be set if making a payment to a blinded route (features
+     * are provided in blinded_payment_paths).
      *
      * @generated from field: repeated lnrpc.FeatureBit dest_features = 17;
      */
@@ -4711,6 +4914,38 @@ export type Hop = Message<"lnrpc.Hop"> & {
      * @generated from field: bytes metadata = 13;
      */
     metadata: Uint8Array;
+    /**
+     *
+     * Blinding point is an optional blinding point included for introduction
+     * nodes in blinded paths. This field is mandatory for hops that represents
+     * the introduction point in a blinded path.
+     *
+     * @generated from field: bytes blinding_point = 14;
+     */
+    blindingPoint: Uint8Array;
+    /**
+     *
+     * Encrypted data is a receiver-produced blob of data that provides hops
+     * in a blinded route with forwarding data. As this data is encrypted by
+     * the recipient, we will not be able to parse it - it is essentially an
+     * arbitrary blob of data from our node's perspective. This field is
+     * mandatory for all hops in a blinded path, including the introduction
+     * node.
+     *
+     * @generated from field: bytes encrypted_data = 15;
+     */
+    encryptedData: Uint8Array;
+    /**
+     *
+     * The total amount that is sent to the recipient (possibly across multiple
+     * HTLCs), as specified by the sender when making a payment to a blinded path.
+     * This value is only set in the final hop payload of a blinded payment. This
+     * value is analogous to the MPPRecord that is used for regular (non-blinded)
+     * MPP payments.
+     *
+     * @generated from field: uint64 total_amt_msat = 16;
+     */
+    totalAmtMsat: bigint;
 };
 /**
  * Describes the message lnrpc.Hop.
@@ -4726,7 +4961,8 @@ export type MPPRecord = Message<"lnrpc.MPPRecord"> & {
      * A unique, random identifier used to authenticate the sender as the intended
      * payer of a multi-path payment. The payment_addr must be the same for all
      * subpayments, and match the payment_addr provided in the receiver's invoice.
-     * The same payment_addr must be used on all subpayments.
+     * The same payment_addr must be used on all subpayments. This is also called
+     * payment secret in specifications (e.g. BOLT 11).
      *
      * @generated from field: bytes payment_addr = 11;
      */
@@ -4833,6 +5069,24 @@ export type Route = Message<"lnrpc.Route"> & {
      * @generated from field: int64 total_amt_msat = 6;
      */
     totalAmtMsat: bigint;
+    /**
+     *
+     * The actual on-chain amount that was sent out to the first hop. This value is
+     * only different from the total_amt_msat field if this is a custom channel
+     * payment and the value transported in the HTLC is different from the BTC
+     * amount in the HTLC. If this value is zero, then this is an old payment that
+     * didn't have this value yet and can be ignored.
+     *
+     * @generated from field: int64 first_hop_amount_msat = 7;
+     */
+    firstHopAmountMsat: bigint;
+    /**
+     *
+     * Custom channel data that might be populated in custom channels.
+     *
+     * @generated from field: bytes custom_channel_data = 8;
+     */
+    customChannelData: Uint8Array;
 };
 /**
  * Describes the message lnrpc.Route.
@@ -5007,6 +5261,14 @@ export type RoutingPolicy = Message<"lnrpc.RoutingPolicy"> & {
     customRecords: {
         [key: string]: Uint8Array;
     };
+    /**
+     * @generated from field: int32 inbound_fee_base_msat = 9;
+     */
+    inboundFeeBaseMsat: number;
+    /**
+     * @generated from field: int32 inbound_fee_rate_milli_msat = 10;
+     */
+    inboundFeeRateMilliMsat: number;
 };
 /**
  * Describes the message lnrpc.RoutingPolicy.
@@ -5193,6 +5455,13 @@ export type ChanInfoRequest = Message<"lnrpc.ChanInfoRequest"> & {
      * @generated from field: uint64 chan_id = 1 [jstype = JS_STRING];
      */
     chanId: string;
+    /**
+     * The channel point of the channel in format funding_txid:output_index. If
+     * chan_id is specified, this field is ignored.
+     *
+     * @generated from field: string chan_point = 2;
+     */
+    chanPoint: string;
 };
 /**
  * Describes the message lnrpc.ChanInfoRequest.
@@ -5510,6 +5779,119 @@ export type RouteHint = Message<"lnrpc.RouteHint"> & {
  */
 export declare const RouteHintSchema: GenMessage<RouteHint>;
 /**
+ * @generated from message lnrpc.BlindedPaymentPath
+ */
+export type BlindedPaymentPath = Message<"lnrpc.BlindedPaymentPath"> & {
+    /**
+     * The blinded path to send the payment to.
+     *
+     * @generated from field: lnrpc.BlindedPath blinded_path = 1;
+     */
+    blindedPath?: BlindedPath;
+    /**
+     * The base fee for the blinded path provided, expressed in msat.
+     *
+     * @generated from field: uint64 base_fee_msat = 2;
+     */
+    baseFeeMsat: bigint;
+    /**
+     *
+     * The proportional fee for the blinded path provided, expressed in parts
+     * per million.
+     *
+     * @generated from field: uint32 proportional_fee_rate = 3;
+     */
+    proportionalFeeRate: number;
+    /**
+     *
+     * The total CLTV delta for the blinded path provided, including the
+     * final CLTV delta for the receiving node.
+     *
+     * @generated from field: uint32 total_cltv_delta = 4;
+     */
+    totalCltvDelta: number;
+    /**
+     *
+     * The minimum hltc size that may be sent over the blinded path, expressed
+     * in msat.
+     *
+     * @generated from field: uint64 htlc_min_msat = 5;
+     */
+    htlcMinMsat: bigint;
+    /**
+     *
+     * The maximum htlc size that may be sent over the blinded path, expressed
+     * in msat.
+     *
+     * @generated from field: uint64 htlc_max_msat = 6;
+     */
+    htlcMaxMsat: bigint;
+    /**
+     * The feature bits for the route.
+     *
+     * @generated from field: repeated lnrpc.FeatureBit features = 7;
+     */
+    features: FeatureBit[];
+};
+/**
+ * Describes the message lnrpc.BlindedPaymentPath.
+ * Use `create(BlindedPaymentPathSchema)` to create a new message.
+ */
+export declare const BlindedPaymentPathSchema: GenMessage<BlindedPaymentPath>;
+/**
+ * @generated from message lnrpc.BlindedPath
+ */
+export type BlindedPath = Message<"lnrpc.BlindedPath"> & {
+    /**
+     * The unblinded pubkey of the introduction node for the route.
+     *
+     * @generated from field: bytes introduction_node = 1;
+     */
+    introductionNode: Uint8Array;
+    /**
+     * The ephemeral pubkey used by nodes in the blinded route.
+     *
+     * @generated from field: bytes blinding_point = 2;
+     */
+    blindingPoint: Uint8Array;
+    /**
+     *
+     * A set of blinded node keys and data blobs for the blinded portion of the
+     * route. Note that the first hop is expected to be the introduction node,
+     * so the route is always expected to have at least one hop.
+     *
+     * @generated from field: repeated lnrpc.BlindedHop blinded_hops = 3;
+     */
+    blindedHops: BlindedHop[];
+};
+/**
+ * Describes the message lnrpc.BlindedPath.
+ * Use `create(BlindedPathSchema)` to create a new message.
+ */
+export declare const BlindedPathSchema: GenMessage<BlindedPath>;
+/**
+ * @generated from message lnrpc.BlindedHop
+ */
+export type BlindedHop = Message<"lnrpc.BlindedHop"> & {
+    /**
+     * The blinded public key of the node.
+     *
+     * @generated from field: bytes blinded_node = 1;
+     */
+    blindedNode: Uint8Array;
+    /**
+     * An encrypted blob of data provided to the blinded node.
+     *
+     * @generated from field: bytes encrypted_data = 2;
+     */
+    encryptedData: Uint8Array;
+};
+/**
+ * Describes the message lnrpc.BlindedHop.
+ * Use `create(BlindedHopSchema)` to create a new message.
+ */
+export declare const BlindedHopSchema: GenMessage<BlindedHop>;
+/**
  * @generated from message lnrpc.AMPInvoiceState
  */
 export type AMPInvoiceState = Message<"lnrpc.AMPInvoiceState"> & {
@@ -5767,9 +6149,10 @@ export type Invoice = Message<"lnrpc.Invoice"> & {
     isKeysend: boolean;
     /**
      *
-     * The payment address of this invoice. This value will be used in MPP
-     * payments, and also for newer invoices that always require the MPP payload
-     * for added end-to-end security.
+     * The payment address of this invoice. This is also called payment secret in
+     * specifications (e.g. BOLT 11). This value will be used in MPP payments, and
+     * also for newer invoices that always require the MPP payload for added
+     * end-to-end security.
      * Note: Output only, don't specify for creating an invoice.
      *
      * @generated from field: bytes payment_addr = 26;
@@ -5799,9 +6182,26 @@ export type Invoice = Message<"lnrpc.Invoice"> & {
     };
     /**
      *
+     * Signals that the invoice should include blinded paths to hide the true
+     * identity of the recipient.
+     *
+     * @generated from field: bool is_blinded = 29;
+     */
+    isBlinded: boolean;
+    /**
+     *
+     * Config values to use when creating blinded paths for this invoice. These
+     * can be used to override the defaults config values provided in by the
+     * global config. This field is only used if is_blinded is true.
+     *
+     * @generated from field: lnrpc.BlindedPathConfig blinded_path_config = 30;
+     */
+    blindedPathConfig?: BlindedPathConfig;
+    /**
+     *
      * The minimum number of hop hints to include in this invoice.
      *
-     * @generated from field: int32 min_hop_hints = 29;
+     * @generated from field: int32 min_hop_hints = 31;
      */
     minHopHints: number;
 };
@@ -5835,6 +6235,51 @@ export declare enum Invoice_InvoiceState {
  * Describes the enum lnrpc.Invoice.InvoiceState.
  */
 export declare const Invoice_InvoiceStateSchema: GenEnum<Invoice_InvoiceState>;
+/**
+ * @generated from message lnrpc.BlindedPathConfig
+ */
+export type BlindedPathConfig = Message<"lnrpc.BlindedPathConfig"> & {
+    /**
+     *
+     * The minimum number of real hops to include in a blinded path. This doesn't
+     * include our node, so if the minimum is 1, then the path will contain at
+     * minimum our node along with an introduction node hop. If it is zero then
+     * the shortest path will use our node as an introduction node.
+     *
+     * @generated from field: optional uint32 min_num_real_hops = 1;
+     */
+    minNumRealHops?: number;
+    /**
+     *
+     * The number of hops to include in a blinded path. This doesn't include our
+     * node, so if it is 1, then the path will contain our node along with an
+     * introduction node or dummy node hop. If paths shorter than NumHops is
+     * found, then they will be padded using dummy hops.
+     *
+     * @generated from field: optional uint32 num_hops = 2;
+     */
+    numHops?: number;
+    /**
+     *
+     * The maximum number of blinded paths to select and add to an invoice.
+     *
+     * @generated from field: optional uint32 max_num_paths = 3;
+     */
+    maxNumPaths?: number;
+    /**
+     *
+     * A list of node IDs of nodes that should not be used in any of our generated
+     * blinded paths.
+     *
+     * @generated from field: repeated bytes node_omission_list = 4;
+     */
+    nodeOmissionList: Uint8Array[];
+};
+/**
+ * Describes the message lnrpc.BlindedPathConfig.
+ * Use `create(BlindedPathConfigSchema)` to create a new message.
+ */
+export declare const BlindedPathConfigSchema: GenMessage<BlindedPathConfig>;
 /**
  * Details of an HTLC that paid to an invoice
  *
@@ -5909,6 +6354,13 @@ export type InvoiceHTLC = Message<"lnrpc.InvoiceHTLC"> & {
      * @generated from field: lnrpc.AMP amp = 11;
      */
     amp?: AMP;
+    /**
+     *
+     * Custom channel data that might be populated in custom channels.
+     *
+     * @generated from field: bytes custom_channel_data = 12;
+     */
+    customChannelData: Uint8Array;
 };
 /**
  * Describes the message lnrpc.InvoiceHTLC.
@@ -5990,9 +6442,9 @@ export type AddInvoiceResponse = Message<"lnrpc.AddInvoiceResponse"> & {
     addIndex: bigint;
     /**
      *
-     * The payment address of the generated invoice. This value should be used
-     * in all payments for this invoice as we require it for end to end
-     * security.
+     * The payment address of the generated invoice. This is also called
+     * payment secret in specifications (e.g. BOLT 11). This value should be used
+     * in all payments for this invoice as we require it for end to end security.
      *
      * @generated from field: bytes payment_addr = 17;
      */
@@ -6248,6 +6700,16 @@ export type Payment = Message<"lnrpc.Payment"> & {
      * @generated from field: lnrpc.PaymentFailureReason failure_reason = 16;
      */
     failureReason: PaymentFailureReason;
+    /**
+     *
+     * The custom TLV records that were sent to the first hop as part of the HTLC
+     * wire message for this payment.
+     *
+     * @generated from field: map<uint64, bytes> first_hop_custom_records = 17;
+     */
+    firstHopCustomRecords: {
+        [key: string]: Uint8Array;
+    };
 };
 /**
  * Describes the message lnrpc.Payment.
@@ -6259,21 +6721,36 @@ export declare const PaymentSchema: GenMessage<Payment>;
  */
 export declare enum Payment_PaymentStatus {
     /**
-     * @generated from enum value: UNKNOWN = 0;
+     * Deprecated. This status will never be returned.
+     *
+     * @generated from enum value: UNKNOWN = 0 [deprecated = true];
+     * @deprecated
      */
     UNKNOWN = 0,
     /**
+     * Payment has inflight HTLCs.
+     *
      * @generated from enum value: IN_FLIGHT = 1;
      */
     IN_FLIGHT = 1,
     /**
+     * Payment is settled.
+     *
      * @generated from enum value: SUCCEEDED = 2;
      */
     SUCCEEDED = 2,
     /**
+     * Payment is failed.
+     *
      * @generated from enum value: FAILED = 3;
      */
-    FAILED = 3
+    FAILED = 3,
+    /**
+     * Payment is created and has not attempted any HTLCs.
+     *
+     * @generated from enum value: INITIATED = 4;
+     */
+    INITIATED = 4
 }
 /**
  * Describes the enum lnrpc.Payment.PaymentStatus.
@@ -6405,14 +6882,14 @@ export type ListPaymentsRequest = Message<"lnrpc.ListPaymentsRequest"> & {
      */
     countTotalPayments: boolean;
     /**
-     * If set, returns all invoices with a creation date greater than or equal
+     * If set, returns all payments with a creation date greater than or equal
      * to it. Measured in seconds since the unix epoch.
      *
      * @generated from field: uint64 creation_date_start = 6;
      */
     creationDateStart: bigint;
     /**
-     * If set, returns all invoices with a creation date less than or equal to
+     * If set, returns all payments with a creation date less than or equal to
      * it. Measured in seconds since the unix epoch.
      *
      * @generated from field: uint64 creation_date_end = 7;
@@ -6506,6 +6983,13 @@ export type DeleteAllPaymentsRequest = Message<"lnrpc.DeleteAllPaymentsRequest">
      * @generated from field: bool failed_htlcs_only = 2;
      */
     failedHtlcsOnly: boolean;
+    /**
+     * Delete all payments. NOTE: Using this option requires careful
+     * consideration as it is a destructive operation.
+     *
+     * @generated from field: bool all_payments = 3;
+     */
+    allPayments: boolean;
 };
 /**
  * Describes the message lnrpc.DeleteAllPaymentsRequest.
@@ -6672,6 +7156,10 @@ export type PayReq = Message<"lnrpc.PayReq"> & {
     features: {
         [key: number]: Feature;
     };
+    /**
+     * @generated from field: repeated lnrpc.BlindedPaymentPath blinded_paths = 14;
+     */
+    blindedPaths: BlindedPaymentPath[];
 };
 /**
  * Describes the message lnrpc.PayReq.
@@ -6745,6 +7233,19 @@ export type ChannelFeeReport = Message<"lnrpc.ChannelFeeReport"> & {
      * @generated from field: double fee_rate = 4;
      */
     feeRate: number;
+    /**
+     * The base fee charged regardless of the number of milli-satoshis sent.
+     *
+     * @generated from field: int32 inbound_base_fee_msat = 6;
+     */
+    inboundBaseFeeMsat: number;
+    /**
+     * The amount charged per milli-satoshis transferred expressed in
+     * millionths of a satoshi.
+     *
+     * @generated from field: int32 inbound_fee_per_mil = 7;
+     */
+    inboundFeePerMil: number;
 };
 /**
  * Describes the message lnrpc.ChannelFeeReport.
@@ -6789,6 +7290,30 @@ export type FeeReportResponse = Message<"lnrpc.FeeReportResponse"> & {
  * Use `create(FeeReportResponseSchema)` to create a new message.
  */
 export declare const FeeReportResponseSchema: GenMessage<FeeReportResponse>;
+/**
+ * @generated from message lnrpc.InboundFee
+ */
+export type InboundFee = Message<"lnrpc.InboundFee"> & {
+    /**
+     * The inbound base fee charged regardless of the number of milli-satoshis
+     * received in the channel. By default, only negative values are accepted.
+     *
+     * @generated from field: int32 base_fee_msat = 1;
+     */
+    baseFeeMsat: number;
+    /**
+     * The effective inbound fee rate in micro-satoshis (parts per million).
+     * By default, only negative values are accepted.
+     *
+     * @generated from field: int32 fee_rate_ppm = 2;
+     */
+    feeRatePpm: number;
+};
+/**
+ * Describes the message lnrpc.InboundFee.
+ * Use `create(InboundFeeSchema)` to create a new message.
+ */
+export declare const InboundFeeSchema: GenMessage<InboundFee>;
 /**
  * @generated from message lnrpc.PolicyUpdateRequest
  */
@@ -6861,6 +7386,13 @@ export type PolicyUpdateRequest = Message<"lnrpc.PolicyUpdateRequest"> & {
      * @generated from field: bool min_htlc_msat_specified = 8;
      */
     minHtlcMsatSpecified: boolean;
+    /**
+     * Optional inbound fee. If unset, the previously set value will be
+     * retained [EXPERIMENTAL].
+     *
+     * @generated from field: lnrpc.InboundFee inbound_fee = 10;
+     */
+    inboundFee?: InboundFee;
 };
 /**
  * Describes the message lnrpc.PolicyUpdateRequest.
@@ -7597,6 +8129,10 @@ export declare enum Failure_FailureCode {
      */
     INVALID_ONION_PAYLOAD = 24,
     /**
+     * @generated from enum value: INVALID_ONION_BLINDING = 25;
+     */
+    INVALID_ONION_BLINDING = 25,
+    /**
      *
      * An internal error occurred.
      *
@@ -8191,6 +8727,34 @@ export declare enum OutputScriptType {
  */
 export declare const OutputScriptTypeSchema: GenEnum<OutputScriptType>;
 /**
+ * @generated from enum lnrpc.CoinSelectionStrategy
+ */
+export declare enum CoinSelectionStrategy {
+    /**
+     * Use the coin selection strategy defined in the global configuration
+     * (lnd.conf).
+     *
+     * @generated from enum value: STRATEGY_USE_GLOBAL_CONFIG = 0;
+     */
+    STRATEGY_USE_GLOBAL_CONFIG = 0,
+    /**
+     * Select the largest available coins first during coin selection.
+     *
+     * @generated from enum value: STRATEGY_LARGEST = 1;
+     */
+    STRATEGY_LARGEST = 1,
+    /**
+     * Randomly select the available coins during coin selection.
+     *
+     * @generated from enum value: STRATEGY_RANDOM = 2;
+     */
+    STRATEGY_RANDOM = 2
+}
+/**
+ * Describes the enum lnrpc.CoinSelectionStrategy.
+ */
+export declare const CoinSelectionStrategySchema: GenEnum<CoinSelectionStrategy>;
+/**
  *
  * `AddressType` has to be one of:
  *
@@ -8280,11 +8844,22 @@ export declare enum CommitmentType {
      */
     SCRIPT_ENFORCED_LEASE = 4,
     /**
-     * TODO(roasbeef): need script enforce mirror type for the above as well?
+     *
+     * A channel that uses musig2 for the funding output, and the new tapscript
+     * features where relevant.
      *
      * @generated from enum value: SIMPLE_TAPROOT = 5;
      */
-    SIMPLE_TAPROOT = 5
+    SIMPLE_TAPROOT = 5,
+    /**
+     *
+     * Identical to the SIMPLE_TAPROOT channel type, but with extra functionality.
+     * This channel type also commits to additional meta data in the tapscript
+     * leaves for the scripts in a channel.
+     *
+     * @generated from enum value: SIMPLE_TAPROOT_OVERLAY = 6;
+     */
+    SIMPLE_TAPROOT_OVERLAY = 6
 }
 /**
  * Describes the enum lnrpc.CommitmentType.
@@ -8495,7 +9070,14 @@ export declare enum PaymentFailureReason {
      *
      * @generated from enum value: FAILURE_REASON_INSUFFICIENT_BALANCE = 5;
      */
-    FAILURE_REASON_INSUFFICIENT_BALANCE = 5
+    FAILURE_REASON_INSUFFICIENT_BALANCE = 5,
+    /**
+     *
+     * The payment was canceled.
+     *
+     * @generated from enum value: FAILURE_REASON_CANCELED = 6;
+     */
+    FAILURE_REASON_CANCELED = 6
 }
 /**
  * Describes the enum lnrpc.PaymentFailureReason.
@@ -8597,6 +9179,14 @@ export declare enum FeatureBit {
      * @generated from enum value: ANCHORS_ZERO_FEE_HTLC_OPT = 23;
      */
     ANCHORS_ZERO_FEE_HTLC_OPT = 23,
+    /**
+     * @generated from enum value: ROUTE_BLINDING_REQUIRED = 24;
+     */
+    ROUTE_BLINDING_REQUIRED = 24,
+    /**
+     * @generated from enum value: ROUTE_BLINDING_OPTIONAL = 25;
+     */
+    ROUTE_BLINDING_OPTIONAL = 25,
     /**
      * @generated from enum value: AMP_REQ = 30;
      */
@@ -8858,6 +9448,19 @@ export declare const Lightning: GenService<{
         methodKind: "unary";
         input: typeof GetInfoRequestSchema;
         output: typeof GetInfoResponseSchema;
+    };
+    /**
+     * lncli: 'getdebuginfo'
+     * GetDebugInfo returns debug information concerning the state of the daemon
+     * and its subsystems. This includes the full configuration and the latest log
+     * entries from the log file.
+     *
+     * @generated from rpc lnrpc.Lightning.GetDebugInfo
+     */
+    getDebugInfo: {
+        methodKind: "unary";
+        input: typeof GetDebugInfoRequestSchema;
+        output: typeof GetDebugInfoResponseSchema;
     };
     /**
      * * lncli: `getrecoveryinfo`
@@ -9145,7 +9748,7 @@ export declare const Lightning: GenService<{
      * optionally specify the add_index and/or the settle_index. If the add_index
      * is specified, then we'll first start by sending add invoice events for all
      * invoices with an add_index greater than the specified value. If the
-     * settle_index is specified, the next, we'll send out all settle events for
+     * settle_index is specified, then next, we'll send out all settle events for
      * invoices with a settle_index greater than the specified value. One or both
      * of these fields can be set. If no fields are set, then we'll only send out
      * the latest add/settle events.
@@ -9182,7 +9785,7 @@ export declare const Lightning: GenService<{
         output: typeof ListPaymentsResponseSchema;
     };
     /**
-     *
+     * lncli: `deletepayments`
      * DeletePayment deletes an outgoing payment from DB. Note that it will not
      * attempt to delete an In-Flight payment, since that would be unsafe.
      *
@@ -9194,7 +9797,7 @@ export declare const Lightning: GenService<{
         output: typeof DeletePaymentResponseSchema;
     };
     /**
-     *
+     * lncli: `deletepayments --all`
      * DeleteAllPayments deletes all outgoing payments from DB. Note that it will
      * not attempt to delete In-Flight payments, since that would be unsafe.
      *
@@ -9410,7 +10013,7 @@ export declare const Lightning: GenService<{
         output: typeof ChanBackupSnapshotSchema;
     };
     /**
-     *
+     * lncli: `verifychanbackup`
      * VerifyChanBackup allows a caller to verify the integrity of a channel backup
      * snapshot. This method will accept either a packed Single or a packed Multi.
      * Specifying both will result in an error.

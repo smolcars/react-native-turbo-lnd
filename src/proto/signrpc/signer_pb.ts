@@ -10,7 +10,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file signrpc/signer.proto.
  */
 export const file_signrpc_signer: GenFile = /*@__PURE__*/
-  fileDesc("ChRzaWducnBjL3NpZ25lci5wcm90bxIHc2lnbnJwYyIzCgpLZXlMb2NhdG9yEhIKCmtleV9mYW1pbHkYASABKAUSEQoJa2V5X2luZGV4GAIgASgFIkwKDUtleURlc2NyaXB0b3ISFQoNcmF3X2tleV9ieXRlcxgBIAEoDBIkCgdrZXlfbG9jGAIgASgLMhMuc2lnbnJwYy5LZXlMb2NhdG9yIikKBVR4T3V0Eg0KBXZhbHVlGAEgASgDEhEKCXBrX3NjcmlwdBgCIAEoDCKBAgoOU2lnbkRlc2NyaXB0b3ISKAoIa2V5X2Rlc2MYASABKAsyFi5zaWducnBjLktleURlc2NyaXB0b3ISFAoMc2luZ2xlX3R3ZWFrGAIgASgMEhQKDGRvdWJsZV90d2VhaxgDIAEoDBIRCgl0YXBfdHdlYWsYCiABKAwSFgoOd2l0bmVzc19zY3JpcHQYBCABKAwSHgoGb3V0cHV0GAUgASgLMg4uc2lnbnJwYy5UeE91dBIPCgdzaWdoYXNoGAcgASgNEhMKC2lucHV0X2luZGV4GAggASgFEigKC3NpZ25fbWV0aG9kGAkgASgOMhMuc2lnbnJwYy5TaWduTWV0aG9kInIKB1NpZ25SZXESFAoMcmF3X3R4X2J5dGVzGAEgASgMEisKCnNpZ25fZGVzY3MYAiADKAsyFy5zaWducnBjLlNpZ25EZXNjcmlwdG9yEiQKDHByZXZfb3V0cHV0cxgDIAMoCzIOLnNpZ25ycGMuVHhPdXQiHAoIU2lnblJlc3ASEAoIcmF3X3NpZ3MYASADKAwiMgoLSW5wdXRTY3JpcHQSDwoHd2l0bmVzcxgBIAMoDBISCgpzaWdfc2NyaXB0GAIgASgMIj4KD0lucHV0U2NyaXB0UmVzcBIrCg1pbnB1dF9zY3JpcHRzGAEgAygLMhQuc2lnbnJwYy5JbnB1dFNjcmlwdCKhAQoOU2lnbk1lc3NhZ2VSZXESCwoDbXNnGAEgASgMEiQKB2tleV9sb2MYAiABKAsyEy5zaWducnBjLktleUxvY2F0b3ISEwoLZG91YmxlX2hhc2gYAyABKAgSEwoLY29tcGFjdF9zaWcYBCABKAgSEwoLc2Nobm9ycl9zaWcYBSABKAgSHQoVc2Nobm9ycl9zaWdfdGFwX3R3ZWFrGAYgASgMIiQKD1NpZ25NZXNzYWdlUmVzcBIRCglzaWduYXR1cmUYASABKAwiWgoQVmVyaWZ5TWVzc2FnZVJlcRILCgNtc2cYASABKAwSEQoJc2lnbmF0dXJlGAIgASgMEg4KBnB1YmtleRgDIAEoDBIWCg5pc19zY2hub3JyX3NpZxgEIAEoCCIiChFWZXJpZnlNZXNzYWdlUmVzcBINCgV2YWxpZBgBIAEoCCKAAQoQU2hhcmVkS2V5UmVxdWVzdBIYChBlcGhlbWVyYWxfcHVia2V5GAEgASgMEigKB2tleV9sb2MYAiABKAsyEy5zaWducnBjLktleUxvY2F0b3JCAhgBEigKCGtleV9kZXNjGAMgASgLMhYuc2lnbnJwYy5LZXlEZXNjcmlwdG9yIicKEVNoYXJlZEtleVJlc3BvbnNlEhIKCnNoYXJlZF9rZXkYASABKAwiLQoJVHdlYWtEZXNjEg0KBXR3ZWFrGAEgASgMEhEKCWlzX3hfb25seRgCIAEoCCI/ChBUYXByb290VHdlYWtEZXNjEhMKC3NjcmlwdF9yb290GAEgASgMEhYKDmtleV9zcGVuZF9vbmx5GAIgASgIIrUBChhNdVNpZzJDb21iaW5lS2V5c1JlcXVlc3QSGgoSYWxsX3NpZ25lcl9wdWJrZXlzGAEgAygMEiIKBnR3ZWFrcxgCIAMoCzISLnNpZ25ycGMuVHdlYWtEZXNjEjAKDXRhcHJvb3RfdHdlYWsYAyABKAsyGS5zaWducnBjLlRhcHJvb3RUd2Vha0Rlc2MSJwoHdmVyc2lvbhgEIAEoDjIWLnNpZ25ycGMuTXVTaWcyVmVyc2lvbiJ4ChlNdVNpZzJDb21iaW5lS2V5c1Jlc3BvbnNlEhQKDGNvbWJpbmVkX2tleRgBIAEoDBIcChR0YXByb290X2ludGVybmFsX2tleRgCIAEoDBInCgd2ZXJzaW9uGAQgASgOMhYuc2lnbnJwYy5NdVNpZzJWZXJzaW9uIvsBChRNdVNpZzJTZXNzaW9uUmVxdWVzdBIkCgdrZXlfbG9jGAEgASgLMhMuc2lnbnJwYy5LZXlMb2NhdG9yEhoKEmFsbF9zaWduZXJfcHVia2V5cxgCIAMoDBIiChpvdGhlcl9zaWduZXJfcHVibGljX25vbmNlcxgDIAMoDBIiCgZ0d2Vha3MYBCADKAsyEi5zaWducnBjLlR3ZWFrRGVzYxIwCg10YXByb290X3R3ZWFrGAUgASgLMhkuc2lnbnJwYy5UYXByb290VHdlYWtEZXNjEicKB3ZlcnNpb24YBiABKA4yFi5zaWducnBjLk11U2lnMlZlcnNpb24ivgEKFU11U2lnMlNlc3Npb25SZXNwb25zZRISCgpzZXNzaW9uX2lkGAEgASgMEhQKDGNvbWJpbmVkX2tleRgCIAEoDBIcChR0YXByb290X2ludGVybmFsX2tleRgDIAEoDBIbChNsb2NhbF9wdWJsaWNfbm9uY2VzGAQgASgMEhcKD2hhdmVfYWxsX25vbmNlcxgFIAEoCBInCgd2ZXJzaW9uGAYgASgOMhYuc2lnbnJwYy5NdVNpZzJWZXJzaW9uIlUKG011U2lnMlJlZ2lzdGVyTm9uY2VzUmVxdWVzdBISCgpzZXNzaW9uX2lkGAEgASgMEiIKGm90aGVyX3NpZ25lcl9wdWJsaWNfbm9uY2VzGAMgAygMIjcKHE11U2lnMlJlZ2lzdGVyTm9uY2VzUmVzcG9uc2USFwoPaGF2ZV9hbGxfbm9uY2VzGAEgASgIIlAKEU11U2lnMlNpZ25SZXF1ZXN0EhIKCnNlc3Npb25faWQYASABKAwSFgoObWVzc2FnZV9kaWdlc3QYAiABKAwSDwoHY2xlYW51cBgDIAEoCCI1ChJNdVNpZzJTaWduUmVzcG9uc2USHwoXbG9jYWxfcGFydGlhbF9zaWduYXR1cmUYASABKAwiTwoXTXVTaWcyQ29tYmluZVNpZ1JlcXVlc3QSEgoKc2Vzc2lvbl9pZBgBIAEoDBIgChhvdGhlcl9wYXJ0aWFsX3NpZ25hdHVyZXMYAiADKAwiUAoYTXVTaWcyQ29tYmluZVNpZ1Jlc3BvbnNlEhsKE2hhdmVfYWxsX3NpZ25hdHVyZXMYASABKAgSFwoPZmluYWxfc2lnbmF0dXJlGAIgASgMIioKFE11U2lnMkNsZWFudXBSZXF1ZXN0EhIKCnNlc3Npb25faWQYASABKAwiFwoVTXVTaWcyQ2xlYW51cFJlc3BvbnNlKpwBCgpTaWduTWV0aG9kEhoKFlNJR05fTUVUSE9EX1dJVE5FU1NfVjAQABIpCiVTSUdOX01FVEhPRF9UQVBST09UX0tFWV9TUEVORF9CSVAwMDg2EAESIQodU0lHTl9NRVRIT0RfVEFQUk9PVF9LRVlfU1BFTkQQAhIkCiBTSUdOX01FVEhPRF9UQVBST09UX1NDUklQVF9TUEVORBADKmIKDU11U2lnMlZlcnNpb24SHAoYTVVTSUcyX1ZFUlNJT05fVU5ERUZJTkVEEAASFwoTTVVTSUcyX1ZFUlNJT05fVjA0MBABEhoKFk1VU0lHMl9WRVJTSU9OX1YxMDBSQzIQAjLbBgoGU2lnbmVyEjQKDVNpZ25PdXRwdXRSYXcSEC5zaWducnBjLlNpZ25SZXEaES5zaWducnBjLlNpZ25SZXNwEkAKEkNvbXB1dGVJbnB1dFNjcmlwdBIQLnNpZ25ycGMuU2lnblJlcRoYLnNpZ25ycGMuSW5wdXRTY3JpcHRSZXNwEkAKC1NpZ25NZXNzYWdlEhcuc2lnbnJwYy5TaWduTWVzc2FnZVJlcRoYLnNpZ25ycGMuU2lnbk1lc3NhZ2VSZXNwEkYKDVZlcmlmeU1lc3NhZ2USGS5zaWducnBjLlZlcmlmeU1lc3NhZ2VSZXEaGi5zaWducnBjLlZlcmlmeU1lc3NhZ2VSZXNwEkgKD0Rlcml2ZVNoYXJlZEtleRIZLnNpZ25ycGMuU2hhcmVkS2V5UmVxdWVzdBoaLnNpZ25ycGMuU2hhcmVkS2V5UmVzcG9uc2USWgoRTXVTaWcyQ29tYmluZUtleXMSIS5zaWducnBjLk11U2lnMkNvbWJpbmVLZXlzUmVxdWVzdBoiLnNpZ25ycGMuTXVTaWcyQ29tYmluZUtleXNSZXNwb25zZRJUChNNdVNpZzJDcmVhdGVTZXNzaW9uEh0uc2lnbnJwYy5NdVNpZzJTZXNzaW9uUmVxdWVzdBoeLnNpZ25ycGMuTXVTaWcyU2Vzc2lvblJlc3BvbnNlEmMKFE11U2lnMlJlZ2lzdGVyTm9uY2VzEiQuc2lnbnJwYy5NdVNpZzJSZWdpc3Rlck5vbmNlc1JlcXVlc3QaJS5zaWducnBjLk11U2lnMlJlZ2lzdGVyTm9uY2VzUmVzcG9uc2USRQoKTXVTaWcyU2lnbhIaLnNpZ25ycGMuTXVTaWcyU2lnblJlcXVlc3QaGy5zaWducnBjLk11U2lnMlNpZ25SZXNwb25zZRJXChBNdVNpZzJDb21iaW5lU2lnEiAuc2lnbnJwYy5NdVNpZzJDb21iaW5lU2lnUmVxdWVzdBohLnNpZ25ycGMuTXVTaWcyQ29tYmluZVNpZ1Jlc3BvbnNlEk4KDU11U2lnMkNsZWFudXASHS5zaWducnBjLk11U2lnMkNsZWFudXBSZXF1ZXN0Gh4uc2lnbnJwYy5NdVNpZzJDbGVhbnVwUmVzcG9uc2VCL1otZ2l0aHViLmNvbS9saWdodG5pbmduZXR3b3JrL2xuZC9sbnJwYy9zaWducnBjYgZwcm90bzM");
+  fileDesc("ChRzaWducnBjL3NpZ25lci5wcm90bxIHc2lnbnJwYyIzCgpLZXlMb2NhdG9yEhIKCmtleV9mYW1pbHkYASABKAUSEQoJa2V5X2luZGV4GAIgASgFIkwKDUtleURlc2NyaXB0b3ISFQoNcmF3X2tleV9ieXRlcxgBIAEoDBIkCgdrZXlfbG9jGAIgASgLMhMuc2lnbnJwYy5LZXlMb2NhdG9yIikKBVR4T3V0Eg0KBXZhbHVlGAEgASgDEhEKCXBrX3NjcmlwdBgCIAEoDCKBAgoOU2lnbkRlc2NyaXB0b3ISKAoIa2V5X2Rlc2MYASABKAsyFi5zaWducnBjLktleURlc2NyaXB0b3ISFAoMc2luZ2xlX3R3ZWFrGAIgASgMEhQKDGRvdWJsZV90d2VhaxgDIAEoDBIRCgl0YXBfdHdlYWsYCiABKAwSFgoOd2l0bmVzc19zY3JpcHQYBCABKAwSHgoGb3V0cHV0GAUgASgLMg4uc2lnbnJwYy5UeE91dBIPCgdzaWdoYXNoGAcgASgNEhMKC2lucHV0X2luZGV4GAggASgFEigKC3NpZ25fbWV0aG9kGAkgASgOMhMuc2lnbnJwYy5TaWduTWV0aG9kInIKB1NpZ25SZXESFAoMcmF3X3R4X2J5dGVzGAEgASgMEisKCnNpZ25fZGVzY3MYAiADKAsyFy5zaWducnBjLlNpZ25EZXNjcmlwdG9yEiQKDHByZXZfb3V0cHV0cxgDIAMoCzIOLnNpZ25ycGMuVHhPdXQiHAoIU2lnblJlc3ASEAoIcmF3X3NpZ3MYASADKAwiMgoLSW5wdXRTY3JpcHQSDwoHd2l0bmVzcxgBIAMoDBISCgpzaWdfc2NyaXB0GAIgASgMIj4KD0lucHV0U2NyaXB0UmVzcBIrCg1pbnB1dF9zY3JpcHRzGAEgAygLMhQuc2lnbnJwYy5JbnB1dFNjcmlwdCKuAQoOU2lnbk1lc3NhZ2VSZXESCwoDbXNnGAEgASgMEiQKB2tleV9sb2MYAiABKAsyEy5zaWducnBjLktleUxvY2F0b3ISEwoLZG91YmxlX2hhc2gYAyABKAgSEwoLY29tcGFjdF9zaWcYBCABKAgSEwoLc2Nobm9ycl9zaWcYBSABKAgSHQoVc2Nobm9ycl9zaWdfdGFwX3R3ZWFrGAYgASgMEgsKA3RhZxgHIAEoDCIkCg9TaWduTWVzc2FnZVJlc3ASEQoJc2lnbmF0dXJlGAEgASgMImcKEFZlcmlmeU1lc3NhZ2VSZXESCwoDbXNnGAEgASgMEhEKCXNpZ25hdHVyZRgCIAEoDBIOCgZwdWJrZXkYAyABKAwSFgoOaXNfc2Nobm9ycl9zaWcYBCABKAgSCwoDdGFnGAUgASgMIiIKEVZlcmlmeU1lc3NhZ2VSZXNwEg0KBXZhbGlkGAEgASgIIoABChBTaGFyZWRLZXlSZXF1ZXN0EhgKEGVwaGVtZXJhbF9wdWJrZXkYASABKAwSKAoHa2V5X2xvYxgCIAEoCzITLnNpZ25ycGMuS2V5TG9jYXRvckICGAESKAoIa2V5X2Rlc2MYAyABKAsyFi5zaWducnBjLktleURlc2NyaXB0b3IiJwoRU2hhcmVkS2V5UmVzcG9uc2USEgoKc2hhcmVkX2tleRgBIAEoDCItCglUd2Vha0Rlc2MSDQoFdHdlYWsYASABKAwSEQoJaXNfeF9vbmx5GAIgASgIIj8KEFRhcHJvb3RUd2Vha0Rlc2MSEwoLc2NyaXB0X3Jvb3QYASABKAwSFgoOa2V5X3NwZW5kX29ubHkYAiABKAgitQEKGE11U2lnMkNvbWJpbmVLZXlzUmVxdWVzdBIaChJhbGxfc2lnbmVyX3B1YmtleXMYASADKAwSIgoGdHdlYWtzGAIgAygLMhIuc2lnbnJwYy5Ud2Vha0Rlc2MSMAoNdGFwcm9vdF90d2VhaxgDIAEoCzIZLnNpZ25ycGMuVGFwcm9vdFR3ZWFrRGVzYxInCgd2ZXJzaW9uGAQgASgOMhYuc2lnbnJwYy5NdVNpZzJWZXJzaW9uIngKGU11U2lnMkNvbWJpbmVLZXlzUmVzcG9uc2USFAoMY29tYmluZWRfa2V5GAEgASgMEhwKFHRhcHJvb3RfaW50ZXJuYWxfa2V5GAIgASgMEicKB3ZlcnNpb24YBCABKA4yFi5zaWducnBjLk11U2lnMlZlcnNpb24inQIKFE11U2lnMlNlc3Npb25SZXF1ZXN0EiQKB2tleV9sb2MYASABKAsyEy5zaWducnBjLktleUxvY2F0b3ISGgoSYWxsX3NpZ25lcl9wdWJrZXlzGAIgAygMEiIKGm90aGVyX3NpZ25lcl9wdWJsaWNfbm9uY2VzGAMgAygMEiIKBnR3ZWFrcxgEIAMoCzISLnNpZ25ycGMuVHdlYWtEZXNjEjAKDXRhcHJvb3RfdHdlYWsYBSABKAsyGS5zaWducnBjLlRhcHJvb3RUd2Vha0Rlc2MSJwoHdmVyc2lvbhgGIAEoDjIWLnNpZ25ycGMuTXVTaWcyVmVyc2lvbhIgChhwcmVnZW5lcmF0ZWRfbG9jYWxfbm9uY2UYByABKAwivgEKFU11U2lnMlNlc3Npb25SZXNwb25zZRISCgpzZXNzaW9uX2lkGAEgASgMEhQKDGNvbWJpbmVkX2tleRgCIAEoDBIcChR0YXByb290X2ludGVybmFsX2tleRgDIAEoDBIbChNsb2NhbF9wdWJsaWNfbm9uY2VzGAQgASgMEhcKD2hhdmVfYWxsX25vbmNlcxgFIAEoCBInCgd2ZXJzaW9uGAYgASgOMhYuc2lnbnJwYy5NdVNpZzJWZXJzaW9uIlUKG011U2lnMlJlZ2lzdGVyTm9uY2VzUmVxdWVzdBISCgpzZXNzaW9uX2lkGAEgASgMEiIKGm90aGVyX3NpZ25lcl9wdWJsaWNfbm9uY2VzGAMgAygMIjcKHE11U2lnMlJlZ2lzdGVyTm9uY2VzUmVzcG9uc2USFwoPaGF2ZV9hbGxfbm9uY2VzGAEgASgIIlAKEU11U2lnMlNpZ25SZXF1ZXN0EhIKCnNlc3Npb25faWQYASABKAwSFgoObWVzc2FnZV9kaWdlc3QYAiABKAwSDwoHY2xlYW51cBgDIAEoCCI1ChJNdVNpZzJTaWduUmVzcG9uc2USHwoXbG9jYWxfcGFydGlhbF9zaWduYXR1cmUYASABKAwiTwoXTXVTaWcyQ29tYmluZVNpZ1JlcXVlc3QSEgoKc2Vzc2lvbl9pZBgBIAEoDBIgChhvdGhlcl9wYXJ0aWFsX3NpZ25hdHVyZXMYAiADKAwiUAoYTXVTaWcyQ29tYmluZVNpZ1Jlc3BvbnNlEhsKE2hhdmVfYWxsX3NpZ25hdHVyZXMYASABKAgSFwoPZmluYWxfc2lnbmF0dXJlGAIgASgMIioKFE11U2lnMkNsZWFudXBSZXF1ZXN0EhIKCnNlc3Npb25faWQYASABKAwiFwoVTXVTaWcyQ2xlYW51cFJlc3BvbnNlKpwBCgpTaWduTWV0aG9kEhoKFlNJR05fTUVUSE9EX1dJVE5FU1NfVjAQABIpCiVTSUdOX01FVEhPRF9UQVBST09UX0tFWV9TUEVORF9CSVAwMDg2EAESIQodU0lHTl9NRVRIT0RfVEFQUk9PVF9LRVlfU1BFTkQQAhIkCiBTSUdOX01FVEhPRF9UQVBST09UX1NDUklQVF9TUEVORBADKmIKDU11U2lnMlZlcnNpb24SHAoYTVVTSUcyX1ZFUlNJT05fVU5ERUZJTkVEEAASFwoTTVVTSUcyX1ZFUlNJT05fVjA0MBABEhoKFk1VU0lHMl9WRVJTSU9OX1YxMDBSQzIQAjLbBgoGU2lnbmVyEjQKDVNpZ25PdXRwdXRSYXcSEC5zaWducnBjLlNpZ25SZXEaES5zaWducnBjLlNpZ25SZXNwEkAKEkNvbXB1dGVJbnB1dFNjcmlwdBIQLnNpZ25ycGMuU2lnblJlcRoYLnNpZ25ycGMuSW5wdXRTY3JpcHRSZXNwEkAKC1NpZ25NZXNzYWdlEhcuc2lnbnJwYy5TaWduTWVzc2FnZVJlcRoYLnNpZ25ycGMuU2lnbk1lc3NhZ2VSZXNwEkYKDVZlcmlmeU1lc3NhZ2USGS5zaWducnBjLlZlcmlmeU1lc3NhZ2VSZXEaGi5zaWducnBjLlZlcmlmeU1lc3NhZ2VSZXNwEkgKD0Rlcml2ZVNoYXJlZEtleRIZLnNpZ25ycGMuU2hhcmVkS2V5UmVxdWVzdBoaLnNpZ25ycGMuU2hhcmVkS2V5UmVzcG9uc2USWgoRTXVTaWcyQ29tYmluZUtleXMSIS5zaWducnBjLk11U2lnMkNvbWJpbmVLZXlzUmVxdWVzdBoiLnNpZ25ycGMuTXVTaWcyQ29tYmluZUtleXNSZXNwb25zZRJUChNNdVNpZzJDcmVhdGVTZXNzaW9uEh0uc2lnbnJwYy5NdVNpZzJTZXNzaW9uUmVxdWVzdBoeLnNpZ25ycGMuTXVTaWcyU2Vzc2lvblJlc3BvbnNlEmMKFE11U2lnMlJlZ2lzdGVyTm9uY2VzEiQuc2lnbnJwYy5NdVNpZzJSZWdpc3Rlck5vbmNlc1JlcXVlc3QaJS5zaWducnBjLk11U2lnMlJlZ2lzdGVyTm9uY2VzUmVzcG9uc2USRQoKTXVTaWcyU2lnbhIaLnNpZ25ycGMuTXVTaWcyU2lnblJlcXVlc3QaGy5zaWducnBjLk11U2lnMlNpZ25SZXNwb25zZRJXChBNdVNpZzJDb21iaW5lU2lnEiAuc2lnbnJwYy5NdVNpZzJDb21iaW5lU2lnUmVxdWVzdBohLnNpZ25ycGMuTXVTaWcyQ29tYmluZVNpZ1Jlc3BvbnNlEk4KDU11U2lnMkNsZWFudXASHS5zaWducnBjLk11U2lnMkNsZWFudXBSZXF1ZXN0Gh4uc2lnbnJwYy5NdVNpZzJDbGVhbnVwUmVzcG9uc2VCL1otZ2l0aHViLmNvbS9saWdodG5pbmduZXR3b3JrL2xuZC9sbnJwYy9zaWducnBjYgZwcm90bzM");
 
 /**
  * @generated from message signrpc.KeyLocator
@@ -43,7 +43,7 @@ export const KeyLocatorSchema: GenMessage<KeyLocator> = /*@__PURE__*/
  */
 export type KeyDescriptor = Message<"signrpc.KeyDescriptor"> & {
   /**
-   * 
+   *
    * The raw bytes of the public key in the key pair being identified. Either
    * this or the KeyLocator must be specified.
    *
@@ -52,7 +52,7 @@ export type KeyDescriptor = Message<"signrpc.KeyDescriptor"> & {
   rawKeyBytes: Uint8Array;
 
   /**
-   * 
+   *
    * The key locator that identifies which private key to use for signing.
    * Either this or the raw bytes of the target public key must be specified.
    *
@@ -99,11 +99,11 @@ export const TxOutSchema: GenMessage<TxOut> = /*@__PURE__*/
  */
 export type SignDescriptor = Message<"signrpc.SignDescriptor"> & {
   /**
-   * 
+   *
    * A descriptor that precisely describes *which* key to use for signing. This
    * may provide the raw public key directly, or require the Signer to re-derive
    * the key according to the populated derivation path.
-   * 
+   *
    * Note that if the key descriptor was obtained through walletrpc.DeriveKey,
    * then the key locator MUST always be provided, since the derived keys are not
    * persisted unlike with DeriveNextKey.
@@ -113,11 +113,11 @@ export type SignDescriptor = Message<"signrpc.SignDescriptor"> & {
   keyDesc?: KeyDescriptor;
 
   /**
-   * 
+   *
    * A scalar value that will be added to the private key corresponding to the
    * above public key to obtain the private key to be used to sign this input.
    * This value is typically derived via the following computation:
-   * 
+   *
    * derivedKey = privkey + sha256(perCommitmentPoint || pubKey) mod N
    *
    * @generated from field: bytes single_tweak = 2;
@@ -125,14 +125,14 @@ export type SignDescriptor = Message<"signrpc.SignDescriptor"> & {
   singleTweak: Uint8Array;
 
   /**
-   * 
+   *
    * A private key that will be used in combination with its corresponding
    * private key to derive the private key that is to be used to sign the target
    * input. Within the Lightning protocol, this value is typically the
    * commitment secret from a previously revoked commitment transaction. This
    * value is in combination with two hash values, and the original private key
    * to derive the private key to be used when signing.
-   * 
+   *
    * k = (privKey*sha256(pubKey || tweakPub) +
    * tweakPriv*sha256(tweakPub || pubKey)) mod N
    *
@@ -141,13 +141,13 @@ export type SignDescriptor = Message<"signrpc.SignDescriptor"> & {
   doubleTweak: Uint8Array;
 
   /**
-   * 
+   *
    * The 32 byte input to the taproot tweak derivation that is used to derive
    * the output key from an internal key: outputKey = internalKey +
    * tagged_hash("tapTweak", internalKey || tapTweak).
-   * 
+   *
    * When doing a BIP 86 spend, this field can be an empty byte slice.
-   * 
+   *
    * When doing a normal key path spend, with the output key committing to an
    * actual script root, then this field should be: the tapscript root hash.
    *
@@ -156,7 +156,7 @@ export type SignDescriptor = Message<"signrpc.SignDescriptor"> & {
   tapTweak: Uint8Array;
 
   /**
-   * 
+   *
    * The full script required to properly redeem the output. This field will
    * only be populated if a p2tr, p2wsh or a p2sh output is being signed. If a
    * taproot script path spend is being attempted, then this should be the raw
@@ -167,7 +167,7 @@ export type SignDescriptor = Message<"signrpc.SignDescriptor"> & {
   witnessScript: Uint8Array;
 
   /**
-   * 
+   *
    * A description of the output being spent. The value and script MUST be
    * provided.
    *
@@ -176,7 +176,7 @@ export type SignDescriptor = Message<"signrpc.SignDescriptor"> & {
   output?: TxOut;
 
   /**
-   * 
+   *
    * The target sighash type that should be used when generating the final
    * sighash, and signature.
    *
@@ -185,7 +185,7 @@ export type SignDescriptor = Message<"signrpc.SignDescriptor"> & {
   sighash: number;
 
   /**
-   * 
+   *
    * The target input within the transaction that should be signed.
    *
    * @generated from field: int32 input_index = 8;
@@ -193,7 +193,7 @@ export type SignDescriptor = Message<"signrpc.SignDescriptor"> & {
   inputIndex: number;
 
   /**
-   * 
+   *
    * The sign method specifies how the input should be signed. Depending on the
    * method, either the tap_tweak, witness_script or both need to be specified.
    * Defaults to SegWit v0 signing to be backward compatible with older RPC
@@ -230,7 +230,7 @@ export type SignReq = Message<"signrpc.SignReq"> & {
   signDescs: SignDescriptor[];
 
   /**
-   * 
+   *
    * The full list of UTXO information for each of the inputs being spent. This
    * is required when spending one or more taproot (SegWit v1) outputs.
    *
@@ -251,7 +251,7 @@ export const SignReqSchema: GenMessage<SignReq> = /*@__PURE__*/
  */
 export type SignResp = Message<"signrpc.SignResp"> & {
   /**
-   * 
+   *
    * A set of signatures realized in a fixed 64-byte format ordered in ascending
    * input order.
    *
@@ -279,7 +279,7 @@ export type InputScript = Message<"signrpc.InputScript"> & {
   witness: Uint8Array[];
 
   /**
-   * 
+   *
    * The optional sig script for the specified witness that will only be set if
    * the input specified is a nested p2sh witness program.
    *
@@ -319,7 +319,7 @@ export const InputScriptRespSchema: GenMessage<InputScriptResp> = /*@__PURE__*/
  */
 export type SignMessageReq = Message<"signrpc.SignMessageReq"> & {
   /**
-   * 
+   *
    * The message to be signed. When using REST, this field must be encoded as
    * base64.
    *
@@ -342,7 +342,7 @@ export type SignMessageReq = Message<"signrpc.SignMessageReq"> & {
   doubleHash: boolean;
 
   /**
-   * 
+   *
    * Use the compact (pubkey recoverable) format instead of the raw lnwire
    * format. This option cannot be used with Schnorr signatures.
    *
@@ -351,7 +351,7 @@ export type SignMessageReq = Message<"signrpc.SignMessageReq"> & {
   compactSig: boolean;
 
   /**
-   * 
+   *
    * Use Schnorr signature. This option cannot be used with compact format.
    *
    * @generated from field: bool schnorr_sig = 5;
@@ -359,7 +359,7 @@ export type SignMessageReq = Message<"signrpc.SignMessageReq"> & {
   schnorrSig: boolean;
 
   /**
-   * 
+   *
    * The optional Taproot tweak bytes to apply to the private key before creating
    * a Schnorr signature. The private key is tweaked as described in BIP-341:
    * privKey + h_tapTweak(internalKey || tapTweak)
@@ -367,6 +367,15 @@ export type SignMessageReq = Message<"signrpc.SignMessageReq"> & {
    * @generated from field: bytes schnorr_sig_tap_tweak = 6;
    */
   schnorrSigTapTweak: Uint8Array;
+
+  /**
+   *
+   * An optional tag that can be provided when taking a tagged hash of a
+   * message. This option can only be used when schnorr_sig is true.
+   *
+   * @generated from field: bytes tag = 7;
+   */
+  tag: Uint8Array;
 };
 
 /**
@@ -381,7 +390,7 @@ export const SignMessageReqSchema: GenMessage<SignMessageReq> = /*@__PURE__*/
  */
 export type SignMessageResp = Message<"signrpc.SignMessageResp"> & {
   /**
-   * 
+   *
    * The signature for the given message in the fixed-size LN wire format.
    *
    * @generated from field: bytes signature = 1;
@@ -409,7 +418,7 @@ export type VerifyMessageReq = Message<"signrpc.VerifyMessageReq"> & {
   msg: Uint8Array;
 
   /**
-   * 
+   *
    * The fixed-size LN wire encoded signature to be verified over the given
    * message. When using REST, this field must be encoded as base64.
    *
@@ -418,7 +427,7 @@ export type VerifyMessageReq = Message<"signrpc.VerifyMessageReq"> & {
   signature: Uint8Array;
 
   /**
-   * 
+   *
    * The public key the signature has to be valid for. When using REST, this
    * field must be encoded as base64. If the is_schnorr_sig option is true, then
    * the public key is expected to be in the 32-byte x-only serialization
@@ -429,12 +438,21 @@ export type VerifyMessageReq = Message<"signrpc.VerifyMessageReq"> & {
   pubkey: Uint8Array;
 
   /**
-   * 
+   *
    * Specifies if the signature is a Schnorr signature.
    *
    * @generated from field: bool is_schnorr_sig = 4;
    */
   isSchnorrSig: boolean;
+
+  /**
+   *
+   * An optional tag that can be provided when taking a tagged hash of a
+   * message. This option can only be used when is_schnorr_sig is true.
+   *
+   * @generated from field: bytes tag = 5;
+   */
+  tag: Uint8Array;
 };
 
 /**
@@ -475,7 +493,7 @@ export type SharedKeyRequest = Message<"signrpc.SharedKeyRequest"> & {
   ephemeralPubkey: Uint8Array;
 
   /**
-   * 
+   *
    * Deprecated. The optional key locator of the local key that should be used.
    * If this parameter is not set then the node's identity private key will be
    * used.
@@ -486,7 +504,7 @@ export type SharedKeyRequest = Message<"signrpc.SharedKeyRequest"> & {
   keyLoc?: KeyLocator;
 
   /**
-   * 
+   *
    * A key descriptor describes the key used for performing ECDH. Either a key
    * locator or a raw public key is expected, if neither is supplied, defaults to
    * the node's identity private key.
@@ -527,7 +545,7 @@ export const SharedKeyResponseSchema: GenMessage<SharedKeyResponse> = /*@__PURE_
  */
 export type TweakDesc = Message<"signrpc.TweakDesc"> & {
   /**
-   * 
+   *
    * Tweak is the 32-byte value that will modify the public key.
    *
    * @generated from field: bytes tweak = 1;
@@ -535,7 +553,7 @@ export type TweakDesc = Message<"signrpc.TweakDesc"> & {
   tweak: Uint8Array;
 
   /**
-   * 
+   *
    * Specifies if the target key should be converted to an x-only public key
    * before tweaking. If true, then the public key will be mapped to an x-only
    * key before the tweaking operation is applied.
@@ -557,7 +575,7 @@ export const TweakDescSchema: GenMessage<TweakDesc> = /*@__PURE__*/
  */
 export type TaprootTweakDesc = Message<"signrpc.TaprootTweakDesc"> & {
   /**
-   * 
+   *
    * The root hash of the tapscript tree if a script path is committed to. If
    * the MuSig2 key put on chain doesn't also commit to a script path (BIP-0086
    * key spend only), then this needs to be empty and the key_spend_only field
@@ -570,7 +588,7 @@ export type TaprootTweakDesc = Message<"signrpc.TaprootTweakDesc"> & {
   scriptRoot: Uint8Array;
 
   /**
-   * 
+   *
    * Indicates that the above script_root is expected to be empty because this
    * is a BIP-0086 key spend only commitment where only the internal key is
    * committed to instead of also including a script root hash.
@@ -592,7 +610,7 @@ export const TaprootTweakDescSchema: GenMessage<TaprootTweakDesc> = /*@__PURE__*
  */
 export type MuSig2CombineKeysRequest = Message<"signrpc.MuSig2CombineKeysRequest"> & {
   /**
-   * 
+   *
    * A list of all public keys (serialized in 32-byte x-only format for v0.4.0
    * and 33-byte compressed format for v1.0.0rc2!) participating in the signing
    * session. The list will always be sorted lexicographically internally. This
@@ -603,8 +621,8 @@ export type MuSig2CombineKeysRequest = Message<"signrpc.MuSig2CombineKeysRequest
   allSignerPubkeys: Uint8Array[];
 
   /**
-   * 
-   * A series of optional generic tweaks to be applied to the the aggregated
+   *
+   * A series of optional generic tweaks to be applied to the aggregated
    * public key.
    *
    * @generated from field: repeated signrpc.TweakDesc tweaks = 2;
@@ -612,7 +630,7 @@ export type MuSig2CombineKeysRequest = Message<"signrpc.MuSig2CombineKeysRequest
   tweaks: TweakDesc[];
 
   /**
-   * 
+   *
    * An optional taproot specific tweak that must be specified if the MuSig2
    * combined key will be used as the main taproot key of a taproot output
    * on-chain.
@@ -622,7 +640,7 @@ export type MuSig2CombineKeysRequest = Message<"signrpc.MuSig2CombineKeysRequest
   taprootTweak?: TaprootTweakDesc;
 
   /**
-   * 
+   *
    * The mandatory version of the MuSig2 BIP draft to use. This is necessary to
    * differentiate between the changes that were made to the BIP while this
    * experimental RPC was already released. Some of those changes affect how the
@@ -645,7 +663,7 @@ export const MuSig2CombineKeysRequestSchema: GenMessage<MuSig2CombineKeysRequest
  */
 export type MuSig2CombineKeysResponse = Message<"signrpc.MuSig2CombineKeysResponse"> & {
   /**
-   * 
+   *
    * The combined public key (in the 32-byte x-only format) with all tweaks
    * applied to it. If a taproot tweak is specified, this corresponds to the
    * taproot key that can be put into the on-chain output.
@@ -655,7 +673,7 @@ export type MuSig2CombineKeysResponse = Message<"signrpc.MuSig2CombineKeysRespon
   combinedKey: Uint8Array;
 
   /**
-   * 
+   *
    * The raw combined public key (in the 32-byte x-only format) before any tweaks
    * are applied to it. If a taproot tweak is specified, this corresponds to the
    * internal key that needs to be put into the witness if the script spend path
@@ -666,7 +684,7 @@ export type MuSig2CombineKeysResponse = Message<"signrpc.MuSig2CombineKeysRespon
   taprootInternalKey: Uint8Array;
 
   /**
-   * 
+   *
    * The version of the MuSig2 BIP that was used to combine the keys.
    *
    * @generated from field: signrpc.MuSig2Version version = 4;
@@ -686,7 +704,7 @@ export const MuSig2CombineKeysResponseSchema: GenMessage<MuSig2CombineKeysRespon
  */
 export type MuSig2SessionRequest = Message<"signrpc.MuSig2SessionRequest"> & {
   /**
-   * 
+   *
    * The key locator that identifies which key to use for signing.
    *
    * @generated from field: signrpc.KeyLocator key_loc = 1;
@@ -694,7 +712,7 @@ export type MuSig2SessionRequest = Message<"signrpc.MuSig2SessionRequest"> & {
   keyLoc?: KeyLocator;
 
   /**
-   * 
+   *
    * A list of all public keys (serialized in 32-byte x-only format for v0.4.0
    * and 33-byte compressed format for v1.0.0rc2!) participating in the signing
    * session. The list will always be sorted lexicographically internally. This
@@ -705,7 +723,7 @@ export type MuSig2SessionRequest = Message<"signrpc.MuSig2SessionRequest"> & {
   allSignerPubkeys: Uint8Array[];
 
   /**
-   * 
+   *
    * An optional list of all public nonces of other signing participants that
    * might already be known.
    *
@@ -714,8 +732,8 @@ export type MuSig2SessionRequest = Message<"signrpc.MuSig2SessionRequest"> & {
   otherSignerPublicNonces: Uint8Array[];
 
   /**
-   * 
-   * A series of optional generic tweaks to be applied to the the aggregated
+   *
+   * A series of optional generic tweaks to be applied to the aggregated
    * public key.
    *
    * @generated from field: repeated signrpc.TweakDesc tweaks = 4;
@@ -723,7 +741,7 @@ export type MuSig2SessionRequest = Message<"signrpc.MuSig2SessionRequest"> & {
   tweaks: TweakDesc[];
 
   /**
-   * 
+   *
    * An optional taproot specific tweak that must be specified if the MuSig2
    * combined key will be used as the main taproot key of a taproot output
    * on-chain.
@@ -733,7 +751,7 @@ export type MuSig2SessionRequest = Message<"signrpc.MuSig2SessionRequest"> & {
   taprootTweak?: TaprootTweakDesc;
 
   /**
-   * 
+   *
    * The mandatory version of the MuSig2 BIP draft to use. This is necessary to
    * differentiate between the changes that were made to the BIP while this
    * experimental RPC was already released. Some of those changes affect how the
@@ -742,6 +760,19 @@ export type MuSig2SessionRequest = Message<"signrpc.MuSig2SessionRequest"> & {
    * @generated from field: signrpc.MuSig2Version version = 6;
    */
   version: MuSig2Version;
+
+  /**
+   *
+   * A set of pre generated secret local nonces to use in the musig2 session.
+   * This field is optional. This can be useful for protocols that need to send
+   * nonces ahead of time before the set of signer keys are known. This value
+   * MUST be 97 bytes and be the concatenation of two CSPRNG generated 32 byte
+   * values and local public key used for signing as specified in the key_loc
+   * field.
+   *
+   * @generated from field: bytes pregenerated_local_nonce = 7;
+   */
+  pregeneratedLocalNonce: Uint8Array;
 };
 
 /**
@@ -756,7 +787,7 @@ export const MuSig2SessionRequestSchema: GenMessage<MuSig2SessionRequest> = /*@_
  */
 export type MuSig2SessionResponse = Message<"signrpc.MuSig2SessionResponse"> & {
   /**
-   * 
+   *
    * The unique ID that represents this signing session. A session can be used
    * for producing a signature a single time. If the signing fails for any
    * reason, a new session with the same participants needs to be created.
@@ -766,7 +797,7 @@ export type MuSig2SessionResponse = Message<"signrpc.MuSig2SessionResponse"> & {
   sessionId: Uint8Array;
 
   /**
-   * 
+   *
    * The combined public key (in the 32-byte x-only format) with all tweaks
    * applied to it. If a taproot tweak is specified, this corresponds to the
    * taproot key that can be put into the on-chain output.
@@ -776,7 +807,7 @@ export type MuSig2SessionResponse = Message<"signrpc.MuSig2SessionResponse"> & {
   combinedKey: Uint8Array;
 
   /**
-   * 
+   *
    * The raw combined public key (in the 32-byte x-only format) before any tweaks
    * are applied to it. If a taproot tweak is specified, this corresponds to the
    * internal key that needs to be put into the witness if the script spend path
@@ -787,7 +818,7 @@ export type MuSig2SessionResponse = Message<"signrpc.MuSig2SessionResponse"> & {
   taprootInternalKey: Uint8Array;
 
   /**
-   * 
+   *
    * The two public nonces the local signer uses, combined into a single value
    * of 66 bytes. Can be split into the two 33-byte points to get the individual
    * nonces.
@@ -797,7 +828,7 @@ export type MuSig2SessionResponse = Message<"signrpc.MuSig2SessionResponse"> & {
   localPublicNonces: Uint8Array;
 
   /**
-   * 
+   *
    * Indicates whether all nonces required to start the signing process are known
    * now.
    *
@@ -806,7 +837,7 @@ export type MuSig2SessionResponse = Message<"signrpc.MuSig2SessionResponse"> & {
   haveAllNonces: boolean;
 
   /**
-   * 
+   *
    * The version of the MuSig2 BIP that was used to create the session.
    *
    * @generated from field: signrpc.MuSig2Version version = 6;
@@ -826,7 +857,7 @@ export const MuSig2SessionResponseSchema: GenMessage<MuSig2SessionResponse> = /*
  */
 export type MuSig2RegisterNoncesRequest = Message<"signrpc.MuSig2RegisterNoncesRequest"> & {
   /**
-   * 
+   *
    * The unique ID of the signing session those nonces should be registered with.
    *
    * @generated from field: bytes session_id = 1;
@@ -834,7 +865,7 @@ export type MuSig2RegisterNoncesRequest = Message<"signrpc.MuSig2RegisterNoncesR
   sessionId: Uint8Array;
 
   /**
-   * 
+   *
    * A list of all public nonces of other signing participants that should be
    * registered.
    *
@@ -855,7 +886,7 @@ export const MuSig2RegisterNoncesRequestSchema: GenMessage<MuSig2RegisterNoncesR
  */
 export type MuSig2RegisterNoncesResponse = Message<"signrpc.MuSig2RegisterNoncesResponse"> & {
   /**
-   * 
+   *
    * Indicates whether all nonces required to start the signing process are known
    * now.
    *
@@ -876,7 +907,7 @@ export const MuSig2RegisterNoncesResponseSchema: GenMessage<MuSig2RegisterNonces
  */
 export type MuSig2SignRequest = Message<"signrpc.MuSig2SignRequest"> & {
   /**
-   * 
+   *
    * The unique ID of the signing session to use for signing.
    *
    * @generated from field: bytes session_id = 1;
@@ -884,7 +915,7 @@ export type MuSig2SignRequest = Message<"signrpc.MuSig2SignRequest"> & {
   sessionId: Uint8Array;
 
   /**
-   * 
+   *
    * The 32-byte SHA256 digest of the message to sign.
    *
    * @generated from field: bytes message_digest = 2;
@@ -892,7 +923,7 @@ export type MuSig2SignRequest = Message<"signrpc.MuSig2SignRequest"> & {
   messageDigest: Uint8Array;
 
   /**
-   * 
+   *
    * Cleanup indicates that after signing, the session state can be cleaned up,
    * since another participant is going to be responsible for combining the
    * partial signatures.
@@ -914,7 +945,7 @@ export const MuSig2SignRequestSchema: GenMessage<MuSig2SignRequest> = /*@__PURE_
  */
 export type MuSig2SignResponse = Message<"signrpc.MuSig2SignResponse"> & {
   /**
-   * 
+   *
    * The partial signature created by the local signer.
    *
    * @generated from field: bytes local_partial_signature = 1;
@@ -934,7 +965,7 @@ export const MuSig2SignResponseSchema: GenMessage<MuSig2SignResponse> = /*@__PUR
  */
 export type MuSig2CombineSigRequest = Message<"signrpc.MuSig2CombineSigRequest"> & {
   /**
-   * 
+   *
    * The unique ID of the signing session to combine the signatures for.
    *
    * @generated from field: bytes session_id = 1;
@@ -942,7 +973,7 @@ export type MuSig2CombineSigRequest = Message<"signrpc.MuSig2CombineSigRequest">
   sessionId: Uint8Array;
 
   /**
-   * 
+   *
    * The list of all other participants' partial signatures to add to the current
    * session.
    *
@@ -963,7 +994,7 @@ export const MuSig2CombineSigRequestSchema: GenMessage<MuSig2CombineSigRequest> 
  */
 export type MuSig2CombineSigResponse = Message<"signrpc.MuSig2CombineSigResponse"> & {
   /**
-   * 
+   *
    * Indicates whether all partial signatures required to create a final, full
    * signature are known yet. If this is true, then the final_signature field is
    * set, otherwise it is empty.
@@ -973,7 +1004,7 @@ export type MuSig2CombineSigResponse = Message<"signrpc.MuSig2CombineSigResponse
   haveAllSignatures: boolean;
 
   /**
-   * 
+   *
    * The final, full signature that is valid for the combined public key.
    *
    * @generated from field: bytes final_signature = 2;
@@ -993,7 +1024,7 @@ export const MuSig2CombineSigResponseSchema: GenMessage<MuSig2CombineSigResponse
  */
 export type MuSig2CleanupRequest = Message<"signrpc.MuSig2CleanupRequest"> & {
   /**
-   * 
+   *
    * The unique ID of the signing session that should be removed/cleaned up.
    *
    * @generated from field: bytes session_id = 1;
@@ -1026,7 +1057,7 @@ export const MuSig2CleanupResponseSchema: GenMessage<MuSig2CleanupResponse> = /*
  */
 export enum SignMethod {
   /**
-   * 
+   *
    * Specifies that a SegWit v0 (p2wkh, np2wkh, p2wsh) input script should be
    * signed.
    *
@@ -1035,7 +1066,7 @@ export enum SignMethod {
   WITNESS_V0 = 0,
 
   /**
-   * 
+   *
    * Specifies that a SegWit v1 (p2tr) input should be signed by using the
    * BIP0086 method (commit to internal key only).
    *
@@ -1044,7 +1075,7 @@ export enum SignMethod {
   TAPROOT_KEY_SPEND_BIP0086 = 1,
 
   /**
-   * 
+   *
    * Specifies that a SegWit v1 (p2tr) input should be signed by using a given
    * taproot hash to commit to in addition to the internal key.
    *
@@ -1053,7 +1084,7 @@ export enum SignMethod {
   TAPROOT_KEY_SPEND = 2,
 
   /**
-   * 
+   *
    * Specifies that a SegWit v1 (p2tr) input should be spent using the script
    * path and that a specific leaf script should be signed for.
    *
@@ -1073,7 +1104,7 @@ export const SignMethodSchema: GenEnum<SignMethod> = /*@__PURE__*/
  */
 export enum MuSig2Version {
   /**
-   * 
+   *
    * The default value on the RPC is zero for enums so we need to represent an
    * invalid/undefined version by default to make sure clients upgrade their
    * software to set the version explicitly.
@@ -1083,7 +1114,7 @@ export enum MuSig2Version {
   MUSIG2_VERSION_UNDEFINED = 0,
 
   /**
-   * 
+   *
    * The version of MuSig2 that lnd 0.15.x shipped with, which corresponds to the
    * version v0.4.0 of the MuSig2 BIP draft.
    *
@@ -1092,7 +1123,7 @@ export enum MuSig2Version {
   MUSIG2_VERSION_V040 = 1,
 
   /**
-   * 
+   *
    * The current version of MuSig2 which corresponds to the version v1.0.0rc2 of
    * the MuSig2 BIP draft.
    *
@@ -1115,13 +1146,13 @@ export const MuSig2VersionSchema: GenEnum<MuSig2Version> = /*@__PURE__*/
  */
 export const Signer: GenService<{
   /**
-   * 
+   *
    * SignOutputRaw is a method that can be used to generated a signature for a
    * set of inputs/outputs to a transaction. Each request specifies details
    * concerning how the outputs should be signed, which keys they should be
    * signed with, and also any optional tweaks. The return value is a fixed
    * 64-byte signature (the same format as we use on the wire in Lightning).
-   * 
+   *
    * If we are  unable to sign using the specified keys, then an error will be
    * returned.
    *
@@ -1133,13 +1164,13 @@ export const Signer: GenService<{
     output: typeof SignRespSchema;
   },
   /**
-   * 
+   *
    * ComputeInputScript generates a complete InputIndex for the passed
    * transaction with the signature as defined within the passed SignDescriptor.
    * This method should be capable of generating the proper input script for both
    * regular p2wkh/p2tr outputs and p2wkh outputs nested within a regular p2sh
    * output.
-   * 
+   *
    * Note that when using this method to sign inputs belonging to the wallet,
    * the only items of the SignDescriptor that need to be populated are pkScript
    * in the TxOut field, the value in that same field, and finally the input
@@ -1153,10 +1184,10 @@ export const Signer: GenService<{
     output: typeof InputScriptRespSchema;
   },
   /**
-   * 
+   *
    * SignMessage signs a message with the key specified in the key locator. The
    * returned signature is fixed-size LN wire format encoded.
-   * 
+   *
    * The main difference to SignMessage in the main RPC is that a specific key is
    * used to sign the message instead of the node identity private key.
    *
@@ -1168,10 +1199,10 @@ export const Signer: GenService<{
     output: typeof SignMessageRespSchema;
   },
   /**
-   * 
+   *
    * VerifyMessage verifies a signature over a message using the public key
    * provided. The signature must be fixed-size LN wire format encoded.
-   * 
+   *
    * The main difference to VerifyMessage in the main RPC is that the public key
    * used to sign the message does not have to be a node known to the network.
    *
@@ -1183,7 +1214,7 @@ export const Signer: GenService<{
     output: typeof VerifyMessageRespSchema;
   },
   /**
-   * 
+   *
    * DeriveSharedKey returns a shared secret key by performing Diffie-Hellman key
    * derivation between the ephemeral public key in the request and the node's
    * key specified in the key_desc parameter. Either a key locator or a raw
@@ -1201,7 +1232,7 @@ export const Signer: GenService<{
     output: typeof SharedKeyResponseSchema;
   },
   /**
-   * 
+   *
    * MuSig2CombineKeys (experimental!) is a stateless helper RPC that can be used
    * to calculate the combined MuSig2 public key from a list of all participating
    * signers' public keys. This RPC is completely stateless and deterministic and
@@ -1209,7 +1240,7 @@ export const Signer: GenService<{
    * public key that should be put in an on-chain output once all public keys are
    * known. A signing session is only needed later when that output should be
    * _spent_ again.
-   * 
+   *
    * NOTE: The MuSig2 BIP is not final yet and therefore this API must be
    * considered to be HIGHLY EXPERIMENTAL and subject to change in upcoming
    * releases. Backward compatibility is not guaranteed!
@@ -1222,14 +1253,14 @@ export const Signer: GenService<{
     output: typeof MuSig2CombineKeysResponseSchema;
   },
   /**
-   * 
+   *
    * MuSig2CreateSession (experimental!) creates a new MuSig2 signing session
    * using the local key identified by the key locator. The complete list of all
    * public keys of all signing parties must be provided, including the public
    * key of the local signing key. If nonces of other parties are already known,
    * they can be submitted as well to reduce the number of RPC calls necessary
    * later on.
-   * 
+   *
    * NOTE: The MuSig2 BIP is not final yet and therefore this API must be
    * considered to be HIGHLY EXPERIMENTAL and subject to change in upcoming
    * releases. Backward compatibility is not guaranteed!
@@ -1242,11 +1273,11 @@ export const Signer: GenService<{
     output: typeof MuSig2SessionResponseSchema;
   },
   /**
-   * 
+   *
    * MuSig2RegisterNonces (experimental!) registers one or more public nonces of
    * other signing participants for a session identified by its ID. This RPC can
    * be called multiple times until all nonces are registered.
-   * 
+   *
    * NOTE: The MuSig2 BIP is not final yet and therefore this API must be
    * considered to be HIGHLY EXPERIMENTAL and subject to change in upcoming
    * releases. Backward compatibility is not guaranteed!
@@ -1259,14 +1290,14 @@ export const Signer: GenService<{
     output: typeof MuSig2RegisterNoncesResponseSchema;
   },
   /**
-   * 
+   *
    * MuSig2Sign (experimental!) creates a partial signature using the local
    * signing key that was specified when the session was created. This can only
    * be called when all public nonces of all participants are known and have been
    * registered with the session. If this node isn't responsible for combining
    * all the partial signatures, then the cleanup flag should be set, indicating
    * that the session can be removed from memory once the signature was produced.
-   * 
+   *
    * NOTE: The MuSig2 BIP is not final yet and therefore this API must be
    * considered to be HIGHLY EXPERIMENTAL and subject to change in upcoming
    * releases. Backward compatibility is not guaranteed!
@@ -1279,12 +1310,12 @@ export const Signer: GenService<{
     output: typeof MuSig2SignResponseSchema;
   },
   /**
-   * 
+   *
    * MuSig2CombineSig (experimental!) combines the given partial signature(s)
    * with the local one, if it already exists. Once a partial signature of all
    * participants is registered, the final signature will be combined and
    * returned.
-   * 
+   *
    * NOTE: The MuSig2 BIP is not final yet and therefore this API must be
    * considered to be HIGHLY EXPERIMENTAL and subject to change in upcoming
    * releases. Backward compatibility is not guaranteed!
@@ -1297,11 +1328,11 @@ export const Signer: GenService<{
     output: typeof MuSig2CombineSigResponseSchema;
   },
   /**
-   * 
+   *
    * MuSig2Cleanup (experimental!) allows a caller to clean up a session early in
    * cases where it's obvious that the signing session won't succeed and the
    * resources can be released.
-   * 
+   *
    * NOTE: The MuSig2 BIP is not final yet and therefore this API must be
    * considered to be HIGHLY EXPERIMENTAL and subject to change in upcoming
    * releases. Backward compatibility is not guaranteed!

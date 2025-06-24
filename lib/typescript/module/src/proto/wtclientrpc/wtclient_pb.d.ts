@@ -70,6 +70,70 @@ export type RemoveTowerResponse = Message<"wtclientrpc.RemoveTowerResponse"> & {
  */
 export declare const RemoveTowerResponseSchema: GenMessage<RemoveTowerResponse>;
 /**
+ * @generated from message wtclientrpc.DeactivateTowerRequest
+ */
+export type DeactivateTowerRequest = Message<"wtclientrpc.DeactivateTowerRequest"> & {
+    /**
+     * The identifying public key of the watchtower to deactivate.
+     *
+     * @generated from field: bytes pubkey = 1;
+     */
+    pubkey: Uint8Array;
+};
+/**
+ * Describes the message wtclientrpc.DeactivateTowerRequest.
+ * Use `create(DeactivateTowerRequestSchema)` to create a new message.
+ */
+export declare const DeactivateTowerRequestSchema: GenMessage<DeactivateTowerRequest>;
+/**
+ * @generated from message wtclientrpc.DeactivateTowerResponse
+ */
+export type DeactivateTowerResponse = Message<"wtclientrpc.DeactivateTowerResponse"> & {
+    /**
+     * A string describing the action that took place.
+     *
+     * @generated from field: string status = 1;
+     */
+    status: string;
+};
+/**
+ * Describes the message wtclientrpc.DeactivateTowerResponse.
+ * Use `create(DeactivateTowerResponseSchema)` to create a new message.
+ */
+export declare const DeactivateTowerResponseSchema: GenMessage<DeactivateTowerResponse>;
+/**
+ * @generated from message wtclientrpc.TerminateSessionRequest
+ */
+export type TerminateSessionRequest = Message<"wtclientrpc.TerminateSessionRequest"> & {
+    /**
+     * The ID of the session that should be terminated.
+     *
+     * @generated from field: bytes session_id = 1;
+     */
+    sessionId: Uint8Array;
+};
+/**
+ * Describes the message wtclientrpc.TerminateSessionRequest.
+ * Use `create(TerminateSessionRequestSchema)` to create a new message.
+ */
+export declare const TerminateSessionRequestSchema: GenMessage<TerminateSessionRequest>;
+/**
+ * @generated from message wtclientrpc.TerminateSessionResponse
+ */
+export type TerminateSessionResponse = Message<"wtclientrpc.TerminateSessionResponse"> & {
+    /**
+     * A string describing the action that took place.
+     *
+     * @generated from field: string status = 1;
+     */
+    status: string;
+};
+/**
+ * Describes the message wtclientrpc.TerminateSessionResponse.
+ * Use `create(TerminateSessionResponseSchema)` to create a new message.
+ */
+export declare const TerminateSessionResponseSchema: GenMessage<TerminateSessionResponse>;
+/**
  * @generated from message wtclientrpc.GetTowerInfoRequest
  */
 export type GetTowerInfoRequest = Message<"wtclientrpc.GetTowerInfoRequest"> & {
@@ -142,6 +206,13 @@ export type TowerSession = Message<"wtclientrpc.TowerSession"> & {
      * @generated from field: uint32 sweep_sat_per_vbyte = 5;
      */
     sweepSatPerVbyte: number;
+    /**
+     *
+     * The ID of the session.
+     *
+     * @generated from field: bytes id = 6;
+     */
+    id: Uint8Array;
 };
 /**
  * Describes the message wtclientrpc.TowerSession.
@@ -399,7 +470,13 @@ export declare enum PolicyType {
      *
      * @generated from enum value: ANCHOR = 1;
      */
-    ANCHOR = 1
+    ANCHOR = 1,
+    /**
+     * Selects the policy from the taproot tower client.
+     *
+     * @generated from enum value: TAPROOT = 2;
+     */
+    TAPROOT = 2
 }
 /**
  * Describes the enum wtclientrpc.PolicyType.
@@ -413,7 +490,7 @@ export declare const PolicyTypeSchema: GenEnum<PolicyType>;
  */
 export declare const WatchtowerClient: GenService<{
     /**
-     *
+     * lncli: `wtclient add`
      * AddTower adds a new watchtower reachable at the given address and
      * considers it for new sessions. If the watchtower already exists, then
      * any new addresses included will be considered when dialing it for
@@ -427,7 +504,7 @@ export declare const WatchtowerClient: GenService<{
         output: typeof AddTowerResponseSchema;
     };
     /**
-     *
+     * lncli: `wtclient remove`
      * RemoveTower removes a watchtower from being considered for future session
      * negotiations and from being used for any subsequent backups until it's added
      * again. If an address is provided, then this RPC only serves as a way of
@@ -441,6 +518,32 @@ export declare const WatchtowerClient: GenService<{
         output: typeof RemoveTowerResponseSchema;
     };
     /**
+     * lncli: `wtclient deactivate`
+     * DeactivateTower sets the given tower's status to inactive so that it
+     * is not considered for session negotiation. Its sessions will also not
+     * be used while the tower is inactive.
+     *
+     * @generated from rpc wtclientrpc.WatchtowerClient.DeactivateTower
+     */
+    deactivateTower: {
+        methodKind: "unary";
+        input: typeof DeactivateTowerRequestSchema;
+        output: typeof DeactivateTowerResponseSchema;
+    };
+    /**
+     * lncli: `wtclient session terminate`
+     * Terminate terminates the given session and marks it as terminal so that
+     * it is not used for backups anymore.
+     *
+     * @generated from rpc wtclientrpc.WatchtowerClient.TerminateSession
+     */
+    terminateSession: {
+        methodKind: "unary";
+        input: typeof TerminateSessionRequestSchema;
+        output: typeof TerminateSessionResponseSchema;
+    };
+    /**
+     * lncli: `wtclient towers`
      * ListTowers returns the list of watchtowers registered with the client.
      *
      * @generated from rpc wtclientrpc.WatchtowerClient.ListTowers
@@ -451,6 +554,7 @@ export declare const WatchtowerClient: GenService<{
         output: typeof ListTowersResponseSchema;
     };
     /**
+     * lncli: `wtclient tower`
      * GetTowerInfo retrieves information for a registered watchtower.
      *
      * @generated from rpc wtclientrpc.WatchtowerClient.GetTowerInfo
@@ -461,6 +565,7 @@ export declare const WatchtowerClient: GenService<{
         output: typeof TowerSchema;
     };
     /**
+     * lncli: `wtclient stats`
      * Stats returns the in-memory statistics of the client since startup.
      *
      * @generated from rpc wtclientrpc.WatchtowerClient.Stats
@@ -471,6 +576,7 @@ export declare const WatchtowerClient: GenService<{
         output: typeof StatsResponseSchema;
     };
     /**
+     * lncli: `wtclient policy`
      * Policy returns the active watchtower client policy configuration.
      *
      * @generated from rpc wtclientrpc.WatchtowerClient.Policy

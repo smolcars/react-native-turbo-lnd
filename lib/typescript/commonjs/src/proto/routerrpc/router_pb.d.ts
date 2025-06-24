@@ -1,5 +1,5 @@
 import type { GenEnum, GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv2";
-import type { ChannelPoint, Failure, Failure_FailureCode, FeatureBit, HTLCAttempt, HTLCAttemptSchema, PaymentSchema, Route, RouteHint } from "../lightning_pb";
+import type { AliasMap, ChannelPoint, Failure, Failure_FailureCode, FeatureBit, HTLCAttempt, HTLCAttemptSchema, PaymentFailureReason, PaymentSchema, Route, RouteHint } from "../lightning_pb";
 import type { Message } from "@bufbuild/protobuf";
 /**
  * Describes the file routerrpc/router.proto.
@@ -25,15 +25,6 @@ export type SendPaymentRequest = Message<"routerrpc.SendPaymentRequest"> & {
      */
     amt: bigint;
     /**
-     *
-     * Number of millisatoshis to send.
-     *
-     * The fields amt and amt_msat are mutually exclusive.
-     *
-     * @generated from field: int64 amt_msat = 12;
-     */
-    amtMsat: bigint;
-    /**
      * The hash to use within the payment's HTLC
      *
      * @generated from field: bytes payment_hash = 3;
@@ -47,12 +38,6 @@ export type SendPaymentRequest = Message<"routerrpc.SendPaymentRequest"> & {
      * @generated from field: int32 final_cltv_delta = 4;
      */
     finalCltvDelta: number;
-    /**
-     * An optional payment addr to be included within the last hop of the route.
-     *
-     * @generated from field: bytes payment_addr = 20;
-     */
-    paymentAddr: Uint8Array;
     /**
      *
      * A bare-bones invoice for a payment within the Lightning Network.  With the
@@ -88,19 +73,6 @@ export type SendPaymentRequest = Message<"routerrpc.SendPaymentRequest"> & {
     feeLimitSat: bigint;
     /**
      *
-     * The maximum number of millisatoshis that will be paid as a fee of the
-     * payment. If this field is left to the default value of 0, only zero-fee
-     * routes will be considered. This usually means single hop routes connecting
-     * directly to the destination. To send the payment without a fee limit, use
-     * max int here.
-     *
-     * The fields fee_limit_sat and fee_limit_msat are mutually exclusive.
-     *
-     * @generated from field: int64 fee_limit_msat = 13;
-     */
-    feeLimitMsat: bigint;
-    /**
-     *
      * Deprecated, use outgoing_chan_ids. The channel id of the channel that must
      * be taken to the first hop. If zero, any channel may be used (unless
      * outgoing_chan_ids are set).
@@ -111,23 +83,8 @@ export type SendPaymentRequest = Message<"routerrpc.SendPaymentRequest"> & {
     outgoingChanId: string;
     /**
      *
-     * The channel ids of the channels are allowed for the first hop. If empty,
-     * any channel may be used.
-     *
-     * @generated from field: repeated uint64 outgoing_chan_ids = 19;
-     */
-    outgoingChanIds: bigint[];
-    /**
-     *
-     * The pubkey of the last hop of the route. If empty, any hop may be used.
-     *
-     * @generated from field: bytes last_hop_pubkey = 14;
-     */
-    lastHopPubkey: Uint8Array;
-    /**
-     *
-     * An optional maximum total time lock for the route. This should not exceed
-     * lnd's `--max-cltv-expiry` setting. If zero, then the value of
+     * An optional maximum total time lock for the route. This should not
+     * exceed lnd's `--max-cltv-expiry` setting. If zero, then the value of
      * `--max-cltv-expiry` is enforced.
      *
      * @generated from field: int32 cltv_limit = 9;
@@ -153,6 +110,35 @@ export type SendPaymentRequest = Message<"routerrpc.SendPaymentRequest"> & {
     destCustomRecords: {
         [key: string]: Uint8Array;
     };
+    /**
+     *
+     * Number of millisatoshis to send.
+     *
+     * The fields amt and amt_msat are mutually exclusive.
+     *
+     * @generated from field: int64 amt_msat = 12;
+     */
+    amtMsat: bigint;
+    /**
+     *
+     * The maximum number of millisatoshis that will be paid as a fee of the
+     * payment. If this field is left to the default value of 0, only zero-fee
+     * routes will be considered. This usually means single hop routes connecting
+     * directly to the destination. To send the payment without a fee limit, use
+     * max int here.
+     *
+     * The fields fee_limit_sat and fee_limit_msat are mutually exclusive.
+     *
+     * @generated from field: int64 fee_limit_msat = 13;
+     */
+    feeLimitMsat: bigint;
+    /**
+     *
+     * The pubkey of the last hop of the route. If empty, any hop may be used.
+     *
+     * @generated from field: bytes last_hop_pubkey = 14;
+     */
+    lastHopPubkey: Uint8Array;
     /**
      * If set, circular payments to self are permitted.
      *
@@ -188,6 +174,22 @@ export type SendPaymentRequest = Message<"routerrpc.SendPaymentRequest"> & {
     noInflightUpdates: boolean;
     /**
      *
+     * The channel ids of the channels are allowed for the first hop. If empty,
+     * any channel may be used.
+     *
+     * @generated from field: repeated uint64 outgoing_chan_ids = 19;
+     */
+    outgoingChanIds: bigint[];
+    /**
+     *
+     * An optional payment addr to be included within the last hop of the route.
+     * This is also called payment secret in specifications (e.g. BOLT 11).
+     *
+     * @generated from field: bytes payment_addr = 20;
+     */
+    paymentAddr: Uint8Array;
+    /**
+     *
      * The largest payment split that should be attempted when making a payment if
      * splitting is necessary. Setting this value will effectively cause lnd to
      * split more aggressively, vs only when it thinks it needs to. Note that this
@@ -211,6 +213,30 @@ export type SendPaymentRequest = Message<"routerrpc.SendPaymentRequest"> & {
      * @generated from field: double time_pref = 23;
      */
     timePref: number;
+    /**
+     *
+     * If set, the payment loop can be interrupted by manually canceling the
+     * payment context, even before the payment timeout is reached. Note that the
+     * payment may still succeed after cancellation, as in-flight attempts can
+     * still settle afterwards. Canceling will only prevent further attempts from
+     * being sent.
+     *
+     * @generated from field: bool cancelable = 24;
+     */
+    cancelable: boolean;
+    /**
+     *
+     * An optional field that can be used to pass an arbitrary set of TLV records
+     * to the first hop peer of this payment. This can be used to pass application
+     * specific data during the payment attempt. Record types are required to be in
+     * the custom range >= 65536. When using REST, the values must be encoded as
+     * base64.
+     *
+     * @generated from field: map<uint64, bytes> first_hop_custom_records = 25;
+     */
+    firstHopCustomRecords: {
+        [key: string]: Uint8Array;
+    };
 };
 /**
  * Describes the message routerrpc.SendPaymentRequest.
@@ -265,18 +291,47 @@ export declare const TrackPaymentsRequestSchema: GenMessage<TrackPaymentsRequest
 export type RouteFeeRequest = Message<"routerrpc.RouteFeeRequest"> & {
     /**
      *
-     * The destination once wishes to obtain a routing fee quote to.
+     * The destination one wishes to obtain a routing fee quote to. If set, this
+     * parameter requires the amt_sat parameter also to be set. This parameter
+     * combination triggers a graph based routing fee estimation as opposed to a
+     * payment probe based estimate in case a payment request is provided. The
+     * graph based estimation is an algorithm that is executed on the in memory
+     * graph. Hence its runtime is significantly shorter than a payment probe
+     * estimation that sends out actual payments to the network.
      *
      * @generated from field: bytes dest = 1;
      */
     dest: Uint8Array;
     /**
      *
-     * The amount one wishes to send to the target destination.
+     * The amount one wishes to send to the target destination. It is only to be
+     * used in combination with the dest parameter.
      *
      * @generated from field: int64 amt_sat = 2;
      */
     amtSat: bigint;
+    /**
+     *
+     * A payment request of the target node that the route fee request is intended
+     * for. Its parameters are input to probe payments that estimate routing fees.
+     * The timeout parameter can be specified to set a maximum time on the probing
+     * attempt. Cannot be used in combination with dest and amt_sat.
+     *
+     * @generated from field: string payment_request = 3;
+     */
+    paymentRequest: string;
+    /**
+     *
+     * A user preference of how long a probe payment should maximally be allowed to
+     * take, denoted in seconds. The probing payment loop is aborted if this
+     * timeout is reached. Note that the probing process itself can take longer
+     * than the timeout if the HTLC becomes delayed or stuck. Canceling the context
+     * of this call will not cancel the payment loop, the duration is only
+     * controlled by the timeout parameter.
+     *
+     * @generated from field: uint32 timeout = 4;
+     */
+    timeout: number;
 };
 /**
  * Describes the message routerrpc.RouteFeeRequest.
@@ -304,6 +359,14 @@ export type RouteFeeResponse = Message<"routerrpc.RouteFeeResponse"> & {
      * @generated from field: int64 time_lock_delay = 2;
      */
     timeLockDelay: bigint;
+    /**
+     *
+     * An indication whether a probing payment succeeded or whether and why it
+     * failed. FAILURE_REASON_NONE indicates success.
+     *
+     * @generated from field: lnrpc.PaymentFailureReason failure_reason = 5;
+     */
+    failureReason: PaymentFailureReason;
 };
 /**
  * Describes the message routerrpc.RouteFeeResponse.
@@ -336,6 +399,19 @@ export type SendToRouteRequest = Message<"routerrpc.SendToRouteRequest"> & {
      * @generated from field: bool skip_temp_err = 3;
      */
     skipTempErr: boolean;
+    /**
+     *
+     * An optional field that can be used to pass an arbitrary set of TLV records
+     * to the first hop peer of this payment. This can be used to pass application
+     * specific data during the payment attempt. Record types are required to be in
+     * the custom range >= 65536. When using REST, the values must be encoded as
+     * base64.
+     *
+     * @generated from field: map<uint64, bytes> first_hop_custom_records = 4;
+     */
+    firstHopCustomRecords: {
+        [key: string]: Uint8Array;
+    };
 };
 /**
  * Describes the message routerrpc.SendToRouteRequest.
@@ -863,11 +939,26 @@ export type BuildRouteRequest = Message<"routerrpc.BuildRouteRequest"> & {
      */
     hopPubkeys: Uint8Array[];
     /**
+     *
      * An optional payment addr to be included within the last hop of the route.
+     * This is also called payment secret in specifications (e.g. BOLT 11).
      *
      * @generated from field: bytes payment_addr = 5;
      */
     paymentAddr: Uint8Array;
+    /**
+     *
+     * An optional field that can be used to pass an arbitrary set of TLV records
+     * to the first hop peer of this payment. This can be used to pass application
+     * specific data during the payment attempt. Record types are required to be in
+     * the custom range >= 65536. When using REST, the values must be encoded as
+     * base64.
+     *
+     * @generated from field: map<uint64, bytes> first_hop_custom_records = 6;
+     */
+    firstHopCustomRecords: {
+        [key: string]: Uint8Array;
+    };
 };
 /**
  * Describes the message routerrpc.BuildRouteRequest.
@@ -1298,6 +1389,14 @@ export type ForwardHtlcInterceptRequest = Message<"routerrpc.ForwardHtlcIntercep
      * @generated from field: int32 auto_fail_height = 10;
      */
     autoFailHeight: number;
+    /**
+     * The custom records of the peer's incoming p2p wire message.
+     *
+     * @generated from field: map<uint64, bytes> in_wire_custom_records = 11;
+     */
+    inWireCustomRecords: {
+        [key: string]: Uint8Array;
+    };
 };
 /**
  * Describes the message routerrpc.ForwardHtlcInterceptRequest.
@@ -1309,6 +1408,8 @@ export declare const ForwardHtlcInterceptRequestSchema: GenMessage<ForwardHtlcIn
  * ForwardHtlcInterceptResponse enables the caller to resolve a previously hold
  * forward. The caller can choose either to:
  * - `Resume`: Execute the default behavior (usually forward).
+ * - `ResumeModified`: Execute the default behavior (usually forward) with HTLC
+ * field modifications.
  * - `Reject`: Fail the htlc backwards.
  * - `Settle`: Settle this htlc with a given preimage.
  *
@@ -1356,6 +1457,31 @@ export type ForwardHtlcInterceptResponse = Message<"routerrpc.ForwardHtlcInterce
      * @generated from field: lnrpc.Failure.FailureCode failure_code = 5;
      */
     failureCode: Failure_FailureCode;
+    /**
+     * The amount that was set on the p2p wire message of the incoming HTLC.
+     * This field is ignored if the action is not RESUME_MODIFIED or the amount
+     * is zero.
+     *
+     * @generated from field: uint64 in_amount_msat = 6;
+     */
+    inAmountMsat: bigint;
+    /**
+     * The amount to set on the p2p wire message of the resumed HTLC. This field
+     * is ignored if the action is not RESUME_MODIFIED or the amount is zero.
+     *
+     * @generated from field: uint64 out_amount_msat = 7;
+     */
+    outAmountMsat: bigint;
+    /**
+     * Any custom records that should be set on the p2p wire message message of
+     * the resumed HTLC. This field is ignored if the action is not
+     * RESUME_MODIFIED.
+     *
+     * @generated from field: map<uint64, bytes> out_wire_custom_records = 8;
+     */
+    outWireCustomRecords: {
+        [key: string]: Uint8Array;
+    };
 };
 /**
  * Describes the message routerrpc.ForwardHtlcInterceptResponse.
@@ -1389,6 +1515,62 @@ export type UpdateChanStatusResponse = Message<"routerrpc.UpdateChanStatusRespon
  * Use `create(UpdateChanStatusResponseSchema)` to create a new message.
  */
 export declare const UpdateChanStatusResponseSchema: GenMessage<UpdateChanStatusResponse>;
+/**
+ * @generated from message routerrpc.AddAliasesRequest
+ */
+export type AddAliasesRequest = Message<"routerrpc.AddAliasesRequest"> & {
+    /**
+     * @generated from field: repeated lnrpc.AliasMap alias_maps = 1;
+     */
+    aliasMaps: AliasMap[];
+};
+/**
+ * Describes the message routerrpc.AddAliasesRequest.
+ * Use `create(AddAliasesRequestSchema)` to create a new message.
+ */
+export declare const AddAliasesRequestSchema: GenMessage<AddAliasesRequest>;
+/**
+ * @generated from message routerrpc.AddAliasesResponse
+ */
+export type AddAliasesResponse = Message<"routerrpc.AddAliasesResponse"> & {
+    /**
+     * @generated from field: repeated lnrpc.AliasMap alias_maps = 1;
+     */
+    aliasMaps: AliasMap[];
+};
+/**
+ * Describes the message routerrpc.AddAliasesResponse.
+ * Use `create(AddAliasesResponseSchema)` to create a new message.
+ */
+export declare const AddAliasesResponseSchema: GenMessage<AddAliasesResponse>;
+/**
+ * @generated from message routerrpc.DeleteAliasesRequest
+ */
+export type DeleteAliasesRequest = Message<"routerrpc.DeleteAliasesRequest"> & {
+    /**
+     * @generated from field: repeated lnrpc.AliasMap alias_maps = 1;
+     */
+    aliasMaps: AliasMap[];
+};
+/**
+ * Describes the message routerrpc.DeleteAliasesRequest.
+ * Use `create(DeleteAliasesRequestSchema)` to create a new message.
+ */
+export declare const DeleteAliasesRequestSchema: GenMessage<DeleteAliasesRequest>;
+/**
+ * @generated from message routerrpc.DeleteAliasesResponse
+ */
+export type DeleteAliasesResponse = Message<"routerrpc.DeleteAliasesResponse"> & {
+    /**
+     * @generated from field: repeated lnrpc.AliasMap alias_maps = 1;
+     */
+    aliasMaps: AliasMap[];
+};
+/**
+ * Describes the message routerrpc.DeleteAliasesResponse.
+ * Use `create(DeleteAliasesResponseSchema)` to create a new message.
+ */
+export declare const DeleteAliasesResponseSchema: GenMessage<DeleteAliasesResponse>;
 /**
  * @generated from enum routerrpc.FailureDetail
  */
@@ -1555,17 +1737,31 @@ export declare const PaymentStateSchema: GenEnum<PaymentState>;
  */
 export declare enum ResolveHoldForwardAction {
     /**
+     * SETTLE is an action that is used to settle an HTLC instead of forwarding
+     * it.
+     *
      * @generated from enum value: SETTLE = 0;
      */
     SETTLE = 0,
     /**
+     * FAIL is an action that is used to fail an HTLC backwards.
+     *
      * @generated from enum value: FAIL = 1;
      */
     FAIL = 1,
     /**
+     * RESUME is an action that is used to resume a forward HTLC.
+     *
      * @generated from enum value: RESUME = 2;
      */
-    RESUME = 2
+    RESUME = 2,
+    /**
+     * RESUME_MODIFIED is an action that is used to resume a hold forward HTLC
+     * with modifications specified during interception.
+     *
+     * @generated from enum value: RESUME_MODIFIED = 3;
+     */
+    RESUME_MODIFIED = 3
 }
 /**
  * Describes the enum routerrpc.ResolveHoldForwardAction.
@@ -1603,7 +1799,10 @@ export declare const Router: GenService<{
      *
      * SendPaymentV2 attempts to route a payment described by the passed
      * PaymentRequest to the final destination. The call returns a stream of
-     * payment updates.
+     * payment updates. When using this RPC, make sure to set a fee limit, as the
+     * default routing fee limit is 0 sats. Without a non-zero fee limit only
+     * routes without fees will be attempted which often fails with
+     * FAILURE_REASON_NO_ROUTE.
      *
      * @generated from rpc routerrpc.Router.SendPaymentV2
      */
@@ -1613,7 +1812,7 @@ export declare const Router: GenService<{
         output: typeof PaymentSchema;
     };
     /**
-     *
+     * lncli: `trackpayment`
      * TrackPaymentV2 returns an update stream for the payment identified by the
      * payment hash.
      *
@@ -1683,7 +1882,7 @@ export declare const Router: GenService<{
         output: typeof HTLCAttemptSchema;
     };
     /**
-     *
+     * lncli: `resetmc`
      * ResetMissionControl clears all mission control state and starts with a clean
      * slate.
      *
@@ -1695,7 +1894,7 @@ export declare const Router: GenService<{
         output: typeof ResetMissionControlResponseSchema;
     };
     /**
-     *
+     * lncli: `querymc`
      * QueryMissionControl exposes the internal mission control state to callers.
      * It is a development feature.
      *
@@ -1707,7 +1906,7 @@ export declare const Router: GenService<{
         output: typeof QueryMissionControlResponseSchema;
     };
     /**
-     *
+     * lncli: `importmc`
      * XImportMissionControl is an experimental API that imports the state provided
      * to the internal mission control's state, using all results which are more
      * recent than our existing values. These values will only be imported
@@ -1721,7 +1920,7 @@ export declare const Router: GenService<{
         output: typeof XImportMissionControlResponseSchema;
     };
     /**
-     *
+     * lncli: `getmccfg`
      * GetMissionControlConfig returns mission control's current config.
      *
      * @generated from rpc routerrpc.Router.GetMissionControlConfig
@@ -1732,7 +1931,7 @@ export declare const Router: GenService<{
         output: typeof GetMissionControlConfigResponseSchema;
     };
     /**
-     *
+     * lncli: `setmccfg`
      * SetMissionControlConfig will set mission control's config, if the config
      * provided is valid.
      *
@@ -1744,7 +1943,7 @@ export declare const Router: GenService<{
         output: typeof SetMissionControlConfigResponseSchema;
     };
     /**
-     *
+     * lncli: `queryprob`
      * Deprecated. QueryProbability returns the current success probability
      * estimate for a given node pair and amount. The call returns a zero success
      * probability if no channel is available or if the amount violates min/max
@@ -1758,10 +1957,14 @@ export declare const Router: GenService<{
         output: typeof QueryProbabilityResponseSchema;
     };
     /**
-     *
+     * lncli: `buildroute`
      * BuildRoute builds a fully specified route based on a list of hop public
      * keys. It retrieves the relevant channel policies from the graph in order to
      * calculate the correct fees and time locks.
+     * Note that LND will use its default final_cltv_delta if no value is supplied.
+     * Make sure to add the correct final_cltv_delta depending on the invoice
+     * restriction. Moreover the caller has to make sure to provide the
+     * payment_addr if the route is paying an invoice which signaled it.
      *
      * @generated from rpc routerrpc.Router.BuildRoute
      */
@@ -1825,7 +2028,7 @@ export declare const Router: GenService<{
         output: typeof ForwardHtlcInterceptRequestSchema;
     };
     /**
-     *
+     * lncli: `updatechanstatus`
      * UpdateChanStatus attempts to manually set the state of a channel
      * (enabled, disabled, or auto). A manual "disable" request will cause the
      * channel to stay disabled until a subsequent manual request of either
@@ -1837,6 +2040,36 @@ export declare const Router: GenService<{
         methodKind: "unary";
         input: typeof UpdateChanStatusRequestSchema;
         output: typeof UpdateChanStatusResponseSchema;
+    };
+    /**
+     *
+     * XAddLocalChanAliases is an experimental API that creates a set of new
+     * channel SCID alias mappings. The final total set of aliases in the manager
+     * after the add operation is returned. This is only a locally stored alias,
+     * and will not be communicated to the channel peer via any message. Therefore,
+     * routing over such an alias will only work if the peer also calls this same
+     * RPC on their end. If an alias already exists, an error is returned
+     *
+     * @generated from rpc routerrpc.Router.XAddLocalChanAliases
+     */
+    xAddLocalChanAliases: {
+        methodKind: "unary";
+        input: typeof AddAliasesRequestSchema;
+        output: typeof AddAliasesResponseSchema;
+    };
+    /**
+     *
+     * XDeleteLocalChanAliases is an experimental API that deletes a set of alias
+     * mappings. The final total set of aliases in the manager after the delete
+     * operation is returned. The deletion will not be communicated to the channel
+     * peer via any message.
+     *
+     * @generated from rpc routerrpc.Router.XDeleteLocalChanAliases
+     */
+    xDeleteLocalChanAliases: {
+        methodKind: "unary";
+        input: typeof DeleteAliasesRequestSchema;
+        output: typeof DeleteAliasesResponseSchema;
     };
 }>;
 //# sourceMappingURL=router_pb.d.ts.map

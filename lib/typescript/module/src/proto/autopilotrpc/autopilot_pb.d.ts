@@ -152,7 +152,7 @@ export declare const SetScoresResponseSchema: GenMessage<SetScoresResponse>;
  */
 export declare const Autopilot: GenService<{
     /**
-     *
+     * lncli: `autopilot status`
      * Status returns whether the daemon's autopilot agent is active.
      *
      * @generated from rpc autopilotrpc.Autopilot.Status
@@ -175,7 +175,7 @@ export declare const Autopilot: GenService<{
         output: typeof ModifyStatusResponseSchema;
     };
     /**
-     *
+     * lncli: `autopilot query`
      * QueryScores queries all available autopilot heuristics, in addition to any
      * active combination of these heruristics, for the scores they would give to
      * the given nodes.

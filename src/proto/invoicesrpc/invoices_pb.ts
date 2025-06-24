@@ -4,7 +4,7 @@
 
 import type { GenEnum, GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv2";
 import { enumDesc, fileDesc, messageDesc, serviceDesc } from "@bufbuild/protobuf/codegenv2";
-import type { InvoiceSchema, RouteHint } from "../lightning_pb";
+import type { Invoice, InvoiceSchema, RouteHint } from "../lightning_pb";
 import { file_lightning } from "../lightning_pb";
 import type { Message } from "@bufbuild/protobuf";
 
@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file invoicesrpc/invoices.proto.
  */
 export const file_invoicesrpc_invoices: GenFile = /*@__PURE__*/
-  fileDesc("ChppbnZvaWNlc3JwYy9pbnZvaWNlcy5wcm90bxILaW52b2ljZXNycGMiKAoQQ2FuY2VsSW52b2ljZU1zZxIUCgxwYXltZW50X2hhc2gYASABKAwiEwoRQ2FuY2VsSW52b2ljZVJlc3Ai5AEKFUFkZEhvbGRJbnZvaWNlUmVxdWVzdBIMCgRtZW1vGAEgASgJEgwKBGhhc2gYAiABKAwSDQoFdmFsdWUYAyABKAMSEgoKdmFsdWVfbXNhdBgKIAEoAxIYChBkZXNjcmlwdGlvbl9oYXNoGAQgASgMEg4KBmV4cGlyeRgFIAEoAxIVCg1mYWxsYmFja19hZGRyGAYgASgJEhMKC2NsdHZfZXhwaXJ5GAcgASgEEiUKC3JvdXRlX2hpbnRzGAggAygLMhAubG5ycGMuUm91dGVIaW50Eg8KB3ByaXZhdGUYCSABKAgiVgoSQWRkSG9sZEludm9pY2VSZXNwEhcKD3BheW1lbnRfcmVxdWVzdBgBIAEoCRIRCglhZGRfaW5kZXgYAiABKAQSFAoMcGF5bWVudF9hZGRyGAMgASgMIiQKEFNldHRsZUludm9pY2VNc2cSEAoIcHJlaW1hZ2UYASABKAwiEwoRU2V0dGxlSW52b2ljZVJlc3AiNQodU3Vic2NyaWJlU2luZ2xlSW52b2ljZVJlcXVlc3QSDgoGcl9oYXNoGAIgASgMSgQIARACIpkBChBMb29rdXBJbnZvaWNlTXNnEhYKDHBheW1lbnRfaGFzaBgBIAEoDEgAEhYKDHBheW1lbnRfYWRkchgCIAEoDEgAEhAKBnNldF9pZBgDIAEoDEgAEjQKD2xvb2t1cF9tb2RpZmllchgEIAEoDjIbLmludm9pY2VzcnBjLkxvb2t1cE1vZGlmaWVyQg0KC2ludm9pY2VfcmVmKkQKDkxvb2t1cE1vZGlmaWVyEgsKB0RFRkFVTFQQABIRCg1IVExDX1NFVF9PTkxZEAESEgoOSFRMQ19TRVRfQkxBTksQAjKbAwoISW52b2ljZXMSVgoWU3Vic2NyaWJlU2luZ2xlSW52b2ljZRIqLmludm9pY2VzcnBjLlN1YnNjcmliZVNpbmdsZUludm9pY2VSZXF1ZXN0Gg4ubG5ycGMuSW52b2ljZTABEk4KDUNhbmNlbEludm9pY2USHS5pbnZvaWNlc3JwYy5DYW5jZWxJbnZvaWNlTXNnGh4uaW52b2ljZXNycGMuQ2FuY2VsSW52b2ljZVJlc3ASVQoOQWRkSG9sZEludm9pY2USIi5pbnZvaWNlc3JwYy5BZGRIb2xkSW52b2ljZVJlcXVlc3QaHy5pbnZvaWNlc3JwYy5BZGRIb2xkSW52b2ljZVJlc3ASTgoNU2V0dGxlSW52b2ljZRIdLmludm9pY2VzcnBjLlNldHRsZUludm9pY2VNc2caHi5pbnZvaWNlc3JwYy5TZXR0bGVJbnZvaWNlUmVzcBJACg9Mb29rdXBJbnZvaWNlVjISHS5pbnZvaWNlc3JwYy5Mb29rdXBJbnZvaWNlTXNnGg4ubG5ycGMuSW52b2ljZUIzWjFnaXRodWIuY29tL2xpZ2h0bmluZ25ldHdvcmsvbG5kL2xucnBjL2ludm9pY2VzcnBjYgZwcm90bzM", [file_lightning]);
+  fileDesc("ChppbnZvaWNlc3JwYy9pbnZvaWNlcy5wcm90bxILaW52b2ljZXNycGMiKAoQQ2FuY2VsSW52b2ljZU1zZxIUCgxwYXltZW50X2hhc2gYASABKAwiEwoRQ2FuY2VsSW52b2ljZVJlc3Ai5AEKFUFkZEhvbGRJbnZvaWNlUmVxdWVzdBIMCgRtZW1vGAEgASgJEgwKBGhhc2gYAiABKAwSDQoFdmFsdWUYAyABKAMSEgoKdmFsdWVfbXNhdBgKIAEoAxIYChBkZXNjcmlwdGlvbl9oYXNoGAQgASgMEg4KBmV4cGlyeRgFIAEoAxIVCg1mYWxsYmFja19hZGRyGAYgASgJEhMKC2NsdHZfZXhwaXJ5GAcgASgEEiUKC3JvdXRlX2hpbnRzGAggAygLMhAubG5ycGMuUm91dGVIaW50Eg8KB3ByaXZhdGUYCSABKAgiVgoSQWRkSG9sZEludm9pY2VSZXNwEhcKD3BheW1lbnRfcmVxdWVzdBgBIAEoCRIRCglhZGRfaW5kZXgYAiABKAQSFAoMcGF5bWVudF9hZGRyGAMgASgMIiQKEFNldHRsZUludm9pY2VNc2cSEAoIcHJlaW1hZ2UYASABKAwiEwoRU2V0dGxlSW52b2ljZVJlc3AiNQodU3Vic2NyaWJlU2luZ2xlSW52b2ljZVJlcXVlc3QSDgoGcl9oYXNoGAIgASgMSgQIARACIpkBChBMb29rdXBJbnZvaWNlTXNnEhYKDHBheW1lbnRfaGFzaBgBIAEoDEgAEhYKDHBheW1lbnRfYWRkchgCIAEoDEgAEhAKBnNldF9pZBgDIAEoDEgAEjQKD2xvb2t1cF9tb2RpZmllchgEIAEoDjIbLmludm9pY2VzcnBjLkxvb2t1cE1vZGlmaWVyQg0KC2ludm9pY2VfcmVmIi4KCkNpcmN1aXRLZXkSDwoHY2hhbl9pZBgBIAEoBBIPCgdodGxjX2lkGAIgASgEIt0CChFIdGxjTW9kaWZ5UmVxdWVzdBIfCgdpbnZvaWNlGAEgASgLMg4ubG5ycGMuSW52b2ljZRI2ChVleGl0X2h0bGNfY2lyY3VpdF9rZXkYAiABKAsyFy5pbnZvaWNlc3JwYy5DaXJjdWl0S2V5EhUKDWV4aXRfaHRsY19hbXQYAyABKAQSGAoQZXhpdF9odGxjX2V4cGlyeRgEIAEoDRIWCg5jdXJyZW50X2hlaWdodBgFIAEoDRJkCh1leGl0X2h0bGNfd2lyZV9jdXN0b21fcmVjb3JkcxgGIAMoCzI9Lmludm9pY2VzcnBjLkh0bGNNb2RpZnlSZXF1ZXN0LkV4aXRIdGxjV2lyZUN1c3RvbVJlY29yZHNFbnRyeRpACh5FeGl0SHRsY1dpcmVDdXN0b21SZWNvcmRzRW50cnkSCwoDa2V5GAEgASgEEg0KBXZhbHVlGAIgASgMOgI4ASJ6ChJIdGxjTW9kaWZ5UmVzcG9uc2USLAoLY2lyY3VpdF9rZXkYASABKAsyFy5pbnZvaWNlc3JwYy5DaXJjdWl0S2V5EhUKCGFtdF9wYWlkGAIgASgESACIAQESEgoKY2FuY2VsX3NldBgDIAEoCEILCglfYW10X3BhaWQqRAoOTG9va3VwTW9kaWZpZXISCwoHREVGQVVMVBAAEhEKDUhUTENfU0VUX09OTFkQARISCg5IVExDX1NFVF9CTEFOSxACMvADCghJbnZvaWNlcxJWChZTdWJzY3JpYmVTaW5nbGVJbnZvaWNlEiouaW52b2ljZXNycGMuU3Vic2NyaWJlU2luZ2xlSW52b2ljZVJlcXVlc3QaDi5sbnJwYy5JbnZvaWNlMAESTgoNQ2FuY2VsSW52b2ljZRIdLmludm9pY2VzcnBjLkNhbmNlbEludm9pY2VNc2caHi5pbnZvaWNlc3JwYy5DYW5jZWxJbnZvaWNlUmVzcBJVCg5BZGRIb2xkSW52b2ljZRIiLmludm9pY2VzcnBjLkFkZEhvbGRJbnZvaWNlUmVxdWVzdBofLmludm9pY2VzcnBjLkFkZEhvbGRJbnZvaWNlUmVzcBJOCg1TZXR0bGVJbnZvaWNlEh0uaW52b2ljZXNycGMuU2V0dGxlSW52b2ljZU1zZxoeLmludm9pY2VzcnBjLlNldHRsZUludm9pY2VSZXNwEkAKD0xvb2t1cEludm9pY2VWMhIdLmludm9pY2VzcnBjLkxvb2t1cEludm9pY2VNc2caDi5sbnJwYy5JbnZvaWNlElMKDEh0bGNNb2RpZmllchIfLmludm9pY2VzcnBjLkh0bGNNb2RpZnlSZXNwb25zZRoeLmludm9pY2VzcnBjLkh0bGNNb2RpZnlSZXF1ZXN0KAEwAUIzWjFnaXRodWIuY29tL2xpZ2h0bmluZ25ldHdvcmsvbG5kL2xucnBjL2ludm9pY2VzcnBjYgZwcm90bzM", [file_lightning]);
 
 /**
  * @generated from message invoicesrpc.CancelInvoiceMsg
@@ -52,7 +52,7 @@ export const CancelInvoiceRespSchema: GenMessage<CancelInvoiceResp> = /*@__PURE_
  */
 export type AddHoldInvoiceRequest = Message<"invoicesrpc.AddHoldInvoiceRequest"> & {
   /**
-   * 
+   *
    * An optional memo to attach along with the invoice. Used for record keeping
    * purposes for the invoice's creator, and will also be set in the description
    * field of the encoded payment request if the description_hash field is not
@@ -70,9 +70,9 @@ export type AddHoldInvoiceRequest = Message<"invoicesrpc.AddHoldInvoiceRequest">
   hash: Uint8Array;
 
   /**
-   * 
+   *
    * The value of this invoice in satoshis
-   * 
+   *
    * The fields value and value_msat are mutually exclusive.
    *
    * @generated from field: int64 value = 3;
@@ -80,9 +80,9 @@ export type AddHoldInvoiceRequest = Message<"invoicesrpc.AddHoldInvoiceRequest">
   value: bigint;
 
   /**
-   * 
+   *
    * The value of this invoice in millisatoshis
-   * 
+   *
    * The fields value and value_msat are mutually exclusive.
    *
    * @generated from field: int64 value_msat = 10;
@@ -90,7 +90,7 @@ export type AddHoldInvoiceRequest = Message<"invoicesrpc.AddHoldInvoiceRequest">
   valueMsat: bigint;
 
   /**
-   * 
+   *
    * Hash (SHA-256) of a description of the payment. Used if the description of
    * payment (memo) is too long to naturally fit within the description field
    * of an encoded payment request.
@@ -121,7 +121,7 @@ export type AddHoldInvoiceRequest = Message<"invoicesrpc.AddHoldInvoiceRequest">
   cltvExpiry: bigint;
 
   /**
-   * 
+   *
    * Route hints that can each be individually used to assist in reaching the
    * invoice's destination.
    *
@@ -149,7 +149,7 @@ export const AddHoldInvoiceRequestSchema: GenMessage<AddHoldInvoiceRequest> = /*
  */
 export type AddHoldInvoiceResp = Message<"invoicesrpc.AddHoldInvoiceResp"> & {
   /**
-   * 
+   *
    * A bare-bones invoice for a payment within the Lightning Network. With the
    * details of the invoice, the sender has all the data necessary to send a
    * payment to the recipient.
@@ -159,7 +159,7 @@ export type AddHoldInvoiceResp = Message<"invoicesrpc.AddHoldInvoiceResp"> & {
   paymentRequest: string;
 
   /**
-   * 
+   *
    * The "add" index of this invoice. Each newly created invoice will increment
    * this index making it monotonically increasing. Callers to the
    * SubscribeInvoices call can use this to instantly get notified of all added
@@ -170,9 +170,10 @@ export type AddHoldInvoiceResp = Message<"invoicesrpc.AddHoldInvoiceResp"> & {
   addIndex: bigint;
 
   /**
-   * 
-   * The payment address of the generated invoice. This value should be used
-   * in all payments for this invoice as we require it for end to end
+   *
+   * The payment address of the generated invoice. This is also called
+   * the payment secret in specifications (e.g. BOLT 11). This value should
+   * be used in all payments for this invoice as we require it for end to end
    * security.
    *
    * @generated from field: bytes payment_addr = 3;
@@ -283,6 +284,129 @@ export const LookupInvoiceMsgSchema: GenMessage<LookupInvoiceMsg> = /*@__PURE__*
   messageDesc(file_invoicesrpc_invoices, 7);
 
 /**
+ * CircuitKey is a unique identifier for an HTLC.
+ *
+ * @generated from message invoicesrpc.CircuitKey
+ */
+export type CircuitKey = Message<"invoicesrpc.CircuitKey"> & {
+  /**
+   * The id of the channel that the is part of this circuit.
+   *
+   * @generated from field: uint64 chan_id = 1;
+   */
+  chanId: bigint;
+
+  /**
+   * The index of the incoming htlc in the incoming channel.
+   *
+   * @generated from field: uint64 htlc_id = 2;
+   */
+  htlcId: bigint;
+};
+
+/**
+ * Describes the message invoicesrpc.CircuitKey.
+ * Use `create(CircuitKeySchema)` to create a new message.
+ */
+export const CircuitKeySchema: GenMessage<CircuitKey> = /*@__PURE__*/
+  messageDesc(file_invoicesrpc_invoices, 8);
+
+/**
+ * @generated from message invoicesrpc.HtlcModifyRequest
+ */
+export type HtlcModifyRequest = Message<"invoicesrpc.HtlcModifyRequest"> & {
+  /**
+   * The invoice the intercepted HTLC is attempting to settle. The HTLCs in
+   * the invoice are only HTLCs that have already been accepted or settled,
+   * not including the current intercepted HTLC.
+   *
+   * @generated from field: lnrpc.Invoice invoice = 1;
+   */
+  invoice?: Invoice;
+
+  /**
+   * The unique identifier of the HTLC of this intercepted HTLC.
+   *
+   * @generated from field: invoicesrpc.CircuitKey exit_htlc_circuit_key = 2;
+   */
+  exitHtlcCircuitKey?: CircuitKey;
+
+  /**
+   * The amount in milli-satoshi that the exit HTLC is attempting to pay.
+   *
+   * @generated from field: uint64 exit_htlc_amt = 3;
+   */
+  exitHtlcAmt: bigint;
+
+  /**
+   * The absolute expiry height of the exit HTLC.
+   *
+   * @generated from field: uint32 exit_htlc_expiry = 4;
+   */
+  exitHtlcExpiry: number;
+
+  /**
+   * The current block height.
+   *
+   * @generated from field: uint32 current_height = 5;
+   */
+  currentHeight: number;
+
+  /**
+   * The wire message custom records of the exit HTLC.
+   *
+   * @generated from field: map<uint64, bytes> exit_htlc_wire_custom_records = 6;
+   */
+  exitHtlcWireCustomRecords: { [key: string]: Uint8Array };
+};
+
+/**
+ * Describes the message invoicesrpc.HtlcModifyRequest.
+ * Use `create(HtlcModifyRequestSchema)` to create a new message.
+ */
+export const HtlcModifyRequestSchema: GenMessage<HtlcModifyRequest> = /*@__PURE__*/
+  messageDesc(file_invoicesrpc_invoices, 9);
+
+/**
+ * @generated from message invoicesrpc.HtlcModifyResponse
+ */
+export type HtlcModifyResponse = Message<"invoicesrpc.HtlcModifyResponse"> & {
+  /**
+   * The circuit key of the HTLC that the client wants to modify.
+   *
+   * @generated from field: invoicesrpc.CircuitKey circuit_key = 1;
+   */
+  circuitKey?: CircuitKey;
+
+  /**
+   * The modified amount in milli-satoshi that the exit HTLC is paying. This
+   * value can be different from the actual on-chain HTLC amount, in case the
+   * HTLC carries other valuable items, as can be the case with custom channel
+   * types.
+   *
+   * @generated from field: optional uint64 amt_paid = 2;
+   */
+  amtPaid?: bigint;
+
+  /**
+   * This flag indicates whether the HTLCs associated with the invoices should
+   * be cancelled. The interceptor client may set this field if some
+   * unexpected behavior is encountered. Setting this will ignore the amt_paid
+   * field.
+   *
+   * @generated from field: bool cancel_set = 3;
+   */
+  cancelSet: boolean;
+};
+
+/**
+ * Describes the message invoicesrpc.HtlcModifyResponse.
+ * Use `create(HtlcModifyResponseSchema)` to create a new message.
+ */
+export const HtlcModifyResponseSchema: GenMessage<HtlcModifyResponse> = /*@__PURE__*/
+  messageDesc(file_invoicesrpc_invoices, 10);
+
+/**
  * @generated from enum invoicesrpc.LookupModifier
  */
 export enum LookupModifier {
@@ -294,7 +418,7 @@ export enum LookupModifier {
   DEFAULT = 0,
 
   /**
-   * 
+   *
    * Indicates that when a look up is done based on a set_id, then only that set
    * of HTLCs related to that set ID should be returned.
    *
@@ -303,7 +427,7 @@ export enum LookupModifier {
   HTLC_SET_ONLY = 1,
 
   /**
-   * 
+   *
    * Indicates that when a look up is done using a payment_addr, then no HTLCs
    * related to the payment_addr should be returned. This is useful when one
    * wants to be able to obtain the set of associated setIDs with a given
@@ -328,7 +452,7 @@ export const LookupModifierSchema: GenEnum<LookupModifier> = /*@__PURE__*/
  */
 export const Invoices: GenService<{
   /**
-   * 
+   *
    * SubscribeSingleInvoice returns a uni-directional stream (server -> client)
    * to notify the client of state transitions of the specified invoice.
    * Initially the current invoice state is always sent out.
@@ -341,7 +465,7 @@ export const Invoices: GenService<{
     output: typeof InvoiceSchema;
   },
   /**
-   * 
+   * lncli: `cancelinvoice`
    * CancelInvoice cancels a currently open invoice. If the invoice is already
    * canceled, this call will succeed. If the invoice is already settled, it will
    * fail.
@@ -354,7 +478,7 @@ export const Invoices: GenService<{
     output: typeof CancelInvoiceRespSchema;
   },
   /**
-   * 
+   * lncli: `addholdinvoice`
    * AddHoldInvoice creates a hold invoice. It ties the invoice to the hash
    * supplied in the request.
    *
@@ -366,7 +490,7 @@ export const Invoices: GenService<{
     output: typeof AddHoldInvoiceRespSchema;
   },
   /**
-   * 
+   * lncli: `settleinvoice`
    * SettleInvoice settles an accepted invoice. If the invoice is already
    * settled, this call will succeed.
    *
@@ -378,8 +502,8 @@ export const Invoices: GenService<{
     output: typeof SettleInvoiceRespSchema;
   },
   /**
-   * 
-   * LookupInvoiceV2 attempts to look up at invoice. An invoice can be refrenced
+   *
+   * LookupInvoiceV2 attempts to look up at invoice. An invoice can be referenced
    * using either its payment hash, payment address, or set ID.
    *
    * @generated from rpc invoicesrpc.Invoices.LookupInvoiceV2
@@ -388,6 +512,20 @@ export const Invoices: GenService<{
     methodKind: "unary";
     input: typeof LookupInvoiceMsgSchema;
     output: typeof InvoiceSchema;
+  },
+  /**
+   *
+   * HtlcModifier is a bidirectional streaming RPC that allows a client to
+   * intercept and modify the HTLCs that attempt to settle the given invoice. The
+   * server will send HTLCs of invoices to the client and the client can modify
+   * some aspects of the HTLC in order to pass the invoice acceptance tests.
+   *
+   * @generated from rpc invoicesrpc.Invoices.HtlcModifier
+   */
+  htlcModifier: {
+    methodKind: "bidi_streaming";
+    input: typeof HtlcModifyResponseSchema;
+    output: typeof HtlcModifyRequestSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_invoicesrpc_invoices, 0);

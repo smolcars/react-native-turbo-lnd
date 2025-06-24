@@ -66,7 +66,7 @@ export const GetInfoResponseSchema: GenMessage<GetInfoResponse> = /*@__PURE__*/
  */
 export const Watchtower: GenService<{
   /**
-   * lncli: tower info
+   * lncli: `tower info`
    * GetInfo returns general information concerning the companion watchtower
    * including its public key and URIs where the server is currently
    * listening for clients.

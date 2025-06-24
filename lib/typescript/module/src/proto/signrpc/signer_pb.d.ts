@@ -316,6 +316,14 @@ export type SignMessageReq = Message<"signrpc.SignMessageReq"> & {
      * @generated from field: bytes schnorr_sig_tap_tweak = 6;
      */
     schnorrSigTapTweak: Uint8Array;
+    /**
+     *
+     * An optional tag that can be provided when taking a tagged hash of a
+     * message. This option can only be used when schnorr_sig is true.
+     *
+     * @generated from field: bytes tag = 7;
+     */
+    tag: Uint8Array;
 };
 /**
  * Describes the message signrpc.SignMessageReq.
@@ -375,6 +383,14 @@ export type VerifyMessageReq = Message<"signrpc.VerifyMessageReq"> & {
      * @generated from field: bool is_schnorr_sig = 4;
      */
     isSchnorrSig: boolean;
+    /**
+     *
+     * An optional tag that can be provided when taking a tagged hash of a
+     * message. This option can only be used when is_schnorr_sig is true.
+     *
+     * @generated from field: bytes tag = 5;
+     */
+    tag: Uint8Array;
 };
 /**
  * Describes the message signrpc.VerifyMessageReq.
@@ -521,7 +537,7 @@ export type MuSig2CombineKeysRequest = Message<"signrpc.MuSig2CombineKeysRequest
     allSignerPubkeys: Uint8Array[];
     /**
      *
-     * A series of optional generic tweaks to be applied to the the aggregated
+     * A series of optional generic tweaks to be applied to the aggregated
      * public key.
      *
      * @generated from field: repeated signrpc.TweakDesc tweaks = 2;
@@ -619,7 +635,7 @@ export type MuSig2SessionRequest = Message<"signrpc.MuSig2SessionRequest"> & {
     otherSignerPublicNonces: Uint8Array[];
     /**
      *
-     * A series of optional generic tweaks to be applied to the the aggregated
+     * A series of optional generic tweaks to be applied to the aggregated
      * public key.
      *
      * @generated from field: repeated signrpc.TweakDesc tweaks = 4;
@@ -644,6 +660,18 @@ export type MuSig2SessionRequest = Message<"signrpc.MuSig2SessionRequest"> & {
      * @generated from field: signrpc.MuSig2Version version = 6;
      */
     version: MuSig2Version;
+    /**
+     *
+     * A set of pre generated secret local nonces to use in the musig2 session.
+     * This field is optional. This can be useful for protocols that need to send
+     * nonces ahead of time before the set of signer keys are known. This value
+     * MUST be 97 bytes and be the concatenation of two CSPRNG generated 32 byte
+     * values and local public key used for signing as specified in the key_loc
+     * field.
+     *
+     * @generated from field: bytes pregenerated_local_nonce = 7;
+     */
+    pregeneratedLocalNonce: Uint8Array;
 };
 /**
  * Describes the message signrpc.MuSig2SessionRequest.

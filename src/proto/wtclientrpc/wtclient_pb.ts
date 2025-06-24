@@ -10,7 +10,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file wtclientrpc/wtclient.proto.
  */
 export const file_wtclientrpc_wtclient: GenFile = /*@__PURE__*/
-  fileDesc("Chp3dGNsaWVudHJwYy93dGNsaWVudC5wcm90bxILd3RjbGllbnRycGMiMgoPQWRkVG93ZXJSZXF1ZXN0Eg4KBnB1YmtleRgBIAEoDBIPCgdhZGRyZXNzGAIgASgJIhIKEEFkZFRvd2VyUmVzcG9uc2UiNQoSUmVtb3ZlVG93ZXJSZXF1ZXN0Eg4KBnB1YmtleRgBIAEoDBIPCgdhZGRyZXNzGAIgASgJIhUKE1JlbW92ZVRvd2VyUmVzcG9uc2UiYwoTR2V0VG93ZXJJbmZvUmVxdWVzdBIOCgZwdWJrZXkYASABKAwSGAoQaW5jbHVkZV9zZXNzaW9ucxgCIAEoCBIiChpleGNsdWRlX2V4aGF1c3RlZF9zZXNzaW9ucxgDIAEoCCKSAQoMVG93ZXJTZXNzaW9uEhMKC251bV9iYWNrdXBzGAEgASgNEhsKE251bV9wZW5kaW5nX2JhY2t1cHMYAiABKA0SEwoLbWF4X2JhY2t1cHMYAyABKA0SHgoSc3dlZXBfc2F0X3Blcl9ieXRlGAQgASgNQgIYARIbChNzd2VlcF9zYXRfcGVyX3ZieXRlGAUgASgNItABCgVUb3dlchIOCgZwdWJrZXkYASABKAwSEQoJYWRkcmVzc2VzGAIgAygJEiQKGGFjdGl2ZV9zZXNzaW9uX2NhbmRpZGF0ZRgDIAEoCEICGAESGAoMbnVtX3Nlc3Npb25zGAQgASgNQgIYARIvCghzZXNzaW9ucxgFIAMoCzIZLnd0Y2xpZW50cnBjLlRvd2VyU2Vzc2lvbkICGAESMwoMc2Vzc2lvbl9pbmZvGAYgAygLMh0ud3RjbGllbnRycGMuVG93ZXJTZXNzaW9uSW5mbyKlAQoQVG93ZXJTZXNzaW9uSW5mbxIgChhhY3RpdmVfc2Vzc2lvbl9jYW5kaWRhdGUYASABKAgSFAoMbnVtX3Nlc3Npb25zGAIgASgNEisKCHNlc3Npb25zGAMgAygLMhkud3RjbGllbnRycGMuVG93ZXJTZXNzaW9uEiwKC3BvbGljeV90eXBlGAQgASgOMhcud3RjbGllbnRycGMuUG9saWN5VHlwZSJRChFMaXN0VG93ZXJzUmVxdWVzdBIYChBpbmNsdWRlX3Nlc3Npb25zGAEgASgIEiIKGmV4Y2x1ZGVfZXhoYXVzdGVkX3Nlc3Npb25zGAIgASgIIjgKEkxpc3RUb3dlcnNSZXNwb25zZRIiCgZ0b3dlcnMYASADKAsyEi53dGNsaWVudHJwYy5Ub3dlciIOCgxTdGF0c1JlcXVlc3QinAEKDVN0YXRzUmVzcG9uc2USEwoLbnVtX2JhY2t1cHMYASABKA0SGwoTbnVtX3BlbmRpbmdfYmFja3VwcxgCIAEoDRIaChJudW1fZmFpbGVkX2JhY2t1cHMYAyABKA0SHQoVbnVtX3Nlc3Npb25zX2FjcXVpcmVkGAQgASgNEh4KFm51bV9zZXNzaW9uc19leGhhdXN0ZWQYBSABKA0iPQoNUG9saWN5UmVxdWVzdBIsCgtwb2xpY3lfdHlwZRgBIAEoDjIXLnd0Y2xpZW50cnBjLlBvbGljeVR5cGUiYgoOUG9saWN5UmVzcG9uc2USEwoLbWF4X3VwZGF0ZXMYASABKA0SHgoSc3dlZXBfc2F0X3Blcl9ieXRlGAIgASgNQgIYARIbChNzd2VlcF9zYXRfcGVyX3ZieXRlGAMgASgNKiQKClBvbGljeVR5cGUSCgoGTEVHQUNZEAASCgoGQU5DSE9SEAEyxQMKEFdhdGNodG93ZXJDbGllbnQSRwoIQWRkVG93ZXISHC53dGNsaWVudHJwYy5BZGRUb3dlclJlcXVlc3QaHS53dGNsaWVudHJwYy5BZGRUb3dlclJlc3BvbnNlElAKC1JlbW92ZVRvd2VyEh8ud3RjbGllbnRycGMuUmVtb3ZlVG93ZXJSZXF1ZXN0GiAud3RjbGllbnRycGMuUmVtb3ZlVG93ZXJSZXNwb25zZRJNCgpMaXN0VG93ZXJzEh4ud3RjbGllbnRycGMuTGlzdFRvd2Vyc1JlcXVlc3QaHy53dGNsaWVudHJwYy5MaXN0VG93ZXJzUmVzcG9uc2USRAoMR2V0VG93ZXJJbmZvEiAud3RjbGllbnRycGMuR2V0VG93ZXJJbmZvUmVxdWVzdBoSLnd0Y2xpZW50cnBjLlRvd2VyEj4KBVN0YXRzEhkud3RjbGllbnRycGMuU3RhdHNSZXF1ZXN0Ghoud3RjbGllbnRycGMuU3RhdHNSZXNwb25zZRJBCgZQb2xpY3kSGi53dGNsaWVudHJwYy5Qb2xpY3lSZXF1ZXN0Ghsud3RjbGllbnRycGMuUG9saWN5UmVzcG9uc2VCM1oxZ2l0aHViLmNvbS9saWdodG5pbmduZXR3b3JrL2xuZC9sbnJwYy93dGNsaWVudHJwY2IGcHJvdG8z");
+  fileDesc("Chp3dGNsaWVudHJwYy93dGNsaWVudC5wcm90bxILd3RjbGllbnRycGMiMgoPQWRkVG93ZXJSZXF1ZXN0Eg4KBnB1YmtleRgBIAEoDBIPCgdhZGRyZXNzGAIgASgJIhIKEEFkZFRvd2VyUmVzcG9uc2UiNQoSUmVtb3ZlVG93ZXJSZXF1ZXN0Eg4KBnB1YmtleRgBIAEoDBIPCgdhZGRyZXNzGAIgASgJIhUKE1JlbW92ZVRvd2VyUmVzcG9uc2UiKAoWRGVhY3RpdmF0ZVRvd2VyUmVxdWVzdBIOCgZwdWJrZXkYASABKAwiKQoXRGVhY3RpdmF0ZVRvd2VyUmVzcG9uc2USDgoGc3RhdHVzGAEgASgJIi0KF1Rlcm1pbmF0ZVNlc3Npb25SZXF1ZXN0EhIKCnNlc3Npb25faWQYASABKAwiKgoYVGVybWluYXRlU2Vzc2lvblJlc3BvbnNlEg4KBnN0YXR1cxgBIAEoCSJjChNHZXRUb3dlckluZm9SZXF1ZXN0Eg4KBnB1YmtleRgBIAEoDBIYChBpbmNsdWRlX3Nlc3Npb25zGAIgASgIEiIKGmV4Y2x1ZGVfZXhoYXVzdGVkX3Nlc3Npb25zGAMgASgIIp4BCgxUb3dlclNlc3Npb24SEwoLbnVtX2JhY2t1cHMYASABKA0SGwoTbnVtX3BlbmRpbmdfYmFja3VwcxgCIAEoDRITCgttYXhfYmFja3VwcxgDIAEoDRIeChJzd2VlcF9zYXRfcGVyX2J5dGUYBCABKA1CAhgBEhsKE3N3ZWVwX3NhdF9wZXJfdmJ5dGUYBSABKA0SCgoCaWQYBiABKAwi0AEKBVRvd2VyEg4KBnB1YmtleRgBIAEoDBIRCglhZGRyZXNzZXMYAiADKAkSJAoYYWN0aXZlX3Nlc3Npb25fY2FuZGlkYXRlGAMgASgIQgIYARIYCgxudW1fc2Vzc2lvbnMYBCABKA1CAhgBEi8KCHNlc3Npb25zGAUgAygLMhkud3RjbGllbnRycGMuVG93ZXJTZXNzaW9uQgIYARIzCgxzZXNzaW9uX2luZm8YBiADKAsyHS53dGNsaWVudHJwYy5Ub3dlclNlc3Npb25JbmZvIqUBChBUb3dlclNlc3Npb25JbmZvEiAKGGFjdGl2ZV9zZXNzaW9uX2NhbmRpZGF0ZRgBIAEoCBIUCgxudW1fc2Vzc2lvbnMYAiABKA0SKwoIc2Vzc2lvbnMYAyADKAsyGS53dGNsaWVudHJwYy5Ub3dlclNlc3Npb24SLAoLcG9saWN5X3R5cGUYBCABKA4yFy53dGNsaWVudHJwYy5Qb2xpY3lUeXBlIlEKEUxpc3RUb3dlcnNSZXF1ZXN0EhgKEGluY2x1ZGVfc2Vzc2lvbnMYASABKAgSIgoaZXhjbHVkZV9leGhhdXN0ZWRfc2Vzc2lvbnMYAiABKAgiOAoSTGlzdFRvd2Vyc1Jlc3BvbnNlEiIKBnRvd2VycxgBIAMoCzISLnd0Y2xpZW50cnBjLlRvd2VyIg4KDFN0YXRzUmVxdWVzdCKcAQoNU3RhdHNSZXNwb25zZRITCgtudW1fYmFja3VwcxgBIAEoDRIbChNudW1fcGVuZGluZ19iYWNrdXBzGAIgASgNEhoKEm51bV9mYWlsZWRfYmFja3VwcxgDIAEoDRIdChVudW1fc2Vzc2lvbnNfYWNxdWlyZWQYBCABKA0SHgoWbnVtX3Nlc3Npb25zX2V4aGF1c3RlZBgFIAEoDSI9Cg1Qb2xpY3lSZXF1ZXN0EiwKC3BvbGljeV90eXBlGAEgASgOMhcud3RjbGllbnRycGMuUG9saWN5VHlwZSJiCg5Qb2xpY3lSZXNwb25zZRITCgttYXhfdXBkYXRlcxgBIAEoDRIeChJzd2VlcF9zYXRfcGVyX2J5dGUYAiABKA1CAhgBEhsKE3N3ZWVwX3NhdF9wZXJfdmJ5dGUYAyABKA0qMQoKUG9saWN5VHlwZRIKCgZMRUdBQ1kQABIKCgZBTkNIT1IQARILCgdUQVBST09UEAIyhAUKEFdhdGNodG93ZXJDbGllbnQSRwoIQWRkVG93ZXISHC53dGNsaWVudHJwYy5BZGRUb3dlclJlcXVlc3QaHS53dGNsaWVudHJwYy5BZGRUb3dlclJlc3BvbnNlElAKC1JlbW92ZVRvd2VyEh8ud3RjbGllbnRycGMuUmVtb3ZlVG93ZXJSZXF1ZXN0GiAud3RjbGllbnRycGMuUmVtb3ZlVG93ZXJSZXNwb25zZRJcCg9EZWFjdGl2YXRlVG93ZXISIy53dGNsaWVudHJwYy5EZWFjdGl2YXRlVG93ZXJSZXF1ZXN0GiQud3RjbGllbnRycGMuRGVhY3RpdmF0ZVRvd2VyUmVzcG9uc2USXwoQVGVybWluYXRlU2Vzc2lvbhIkLnd0Y2xpZW50cnBjLlRlcm1pbmF0ZVNlc3Npb25SZXF1ZXN0GiUud3RjbGllbnRycGMuVGVybWluYXRlU2Vzc2lvblJlc3BvbnNlEk0KCkxpc3RUb3dlcnMSHi53dGNsaWVudHJwYy5MaXN0VG93ZXJzUmVxdWVzdBofLnd0Y2xpZW50cnBjLkxpc3RUb3dlcnNSZXNwb25zZRJECgxHZXRUb3dlckluZm8SIC53dGNsaWVudHJwYy5HZXRUb3dlckluZm9SZXF1ZXN0GhIud3RjbGllbnRycGMuVG93ZXISPgoFU3RhdHMSGS53dGNsaWVudHJwYy5TdGF0c1JlcXVlc3QaGi53dGNsaWVudHJwYy5TdGF0c1Jlc3BvbnNlEkEKBlBvbGljeRIaLnd0Y2xpZW50cnBjLlBvbGljeVJlcXVlc3QaGy53dGNsaWVudHJwYy5Qb2xpY3lSZXNwb25zZUIzWjFnaXRodWIuY29tL2xpZ2h0bmluZ25ldHdvcmsvbG5kL2xucnBjL3d0Y2xpZW50cnBjYgZwcm90bzM");
 
 /**
  * @generated from message wtclientrpc.AddTowerRequest
@@ -63,7 +63,7 @@ export type RemoveTowerRequest = Message<"wtclientrpc.RemoveTowerRequest"> & {
   pubkey: Uint8Array;
 
   /**
-   * 
+   *
    * If set, then the record for this address will be removed, indicating that is
    * is stale. Otherwise, the watchtower will no longer be used for future
    * session negotiations and backups.
@@ -92,6 +92,82 @@ export type RemoveTowerResponse = Message<"wtclientrpc.RemoveTowerResponse"> & {
  */
 export const RemoveTowerResponseSchema: GenMessage<RemoveTowerResponse> = /*@__PURE__*/
   messageDesc(file_wtclientrpc_wtclient, 3);
+
+/**
+ * @generated from message wtclientrpc.DeactivateTowerRequest
+ */
+export type DeactivateTowerRequest = Message<"wtclientrpc.DeactivateTowerRequest"> & {
+  /**
+   * The identifying public key of the watchtower to deactivate.
+   *
+   * @generated from field: bytes pubkey = 1;
+   */
+  pubkey: Uint8Array;
+};
+
+/**
+ * Describes the message wtclientrpc.DeactivateTowerRequest.
+ * Use `create(DeactivateTowerRequestSchema)` to create a new message.
+ */
+export const DeactivateTowerRequestSchema: GenMessage<DeactivateTowerRequest> = /*@__PURE__*/
+  messageDesc(file_wtclientrpc_wtclient, 4);
+
+/**
+ * @generated from message wtclientrpc.DeactivateTowerResponse
+ */
+export type DeactivateTowerResponse = Message<"wtclientrpc.DeactivateTowerResponse"> & {
+  /**
+   * A string describing the action that took place.
+   *
+   * @generated from field: string status = 1;
+   */
+  status: string;
+};
+
+/**
+ * Describes the message wtclientrpc.DeactivateTowerResponse.
+ * Use `create(DeactivateTowerResponseSchema)` to create a new message.
+ */
+export const DeactivateTowerResponseSchema: GenMessage<DeactivateTowerResponse> = /*@__PURE__*/
+  messageDesc(file_wtclientrpc_wtclient, 5);
+
+/**
+ * @generated from message wtclientrpc.TerminateSessionRequest
+ */
+export type TerminateSessionRequest = Message<"wtclientrpc.TerminateSessionRequest"> & {
+  /**
+   * The ID of the session that should be terminated.
+   *
+   * @generated from field: bytes session_id = 1;
+   */
+  sessionId: Uint8Array;
+};
+
+/**
+ * Describes the message wtclientrpc.TerminateSessionRequest.
+ * Use `create(TerminateSessionRequestSchema)` to create a new message.
+ */
+export const TerminateSessionRequestSchema: GenMessage<TerminateSessionRequest> = /*@__PURE__*/
+  messageDesc(file_wtclientrpc_wtclient, 6);
+
+/**
+ * @generated from message wtclientrpc.TerminateSessionResponse
+ */
+export type TerminateSessionResponse = Message<"wtclientrpc.TerminateSessionResponse"> & {
+  /**
+   * A string describing the action that took place.
+   *
+   * @generated from field: string status = 1;
+   */
+  status: string;
+};
+
+/**
+ * Describes the message wtclientrpc.TerminateSessionResponse.
+ * Use `create(TerminateSessionResponseSchema)` to create a new message.
+ */
+export const TerminateSessionResponseSchema: GenMessage<TerminateSessionResponse> = /*@__PURE__*/
+  messageDesc(file_wtclientrpc_wtclient, 7);
 
 /**
  * @generated from message wtclientrpc.GetTowerInfoRequest
@@ -125,14 +201,14 @@ export type GetTowerInfoRequest = Message<"wtclientrpc.GetTowerInfoRequest"> & {
  * Use `create(GetTowerInfoRequestSchema)` to create a new message.
  */
 export const GetTowerInfoRequestSchema: GenMessage<GetTowerInfoRequest> = /*@__PURE__*/
-  messageDesc(file_wtclientrpc_wtclient, 4);
+  messageDesc(file_wtclientrpc_wtclient, 8);
 
 /**
  * @generated from message wtclientrpc.TowerSession
  */
 export type TowerSession = Message<"wtclientrpc.TowerSession"> & {
   /**
-   * 
+   *
    * The total number of successful backups that have been made to the
    * watchtower session.
    *
@@ -141,7 +217,7 @@ export type TowerSession = Message<"wtclientrpc.TowerSession"> & {
   numBackups: number;
 
   /**
-   * 
+   *
    * The total number of backups in the session that are currently pending to be
    * acknowledged by the watchtower.
    *
@@ -157,7 +233,7 @@ export type TowerSession = Message<"wtclientrpc.TowerSession"> & {
   maxBackups: number;
 
   /**
-   * 
+   *
    * Deprecated, use sweep_sat_per_vbyte.
    * The fee rate, in satoshis per vbyte, that will be used by the watchtower for
    * the justice transaction in the event of a channel breach.
@@ -168,13 +244,21 @@ export type TowerSession = Message<"wtclientrpc.TowerSession"> & {
   sweepSatPerByte: number;
 
   /**
-   * 
+   *
    * The fee rate, in satoshis per vbyte, that will be used by the watchtower for
    * the justice transaction in the event of a channel breach.
    *
    * @generated from field: uint32 sweep_sat_per_vbyte = 5;
    */
   sweepSatPerVbyte: number;
+
+  /**
+   *
+   * The ID of the session.
+   *
+   * @generated from field: bytes id = 6;
+   */
+  id: Uint8Array;
 };
 
 /**
@@ -182,7 +266,7 @@ export type TowerSession = Message<"wtclientrpc.TowerSession"> & {
  * Use `create(TowerSessionSchema)` to create a new message.
  */
 export const TowerSessionSchema: GenMessage<TowerSession> = /*@__PURE__*/
-  messageDesc(file_wtclientrpc_wtclient, 5);
+  messageDesc(file_wtclientrpc_wtclient, 9);
 
 /**
  * @generated from message wtclientrpc.Tower
@@ -245,7 +329,7 @@ export type Tower = Message<"wtclientrpc.Tower"> & {
  * Use `create(TowerSchema)` to create a new message.
  */
 export const TowerSchema: GenMessage<Tower> = /*@__PURE__*/
-  messageDesc(file_wtclientrpc_wtclient, 6);
+  messageDesc(file_wtclientrpc_wtclient, 10);
 
 /**
  * @generated from message wtclientrpc.TowerSessionInfo
@@ -285,7 +369,7 @@ export type TowerSessionInfo = Message<"wtclientrpc.TowerSessionInfo"> & {
  * Use `create(TowerSessionInfoSchema)` to create a new message.
  */
 export const TowerSessionInfoSchema: GenMessage<TowerSessionInfo> = /*@__PURE__*/
-  messageDesc(file_wtclientrpc_wtclient, 7);
+  messageDesc(file_wtclientrpc_wtclient, 11);
 
 /**
  * @generated from message wtclientrpc.ListTowersRequest
@@ -312,7 +396,7 @@ export type ListTowersRequest = Message<"wtclientrpc.ListTowersRequest"> & {
  * Use `create(ListTowersRequestSchema)` to create a new message.
  */
 export const ListTowersRequestSchema: GenMessage<ListTowersRequest> = /*@__PURE__*/
-  messageDesc(file_wtclientrpc_wtclient, 8);
+  messageDesc(file_wtclientrpc_wtclient, 12);
 
 /**
  * @generated from message wtclientrpc.ListTowersResponse
@@ -331,7 +415,7 @@ export type ListTowersResponse = Message<"wtclientrpc.ListTowersResponse"> & {
  * Use `create(ListTowersResponseSchema)` to create a new message.
  */
 export const ListTowersResponseSchema: GenMessage<ListTowersResponse> = /*@__PURE__*/
-  messageDesc(file_wtclientrpc_wtclient, 9);
+  messageDesc(file_wtclientrpc_wtclient, 13);
 
 /**
  * @generated from message wtclientrpc.StatsRequest
@@ -344,14 +428,14 @@ export type StatsRequest = Message<"wtclientrpc.StatsRequest"> & {
  * Use `create(StatsRequestSchema)` to create a new message.
  */
 export const StatsRequestSchema: GenMessage<StatsRequest> = /*@__PURE__*/
-  messageDesc(file_wtclientrpc_wtclient, 10);
+  messageDesc(file_wtclientrpc_wtclient, 14);
 
 /**
  * @generated from message wtclientrpc.StatsResponse
  */
 export type StatsResponse = Message<"wtclientrpc.StatsResponse"> & {
   /**
-   * 
+   *
    * The total number of backups made to all active and exhausted watchtower
    * sessions.
    *
@@ -360,7 +444,7 @@ export type StatsResponse = Message<"wtclientrpc.StatsResponse"> & {
   numBackups: number;
 
   /**
-   * 
+   *
    * The total number of backups that are pending to be acknowledged by all
    * active and exhausted watchtower sessions.
    *
@@ -369,7 +453,7 @@ export type StatsResponse = Message<"wtclientrpc.StatsResponse"> & {
   numPendingBackups: number;
 
   /**
-   * 
+   *
    * The total number of backups that all active and exhausted watchtower
    * sessions have failed to acknowledge.
    *
@@ -397,14 +481,14 @@ export type StatsResponse = Message<"wtclientrpc.StatsResponse"> & {
  * Use `create(StatsResponseSchema)` to create a new message.
  */
 export const StatsResponseSchema: GenMessage<StatsResponse> = /*@__PURE__*/
-  messageDesc(file_wtclientrpc_wtclient, 11);
+  messageDesc(file_wtclientrpc_wtclient, 15);
 
 /**
  * @generated from message wtclientrpc.PolicyRequest
  */
 export type PolicyRequest = Message<"wtclientrpc.PolicyRequest"> & {
   /**
-   * 
+   *
    * The client type from which to retrieve the active offering policy.
    *
    * @generated from field: wtclientrpc.PolicyType policy_type = 1;
@@ -417,14 +501,14 @@ export type PolicyRequest = Message<"wtclientrpc.PolicyRequest"> & {
  * Use `create(PolicyRequestSchema)` to create a new message.
  */
 export const PolicyRequestSchema: GenMessage<PolicyRequest> = /*@__PURE__*/
-  messageDesc(file_wtclientrpc_wtclient, 12);
+  messageDesc(file_wtclientrpc_wtclient, 16);
 
 /**
  * @generated from message wtclientrpc.PolicyResponse
  */
 export type PolicyResponse = Message<"wtclientrpc.PolicyResponse"> & {
   /**
-   * 
+   *
    * The maximum number of updates each session we negotiate with watchtowers
    * should allow.
    *
@@ -433,7 +517,7 @@ export type PolicyResponse = Message<"wtclientrpc.PolicyResponse"> & {
   maxUpdates: number;
 
   /**
-   * 
+   *
    * Deprecated, use sweep_sat_per_vbyte.
    * The fee rate, in satoshis per vbyte, that will be used by watchtowers for
    * justice transactions in response to channel breaches.
@@ -444,7 +528,7 @@ export type PolicyResponse = Message<"wtclientrpc.PolicyResponse"> & {
   sweepSatPerByte: number;
 
   /**
-   * 
+   *
    * The fee rate, in satoshis per vbyte, that will be used by watchtowers for
    * justice transactions in response to channel breaches.
    *
@@ -458,7 +542,7 @@ export type PolicyResponse = Message<"wtclientrpc.PolicyResponse"> & {
  * Use `create(PolicyResponseSchema)` to create a new message.
  */
 export const PolicyResponseSchema: GenMessage<PolicyResponse> = /*@__PURE__*/
-  messageDesc(file_wtclientrpc_wtclient, 13);
+  messageDesc(file_wtclientrpc_wtclient, 17);
 
 /**
  * @generated from enum wtclientrpc.PolicyType
@@ -477,6 +561,13 @@ export enum PolicyType {
    * @generated from enum value: ANCHOR = 1;
    */
   ANCHOR = 1,
+
+  /**
+   * Selects the policy from the taproot tower client.
+   *
+   * @generated from enum value: TAPROOT = 2;
+   */
+  TAPROOT = 2,
 }
 
 /**
@@ -493,7 +584,7 @@ export const PolicyTypeSchema: GenEnum<PolicyType> = /*@__PURE__*/
  */
 export const WatchtowerClient: GenService<{
   /**
-   * 
+   * lncli: `wtclient add`
    * AddTower adds a new watchtower reachable at the given address and
    * considers it for new sessions. If the watchtower already exists, then
    * any new addresses included will be considered when dialing it for
@@ -507,7 +598,7 @@ export const WatchtowerClient: GenService<{
     output: typeof AddTowerResponseSchema;
   },
   /**
-   * 
+   * lncli: `wtclient remove`
    * RemoveTower removes a watchtower from being considered for future session
    * negotiations and from being used for any subsequent backups until it's added
    * again. If an address is provided, then this RPC only serves as a way of
@@ -521,6 +612,32 @@ export const WatchtowerClient: GenService<{
     output: typeof RemoveTowerResponseSchema;
   },
   /**
+   * lncli: `wtclient deactivate`
+   * DeactivateTower sets the given tower's status to inactive so that it
+   * is not considered for session negotiation. Its sessions will also not
+   * be used while the tower is inactive.
+   *
+   * @generated from rpc wtclientrpc.WatchtowerClient.DeactivateTower
+   */
+  deactivateTower: {
+    methodKind: "unary";
+    input: typeof DeactivateTowerRequestSchema;
+    output: typeof DeactivateTowerResponseSchema;
+  },
+  /**
+   * lncli: `wtclient session terminate`
+   * Terminate terminates the given session and marks it as terminal so that
+   * it is not used for backups anymore.
+   *
+   * @generated from rpc wtclientrpc.WatchtowerClient.TerminateSession
+   */
+  terminateSession: {
+    methodKind: "unary";
+    input: typeof TerminateSessionRequestSchema;
+    output: typeof TerminateSessionResponseSchema;
+  },
+  /**
+   * lncli: `wtclient towers`
    * ListTowers returns the list of watchtowers registered with the client.
    *
    * @generated from rpc wtclientrpc.WatchtowerClient.ListTowers
@@ -531,6 +648,7 @@ export const WatchtowerClient: GenService<{
     output: typeof ListTowersResponseSchema;
   },
   /**
+   * lncli: `wtclient tower`
    * GetTowerInfo retrieves information for a registered watchtower.
    *
    * @generated from rpc wtclientrpc.WatchtowerClient.GetTowerInfo
@@ -541,6 +659,7 @@ export const WatchtowerClient: GenService<{
     output: typeof TowerSchema;
   },
   /**
+   * lncli: `wtclient stats`
    * Stats returns the in-memory statistics of the client since startup.
    *
    * @generated from rpc wtclientrpc.WatchtowerClient.Stats
@@ -551,6 +670,7 @@ export const WatchtowerClient: GenService<{
     output: typeof StatsResponseSchema;
   },
   /**
+   * lncli: `wtclient policy`
    * Policy returns the active watchtower client policy configuration.
    *
    * @generated from rpc wtclientrpc.WatchtowerClient.Policy

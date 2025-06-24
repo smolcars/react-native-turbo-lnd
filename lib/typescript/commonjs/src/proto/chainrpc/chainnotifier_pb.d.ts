@@ -410,6 +410,38 @@ export type GetBlockResponse = Message<"chainrpc.GetBlockResponse"> & {
  */
 export declare const GetBlockResponseSchema: GenMessage<GetBlockResponse>;
 /**
+ * @generated from message chainrpc.GetBlockHeaderRequest
+ */
+export type GetBlockHeaderRequest = Message<"chainrpc.GetBlockHeaderRequest"> & {
+    /**
+     * The hash of the block with the requested header.
+     *
+     * @generated from field: bytes block_hash = 1;
+     */
+    blockHash: Uint8Array;
+};
+/**
+ * Describes the message chainrpc.GetBlockHeaderRequest.
+ * Use `create(GetBlockHeaderRequestSchema)` to create a new message.
+ */
+export declare const GetBlockHeaderRequestSchema: GenMessage<GetBlockHeaderRequest>;
+/**
+ * @generated from message chainrpc.GetBlockHeaderResponse
+ */
+export type GetBlockHeaderResponse = Message<"chainrpc.GetBlockHeaderResponse"> & {
+    /**
+     * The header of the block with the requested hash.
+     *
+     * @generated from field: bytes raw_block_header = 1;
+     */
+    rawBlockHeader: Uint8Array;
+};
+/**
+ * Describes the message chainrpc.GetBlockHeaderResponse.
+ * Use `create(GetBlockHeaderResponseSchema)` to create a new message.
+ */
+export declare const GetBlockHeaderResponseSchema: GenMessage<GetBlockHeaderResponse>;
+/**
  * @generated from message chainrpc.GetBestBlockRequest
  */
 export type GetBestBlockRequest = Message<"chainrpc.GetBestBlockRequest"> & {};
@@ -489,6 +521,17 @@ export declare const ChainKit: GenService<{
         methodKind: "unary";
         input: typeof GetBlockRequestSchema;
         output: typeof GetBlockResponseSchema;
+    };
+    /**
+     * lncli: `chain getblockheader`
+     * GetBlockHeader returns a block header with a particular block hash.
+     *
+     * @generated from rpc chainrpc.ChainKit.GetBlockHeader
+     */
+    getBlockHeader: {
+        methodKind: "unary";
+        input: typeof GetBlockHeaderRequestSchema;
+        output: typeof GetBlockHeaderResponseSchema;
     };
     /**
      * lncli: `chain getbestblock`

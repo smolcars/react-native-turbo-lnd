@@ -443,7 +443,7 @@ export declare const GetBlockHashResponseSchema: GenMessage<GetBlockHashResponse
  */
 export declare const NeutrinoKit: GenService<{
     /**
-     *
+     * lncli: `neutrino status`
      * Status returns the status of the light client neutrino instance,
      * along with height and hash of the best block, and a list of connected
      * peers.
@@ -456,7 +456,7 @@ export declare const NeutrinoKit: GenService<{
         output: typeof StatusResponseSchema;
     };
     /**
-     *
+     * lncli: `neutrino addpeer`
      * AddPeer adds a new peer that has already been connected to the server.
      *
      * @generated from rpc neutrinorpc.NeutrinoKit.AddPeer
@@ -467,7 +467,7 @@ export declare const NeutrinoKit: GenService<{
         output: typeof AddPeerResponseSchema;
     };
     /**
-     *
+     * lncli: `neutrino disconnectpeer`
      * DisconnectPeer disconnects a peer by target address. Both outbound and
      * inbound nodes will be searched for the target node. An error message will
      * be returned if the peer was not found.
@@ -480,7 +480,7 @@ export declare const NeutrinoKit: GenService<{
         output: typeof DisconnectPeerResponseSchema;
     };
     /**
-     *
+     * lncli: `neutrino isbanned`
      * IsBanned returns true if the peer is banned, otherwise false.
      *
      * @generated from rpc neutrinorpc.NeutrinoKit.IsBanned
@@ -491,7 +491,7 @@ export declare const NeutrinoKit: GenService<{
         output: typeof IsBannedResponseSchema;
     };
     /**
-     *
+     * lncli: `neutrino getblockheader`
      * GetBlockHeader returns a block header with a particular block hash.
      *
      * @generated from rpc neutrinorpc.NeutrinoKit.GetBlockHeader
@@ -513,7 +513,7 @@ export declare const NeutrinoKit: GenService<{
         output: typeof GetBlockResponseSchema;
     };
     /**
-     *
+     * lncli: `neutrino getcfilter`
      * GetCFilter returns a compact filter from a block.
      *
      * @generated from rpc neutrinorpc.NeutrinoKit.GetCFilter

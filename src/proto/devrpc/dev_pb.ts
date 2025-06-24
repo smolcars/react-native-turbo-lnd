@@ -32,7 +32,7 @@ export const ImportGraphResponseSchema: GenMessage<ImportGraphResponse> = /*@__P
  */
 export const Dev: GenService<{
   /**
-   * 
+   * lncli: `importgraph`
    * ImportGraph imports a ChannelGraph into the graph database. Should only be
    * used for development.
    *

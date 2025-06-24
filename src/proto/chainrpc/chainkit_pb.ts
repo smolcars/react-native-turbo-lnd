@@ -10,7 +10,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file chainrpc/chainkit.proto.
  */
 export const file_chainrpc_chainkit: GenFile = /*@__PURE__*/
-  fileDesc("ChdjaGFpbnJwYy9jaGFpbmtpdC5wcm90bxIIY2hhaW5ycGMiJQoPR2V0QmxvY2tSZXF1ZXN0EhIKCmJsb2NrX2hhc2gYASABKAwiJQoQR2V0QmxvY2tSZXNwb25zZRIRCglyYXdfYmxvY2sYASABKAwiFQoTR2V0QmVzdEJsb2NrUmVxdWVzdCJAChRHZXRCZXN0QmxvY2tSZXNwb25zZRISCgpibG9ja19oYXNoGAEgASgMEhQKDGJsb2NrX2hlaWdodBgCIAEoBSIrChNHZXRCbG9ja0hhc2hSZXF1ZXN0EhQKDGJsb2NrX2hlaWdodBgBIAEoAyIqChRHZXRCbG9ja0hhc2hSZXNwb25zZRISCgpibG9ja19oYXNoGAEgASgMMusBCghDaGFpbktpdBJBCghHZXRCbG9jaxIZLmNoYWlucnBjLkdldEJsb2NrUmVxdWVzdBoaLmNoYWlucnBjLkdldEJsb2NrUmVzcG9uc2USTQoMR2V0QmVzdEJsb2NrEh0uY2hhaW5ycGMuR2V0QmVzdEJsb2NrUmVxdWVzdBoeLmNoYWlucnBjLkdldEJlc3RCbG9ja1Jlc3BvbnNlEk0KDEdldEJsb2NrSGFzaBIdLmNoYWlucnBjLkdldEJsb2NrSGFzaFJlcXVlc3QaHi5jaGFpbnJwYy5HZXRCbG9ja0hhc2hSZXNwb25zZUIwWi5naXRodWIuY29tL2xpZ2h0bmluZ25ldHdvcmsvbG5kL2xucnBjL2NoYWlucnBjYgZwcm90bzM");
+  fileDesc("ChdjaGFpbnJwYy9jaGFpbmtpdC5wcm90bxIIY2hhaW5ycGMiJQoPR2V0QmxvY2tSZXF1ZXN0EhIKCmJsb2NrX2hhc2gYASABKAwiJQoQR2V0QmxvY2tSZXNwb25zZRIRCglyYXdfYmxvY2sYASABKAwiKwoVR2V0QmxvY2tIZWFkZXJSZXF1ZXN0EhIKCmJsb2NrX2hhc2gYASABKAwiMgoWR2V0QmxvY2tIZWFkZXJSZXNwb25zZRIYChByYXdfYmxvY2tfaGVhZGVyGAEgASgMIhUKE0dldEJlc3RCbG9ja1JlcXVlc3QiQAoUR2V0QmVzdEJsb2NrUmVzcG9uc2USEgoKYmxvY2tfaGFzaBgBIAEoDBIUCgxibG9ja19oZWlnaHQYAiABKAUiKwoTR2V0QmxvY2tIYXNoUmVxdWVzdBIUCgxibG9ja19oZWlnaHQYASABKAMiKgoUR2V0QmxvY2tIYXNoUmVzcG9uc2USEgoKYmxvY2tfaGFzaBgBIAEoDDLAAgoIQ2hhaW5LaXQSQQoIR2V0QmxvY2sSGS5jaGFpbnJwYy5HZXRCbG9ja1JlcXVlc3QaGi5jaGFpbnJwYy5HZXRCbG9ja1Jlc3BvbnNlElMKDkdldEJsb2NrSGVhZGVyEh8uY2hhaW5ycGMuR2V0QmxvY2tIZWFkZXJSZXF1ZXN0GiAuY2hhaW5ycGMuR2V0QmxvY2tIZWFkZXJSZXNwb25zZRJNCgxHZXRCZXN0QmxvY2sSHS5jaGFpbnJwYy5HZXRCZXN0QmxvY2tSZXF1ZXN0Gh4uY2hhaW5ycGMuR2V0QmVzdEJsb2NrUmVzcG9uc2USTQoMR2V0QmxvY2tIYXNoEh0uY2hhaW5ycGMuR2V0QmxvY2tIYXNoUmVxdWVzdBoeLmNoYWlucnBjLkdldEJsb2NrSGFzaFJlc3BvbnNlQjBaLmdpdGh1Yi5jb20vbGlnaHRuaW5nbmV0d29yay9sbmQvbG5ycGMvY2hhaW5ycGNiBnByb3RvMw");
 
 /**
  * @generated from message chainrpc.GetBlockRequest
@@ -54,6 +54,44 @@ export const GetBlockResponseSchema: GenMessage<GetBlockResponse> = /*@__PURE__*
   messageDesc(file_chainrpc_chainkit, 1);
 
 /**
+ * @generated from message chainrpc.GetBlockHeaderRequest
+ */
+export type GetBlockHeaderRequest = Message<"chainrpc.GetBlockHeaderRequest"> & {
+  /**
+   * The hash of the block with the requested header.
+   *
+   * @generated from field: bytes block_hash = 1;
+   */
+  blockHash: Uint8Array;
+};
+
+/**
+ * Describes the message chainrpc.GetBlockHeaderRequest.
+ * Use `create(GetBlockHeaderRequestSchema)` to create a new message.
+ */
+export const GetBlockHeaderRequestSchema: GenMessage<GetBlockHeaderRequest> = /*@__PURE__*/
+  messageDesc(file_chainrpc_chainkit, 2);
+
+/**
+ * @generated from message chainrpc.GetBlockHeaderResponse
+ */
+export type GetBlockHeaderResponse = Message<"chainrpc.GetBlockHeaderResponse"> & {
+  /**
+   * The header of the block with the requested hash.
+   *
+   * @generated from field: bytes raw_block_header = 1;
+   */
+  rawBlockHeader: Uint8Array;
+};
+
+/**
+ * Describes the message chainrpc.GetBlockHeaderResponse.
+ * Use `create(GetBlockHeaderResponseSchema)` to create a new message.
+ */
+export const GetBlockHeaderResponseSchema: GenMessage<GetBlockHeaderResponse> = /*@__PURE__*/
+  messageDesc(file_chainrpc_chainkit, 3);
+
+/**
  * @generated from message chainrpc.GetBestBlockRequest
  */
 export type GetBestBlockRequest = Message<"chainrpc.GetBestBlockRequest"> & {
@@ -64,7 +102,7 @@ export type GetBestBlockRequest = Message<"chainrpc.GetBestBlockRequest"> & {
  * Use `create(GetBestBlockRequestSchema)` to create a new message.
  */
 export const GetBestBlockRequestSchema: GenMessage<GetBestBlockRequest> = /*@__PURE__*/
-  messageDesc(file_chainrpc_chainkit, 2);
+  messageDesc(file_chainrpc_chainkit, 4);
 
 /**
  * @generated from message chainrpc.GetBestBlockResponse
@@ -90,7 +128,7 @@ export type GetBestBlockResponse = Message<"chainrpc.GetBestBlockResponse"> & {
  * Use `create(GetBestBlockResponseSchema)` to create a new message.
  */
 export const GetBestBlockResponseSchema: GenMessage<GetBestBlockResponse> = /*@__PURE__*/
-  messageDesc(file_chainrpc_chainkit, 3);
+  messageDesc(file_chainrpc_chainkit, 5);
 
 /**
  * @generated from message chainrpc.GetBlockHashRequest
@@ -109,7 +147,7 @@ export type GetBlockHashRequest = Message<"chainrpc.GetBlockHashRequest"> & {
  * Use `create(GetBlockHashRequestSchema)` to create a new message.
  */
 export const GetBlockHashRequestSchema: GenMessage<GetBlockHashRequest> = /*@__PURE__*/
-  messageDesc(file_chainrpc_chainkit, 4);
+  messageDesc(file_chainrpc_chainkit, 6);
 
 /**
  * @generated from message chainrpc.GetBlockHashResponse
@@ -128,7 +166,7 @@ export type GetBlockHashResponse = Message<"chainrpc.GetBlockHashResponse"> & {
  * Use `create(GetBlockHashResponseSchema)` to create a new message.
  */
 export const GetBlockHashResponseSchema: GenMessage<GetBlockHashResponse> = /*@__PURE__*/
-  messageDesc(file_chainrpc_chainkit, 5);
+  messageDesc(file_chainrpc_chainkit, 7);
 
 /**
  * ChainKit is a service that can be used to get information from the
@@ -147,6 +185,17 @@ export const ChainKit: GenService<{
     methodKind: "unary";
     input: typeof GetBlockRequestSchema;
     output: typeof GetBlockResponseSchema;
+  },
+  /**
+   * lncli: `chain getblockheader`
+   * GetBlockHeader returns a block header with a particular block hash.
+   *
+   * @generated from rpc chainrpc.ChainKit.GetBlockHeader
+   */
+  getBlockHeader: {
+    methodKind: "unary";
+    input: typeof GetBlockHeaderRequestSchema;
+    output: typeof GetBlockHeaderResponseSchema;
   },
   /**
    * lncli: `chain getbestblock`

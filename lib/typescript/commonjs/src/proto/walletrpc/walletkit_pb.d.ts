@@ -1,5 +1,5 @@
 import type { GenEnum, GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv2";
-import type { OutPoint, TransactionDetails, Utxo } from "../lightning_pb";
+import type { CoinSelectionStrategy, OutPoint, TransactionDetails, TransactionSchema as TransactionSchema$1, Utxo } from "../lightning_pb";
 import type { KeyDescriptorSchema, KeyLocatorSchema, TxOut } from "../signrpc/signer_pb";
 import type { Message } from "@bufbuild/protobuf";
 /**
@@ -319,6 +319,19 @@ export type AddressProperty = Message<"walletrpc.AddressProperty"> & {
      * @generated from field: int64 balance = 3;
      */
     balance: bigint;
+    /**
+     * The full derivation path of the address. This will be empty for imported
+     * addresses.
+     *
+     * @generated from field: string derivation_path = 4;
+     */
+    derivationPath: string;
+    /**
+     * The public key of the address. This will be empty for imported addresses.
+     *
+     * @generated from field: bytes public_key = 5;
+     */
+    publicKey: Uint8Array;
 };
 /**
  * Describes the message walletrpc.AddressProperty.
@@ -473,6 +486,22 @@ export type ListAddressesResponse = Message<"walletrpc.ListAddressesResponse"> &
  * Use `create(ListAddressesResponseSchema)` to create a new message.
  */
 export declare const ListAddressesResponseSchema: GenMessage<ListAddressesResponse>;
+/**
+ * @generated from message walletrpc.GetTransactionRequest
+ */
+export type GetTransactionRequest = Message<"walletrpc.GetTransactionRequest"> & {
+    /**
+     * The txid of the transaction.
+     *
+     * @generated from field: string txid = 1;
+     */
+    txid: string;
+};
+/**
+ * Describes the message walletrpc.GetTransactionRequest.
+ * Use `create(GetTransactionRequestSchema)` to create a new message.
+ */
+export declare const GetTransactionRequestSchema: GenMessage<GetTransactionRequest>;
 /**
  * @generated from message walletrpc.SignMessageWithAddrRequest
  */
@@ -884,6 +913,22 @@ export type PublishResponse = Message<"walletrpc.PublishResponse"> & {
  */
 export declare const PublishResponseSchema: GenMessage<PublishResponse>;
 /**
+ * @generated from message walletrpc.RemoveTransactionResponse
+ */
+export type RemoveTransactionResponse = Message<"walletrpc.RemoveTransactionResponse"> & {
+    /**
+     * The status of the remove transaction operation.
+     *
+     * @generated from field: string status = 1;
+     */
+    status: string;
+};
+/**
+ * Describes the message walletrpc.RemoveTransactionResponse.
+ * Use `create(RemoveTransactionResponseSchema)` to create a new message.
+ */
+export declare const RemoveTransactionResponseSchema: GenMessage<RemoveTransactionResponse>;
+/**
  * @generated from message walletrpc.SendOutputsRequest
  */
 export type SendOutputsRequest = Message<"walletrpc.SendOutputsRequest"> & {
@@ -921,6 +966,12 @@ export type SendOutputsRequest = Message<"walletrpc.SendOutputsRequest"> & {
      * @generated from field: bool spend_unconfirmed = 5;
      */
     spendUnconfirmed: boolean;
+    /**
+     * The strategy to use for selecting coins during sending the outputs.
+     *
+     * @generated from field: lnrpc.CoinSelectionStrategy coin_selection_strategy = 6;
+     */
+    coinSelectionStrategy: CoinSelectionStrategy;
 };
 /**
  * Describes the message walletrpc.SendOutputsRequest.
@@ -973,6 +1024,12 @@ export type EstimateFeeResponse = Message<"walletrpc.EstimateFeeResponse"> & {
      * @generated from field: int64 sat_per_kw = 1;
      */
     satPerKw: bigint;
+    /**
+     * The current minimum relay fee based on our chain backend in sat/kw.
+     *
+     * @generated from field: int64 min_relay_fee_sat_per_kw = 2;
+     */
+    minRelayFeeSatPerKw: bigint;
 };
 /**
  * Describes the message walletrpc.EstimateFeeResponse.
@@ -1020,16 +1077,32 @@ export type PendingSweep = Message<"walletrpc.PendingSweep"> & {
     broadcastAttempts: number;
     /**
      *
+     * Deprecated.
      * The next height of the chain at which we'll attempt to broadcast the
      * sweep transaction of the output.
      *
-     * @generated from field: uint32 next_broadcast_height = 6;
+     * @generated from field: uint32 next_broadcast_height = 6 [deprecated = true];
+     * @deprecated
      */
     nextBroadcastHeight: number;
     /**
-     * The requested confirmation target for this output.
      *
-     * @generated from field: uint32 requested_conf_target = 8;
+     * Deprecated, use immediate.
+     * Whether this input must be force-swept. This means that it is swept
+     * immediately.
+     *
+     * @generated from field: bool force = 7 [deprecated = true];
+     * @deprecated
+     */
+    force: boolean;
+    /**
+     *
+     * Deprecated, use deadline.
+     * The requested confirmation target for this output, which is the deadline
+     * used by the sweeper.
+     *
+     * @generated from field: uint32 requested_conf_target = 8 [deprecated = true];
+     * @deprecated
      */
     requestedConfTarget: number;
     /**
@@ -1042,27 +1115,42 @@ export type PendingSweep = Message<"walletrpc.PendingSweep"> & {
     requestedSatPerByte: number;
     /**
      *
-     * The fee rate we'll use to sweep the output, expressed in sat/vbyte. The fee
-     * rate is only determined once a sweeping transaction for the output is
-     * created, so it's possible for this to be 0 before this.
+     * The current fee rate we'll use to sweep the output, expressed in sat/vbyte.
+     * The fee rate is only determined once a sweeping transaction for the output
+     * is created, so it's possible for this to be 0 before this.
      *
      * @generated from field: uint64 sat_per_vbyte = 10;
      */
     satPerVbyte: bigint;
     /**
-     * The requested fee rate, expressed in sat/vbyte, for this output.
+     * The requested starting fee rate, expressed in sat/vbyte, for this
+     * output. When not requested, this field will be 0.
      *
      * @generated from field: uint64 requested_sat_per_vbyte = 11;
      */
     requestedSatPerVbyte: bigint;
     /**
      *
-     * Whether this input must be force-swept. This means that it is swept even
-     * if it has a negative yield.
+     * Whether this input will be swept immediately.
      *
-     * @generated from field: bool force = 7;
+     * @generated from field: bool immediate = 12;
      */
-    force: boolean;
+    immediate: boolean;
+    /**
+     *
+     * The budget for this sweep, expressed in satoshis. This is the maximum amount
+     * that can be spent as fees to sweep this output.
+     *
+     * @generated from field: uint64 budget = 13;
+     */
+    budget: bigint;
+    /**
+     *
+     * The deadline height used for this output when perform fee bumping.
+     *
+     * @generated from field: uint32 deadline_height = 14;
+     */
+    deadlineHeight: number;
 };
 /**
  * Describes the message walletrpc.PendingSweep.
@@ -1106,7 +1194,9 @@ export type BumpFeeRequest = Message<"walletrpc.BumpFeeRequest"> & {
      */
     outpoint?: OutPoint;
     /**
-     * The target number of blocks that the input should be spent within.
+     * Optional. The deadline in number of blocks that the input should be spent
+     * within. When not set, for new inputs, the default value (1008) is used;
+     * for existing inputs, their current values will be retained.
      *
      * @generated from field: uint32 target_conf = 2;
      */
@@ -1123,20 +1213,44 @@ export type BumpFeeRequest = Message<"walletrpc.BumpFeeRequest"> & {
     satPerByte: number;
     /**
      *
-     * Whether this input must be force-swept. This means that it is swept even
-     * if it has a negative yield.
+     * Deprecated, use immediate.
+     * Whether this input must be force-swept. This means that it is swept
+     * immediately.
      *
-     * @generated from field: bool force = 4;
+     * @generated from field: bool force = 4 [deprecated = true];
+     * @deprecated
      */
     force: boolean;
     /**
      *
-     * The fee rate, expressed in sat/vbyte, that should be used to spend the input
-     * with.
+     * Optional. The starting fee rate, expressed in sat/vbyte, that will be used
+     * to spend the input with initially. This value will be used by the sweeper's
+     * fee function as its starting fee rate. When not set, the sweeper will use
+     * the estimated fee rate using the `target_conf` as the starting fee rate.
      *
      * @generated from field: uint64 sat_per_vbyte = 5;
      */
     satPerVbyte: bigint;
+    /**
+     *
+     * Optional. Whether this input will be swept immediately. When set to true,
+     * the sweeper will sweep this input without waiting for the next batch.
+     *
+     * @generated from field: bool immediate = 6;
+     */
+    immediate: boolean;
+    /**
+     *
+     * Optional. The max amount in sats that can be used as the fees. Setting this
+     * value greater than the input's value may result in CPFP - one or more wallet
+     * utxos will be used to pay the fees specified by the budget. If not set, for
+     * new inputs, by default 50% of the input's value will be treated as the
+     * budget for fee bumping; for existing inputs, their current budgets will be
+     * retained.
+     *
+     * @generated from field: uint64 budget = 7;
+     */
+    budget: bigint;
 };
 /**
  * Describes the message walletrpc.BumpFeeRequest.
@@ -1146,7 +1260,14 @@ export declare const BumpFeeRequestSchema: GenMessage<BumpFeeRequest>;
 /**
  * @generated from message walletrpc.BumpFeeResponse
  */
-export type BumpFeeResponse = Message<"walletrpc.BumpFeeResponse"> & {};
+export type BumpFeeResponse = Message<"walletrpc.BumpFeeResponse"> & {
+    /**
+     * The status of the bump fee operation.
+     *
+     * @generated from field: string status = 1;
+     */
+    status: string;
+};
 /**
  * Describes the message walletrpc.BumpFeeResponse.
  * Use `create(BumpFeeResponseSchema)` to create a new message.
@@ -1165,6 +1286,15 @@ export type ListSweepsRequest = Message<"walletrpc.ListSweepsRequest"> & {
      * @generated from field: bool verbose = 1;
      */
     verbose: boolean;
+    /**
+     *
+     * The start height to use when fetching sweeps. If not specified (0), the
+     * result will start from the earliest sweep. If set to -1 the result will
+     * only include unconfirmed sweeps (at the time of the call).
+     *
+     * @generated from field: int32 start_height = 2;
+     */
+    startHeight: number;
 };
 /**
  * Describes the message walletrpc.ListSweepsRequest.
@@ -1290,6 +1420,30 @@ export type FundPsbtRequest = Message<"walletrpc.FundPsbtRequest"> & {
         value: TxTemplate;
         case: "raw";
     } | {
+        /**
+         *
+         * Use an existing PSBT packet as the template for the funded PSBT.
+         *
+         * The difference to the pure PSBT template above is that coin selection is
+         * performed even if inputs are specified. The output amounts are summed up
+         * and used as the target amount for coin selection. A change output must
+         * either already exist in the PSBT and be marked as such, otherwise a new
+         * change output of the specified output type will be added. Any inputs
+         * already specified in the PSBT must already be locked (if they belong to
+         * this node), only newly added inputs will be locked by this RPC.
+         *
+         * In case the sum of the already provided inputs exceeds the required
+         * output amount, no new coins are selected. Instead only the fee and
+         * change amount calculation is performed (e.g. a change output is added if
+         * requested or the change is added to the specified existing change
+         * output, given there is any non-dust change). This can be identified by
+         * the returned locked UTXOs being empty.
+         *
+         * @generated from field: walletrpc.PsbtCoinSelect coin_select = 9;
+         */
+        value: PsbtCoinSelect;
+        case: "coinSelect";
+    } | {
         case: undefined;
         value?: undefined;
     };
@@ -1349,6 +1503,12 @@ export type FundPsbtRequest = Message<"walletrpc.FundPsbtRequest"> & {
      * @generated from field: walletrpc.ChangeAddressType change_type = 8;
      */
     changeType: ChangeAddressType;
+    /**
+     * The strategy to use for selecting coins during funding the PSBT.
+     *
+     * @generated from field: lnrpc.CoinSelectionStrategy coin_selection_strategy = 10;
+     */
+    coinSelectionStrategy: CoinSelectionStrategy;
 };
 /**
  * Describes the message walletrpc.FundPsbtRequest.
@@ -1376,7 +1536,8 @@ export type FundPsbtResponse = Message<"walletrpc.FundPsbtResponse"> & {
     /**
      *
      * The list of lock leases that were acquired for the inputs in the funded PSBT
-     * packet.
+     * packet. Only inputs added to the PSBT by this RPC are locked, inputs that
+     * were already present in the PSBT are not locked.
      *
      * @generated from field: repeated walletrpc.UtxoLease locked_utxos = 3;
      */
@@ -1419,6 +1580,61 @@ export type TxTemplate = Message<"walletrpc.TxTemplate"> & {
  * Use `create(TxTemplateSchema)` to create a new message.
  */
 export declare const TxTemplateSchema: GenMessage<TxTemplate>;
+/**
+ * @generated from message walletrpc.PsbtCoinSelect
+ */
+export type PsbtCoinSelect = Message<"walletrpc.PsbtCoinSelect"> & {
+    /**
+     *
+     * The template to use for the funded PSBT. The template must contain at least
+     * one non-dust output. The amount to be funded is calculated by summing up the
+     * amounts of all outputs in the template, subtracting all the input values of
+     * the already specified inputs. The change value is added to the output that
+     * is marked as such (or a new change output is added if none is marked). For
+     * the input amount calculation to be correct, the template must have the
+     * WitnessUtxo field set for all inputs. Any inputs already specified in the
+     * PSBT must already be locked (if they belong to this node), only newly added
+     * inputs will be locked by this RPC.
+     *
+     * @generated from field: bytes psbt = 1;
+     */
+    psbt: Uint8Array;
+    /**
+     * @generated from oneof walletrpc.PsbtCoinSelect.change_output
+     */
+    changeOutput: {
+        /**
+         *
+         * Use the existing output within the template PSBT with the specified
+         * index as the change output. Any leftover change will be added to the
+         * already specified amount of that output. To add a new change output to
+         * the PSBT, set the "add" field below instead. The type of change output
+         * added is defined by change_type in the parent message.
+         *
+         * @generated from field: int32 existing_output_index = 2;
+         */
+        value: number;
+        case: "existingOutputIndex";
+    } | {
+        /**
+         *
+         * Add a new change output to the PSBT using the change_type specified in
+         * the parent message.
+         *
+         * @generated from field: bool add = 3;
+         */
+        value: boolean;
+        case: "add";
+    } | {
+        case: undefined;
+        value?: undefined;
+    };
+};
+/**
+ * Describes the message walletrpc.PsbtCoinSelect.
+ * Use `create(PsbtCoinSelectSchema)` to create a new message.
+ */
+export declare const PsbtCoinSelectSchema: GenMessage<PsbtCoinSelect>;
 /**
  * @generated from message walletrpc.UtxoLease
  */
@@ -1813,7 +2029,118 @@ export declare enum WitnessType {
      *
      * @generated from enum value: TAPROOT_PUB_KEY_SPEND = 22;
      */
-    TAPROOT_PUB_KEY_SPEND = 22
+    TAPROOT_PUB_KEY_SPEND = 22,
+    /**
+     *
+     * A witness type that allows us to spend our settled local commitment after a
+     * CSV delay when we force close the channel.
+     *
+     * @generated from enum value: TAPROOT_LOCAL_COMMIT_SPEND = 23;
+     */
+    TAPROOT_LOCAL_COMMIT_SPEND = 23,
+    /**
+     *
+     * A witness type that allows us to spend our settled local commitment after
+     * a CSV delay when the remote party has force closed the channel.
+     *
+     * @generated from enum value: TAPROOT_REMOTE_COMMIT_SPEND = 24;
+     */
+    TAPROOT_REMOTE_COMMIT_SPEND = 24,
+    /**
+     *
+     * A witness type that we'll use for spending our own anchor output.
+     *
+     * @generated from enum value: TAPROOT_ANCHOR_SWEEP_SPEND = 25;
+     */
+    TAPROOT_ANCHOR_SWEEP_SPEND = 25,
+    /**
+     *
+     * A witness that allows us to timeout an HTLC we offered to the remote party
+     * on our commitment transaction. We use this when we need to go on chain to
+     * time out an HTLC.
+     *
+     * @generated from enum value: TAPROOT_HTLC_OFFERED_TIMEOUT_SECOND_LEVEL = 26;
+     */
+    TAPROOT_HTLC_OFFERED_TIMEOUT_SECOND_LEVEL = 26,
+    /**
+     *
+     * A witness type that allows us to sweep an HTLC we accepted on our commitment
+     * transaction after we go to the second level on chain.
+     *
+     * @generated from enum value: TAPROOT_HTLC_ACCEPTED_SUCCESS_SECOND_LEVEL = 27;
+     */
+    TAPROOT_HTLC_ACCEPTED_SUCCESS_SECOND_LEVEL = 27,
+    /**
+     *
+     * A witness that allows us to sweep an HTLC on the revoked transaction of the
+     * remote party that goes to the second level.
+     *
+     * @generated from enum value: TAPROOT_HTLC_SECOND_LEVEL_REVOKE = 28;
+     */
+    TAPROOT_HTLC_SECOND_LEVEL_REVOKE = 28,
+    /**
+     *
+     * A witness that allows us to sweep an HTLC sent to us by the remote party
+     * in the event that they broadcast a revoked state.
+     *
+     * @generated from enum value: TAPROOT_HTLC_ACCEPTED_REVOKE = 29;
+     */
+    TAPROOT_HTLC_ACCEPTED_REVOKE = 29,
+    /**
+     *
+     * A witness that allows us to sweep an HTLC we offered to the remote party if
+     * they broadcast a revoked commitment.
+     *
+     * @generated from enum value: TAPROOT_HTLC_OFFERED_REVOKE = 30;
+     */
+    TAPROOT_HTLC_OFFERED_REVOKE = 30,
+    /**
+     *
+     * A witness that allows us to sweep an HTLC we offered to the remote party
+     * that lies on the commitment transaction for the remote party. We can spend
+     * this output after the absolute CLTV timeout of the HTLC as passed.
+     *
+     * @generated from enum value: TAPROOT_HTLC_OFFERED_REMOTE_TIMEOUT = 31;
+     */
+    TAPROOT_HTLC_OFFERED_REMOTE_TIMEOUT = 31,
+    /**
+     *
+     * A witness type that allows us to sign the second level HTLC timeout
+     * transaction when spending from an HTLC residing on our local commitment
+     * transaction.
+     * This is used by the sweeper to re-sign inputs if it needs to aggregate
+     * several second level HTLCs.
+     *
+     * @generated from enum value: TAPROOT_HTLC_LOCAL_OFFERED_TIMEOUT = 32;
+     */
+    TAPROOT_HTLC_LOCAL_OFFERED_TIMEOUT = 32,
+    /**
+     *
+     * A witness that allows us to sweep an HTLC that was offered to us by the
+     * remote party for a taproot channels. We use this witness in the case that
+     * the remote party goes to chain, and we know the pre-image to the HTLC. We
+     * can sweep this without any additional timeout.
+     *
+     * @generated from enum value: TAPROOT_HTLC_ACCEPTED_REMOTE_SUCCESS = 33;
+     */
+    TAPROOT_HTLC_ACCEPTED_REMOTE_SUCCESS = 33,
+    /**
+     *
+     * A witness type that allows us to sweep the HTLC offered to us on our local
+     * commitment transaction. We'll use this when we need to go on chain to sweep
+     * the HTLC. In this case, this is the second level HTLC success transaction.
+     *
+     * @generated from enum value: TAPROOT_HTLC_ACCEPTED_LOCAL_SUCCESS = 34;
+     */
+    TAPROOT_HTLC_ACCEPTED_LOCAL_SUCCESS = 34,
+    /**
+     *
+     * A witness that allows us to sweep the settled output of a malicious
+     * counterparty's who broadcasts a revoked taproot commitment transaction.
+     *
+     * @generated from enum value: TAPROOT_COMMITMENT_REVOKE = 35;
+     */
+    TAPROOT_COMMITMENT_REVOKE = 35
 }
 /**
  * Describes the enum walletrpc.WitnessType.
@@ -1872,7 +2199,7 @@ export declare const WalletKit: GenService<{
         output: typeof ListUnspentResponseSchema;
     };
     /**
-     *
+     * lncli: `wallet leaseoutput`
      * LeaseOutput locks an output to the given ID, preventing it from being
      * available for any future coin selection attempts. The absolute time of the
      * lock's expiration is returned. The expiration of the lock can be extended by
@@ -1887,7 +2214,7 @@ export declare const WalletKit: GenService<{
         output: typeof LeaseOutputResponseSchema;
     };
     /**
-     *
+     * lncli: `wallet releaseoutput`
      * ReleaseOutput unlocks an output, allowing it to be available for coin
      * selection if it remains unspent. The ID should match the one used to
      * originally lock the output.
@@ -1900,7 +2227,7 @@ export declare const WalletKit: GenService<{
         output: typeof ReleaseOutputResponseSchema;
     };
     /**
-     *
+     * lncli: `wallet listleases`
      * ListLeases lists all currently locked utxos.
      *
      * @generated from rpc walletrpc.WalletKit.ListLeases
@@ -1947,7 +2274,18 @@ export declare const WalletKit: GenService<{
         output: typeof AddrResponseSchema;
     };
     /**
+     * lncli: `wallet gettx`
+     * GetTransaction returns details for a transaction found in the wallet.
      *
+     * @generated from rpc walletrpc.WalletKit.GetTransaction
+     */
+    getTransaction: {
+        methodKind: "unary";
+        input: typeof GetTransactionRequestSchema;
+        output: typeof TransactionSchema$1;
+    };
+    /**
+     * lncli: `wallet accounts list`
      * ListAccounts retrieves all accounts belonging to the wallet by default. A
      * name and key scope filter can be provided to filter through all of the
      * wallet accounts and return only those matching.
@@ -1960,7 +2298,7 @@ export declare const WalletKit: GenService<{
         output: typeof ListAccountsResponseSchema;
     };
     /**
-     *
+     * lncli: `wallet requiredreserve`
      * RequiredReserve returns the minimum amount of satoshis that should be kept
      * in the wallet in order to fee bump anchor channels if necessary. The value
      * scales with the number of public anchor channels but is capped at a maximum.
@@ -1973,7 +2311,7 @@ export declare const WalletKit: GenService<{
         output: typeof RequiredReserveResponseSchema;
     };
     /**
-     *
+     * lncli: `wallet addresses list`
      * ListAddresses retrieves all the addresses along with their balance. An
      * account name filter can be provided to filter through all of the
      * wallet accounts and return the addresses of only those matching.
@@ -1986,7 +2324,7 @@ export declare const WalletKit: GenService<{
         output: typeof ListAddressesResponseSchema;
     };
     /**
-     *
+     * lncli: `wallet addresses signmessage`
      * SignMessageWithAddr returns the compact signature (base64 encoded) created
      * with the private key of the provided address. This requires the address
      * to be solely based on a public key lock (no scripts). Obviously the internal
@@ -2008,7 +2346,7 @@ export declare const WalletKit: GenService<{
         output: typeof SignMessageWithAddrResponseSchema;
     };
     /**
-     *
+     * lncli: `wallet addresses verifymessage`
      * VerifyMessageWithAddr returns the validity and the recovered public key of
      * the provided compact signature (base64 encoded). The verification is
      * twofold. First the validity of the signature itself is checked and then
@@ -2037,7 +2375,7 @@ export declare const WalletKit: GenService<{
         output: typeof VerifyMessageWithAddrResponseSchema;
     };
     /**
-     *
+     * lncli: `wallet accounts import`
      * ImportAccount imports an account backed by an account extended public key.
      * The master key fingerprint denotes the fingerprint of the root key
      * corresponding to the account public key (also known as the key with
@@ -2070,7 +2408,7 @@ export declare const WalletKit: GenService<{
         output: typeof ImportAccountResponseSchema;
     };
     /**
-     *
+     * lncli: `wallet accounts import-pubkey`
      * ImportPublicKey imports a public key as watch-only into the wallet. The
      * public key is converted into a simple address of the given type and that
      * address script is watched on chain. For Taproot keys, this will only watch
@@ -2110,7 +2448,7 @@ export declare const WalletKit: GenService<{
         output: typeof ImportTapscriptResponseSchema;
     };
     /**
-     *
+     * lncli: `wallet publishtx`
      * PublishTransaction attempts to publish the passed transaction to the
      * network. Once this returns without an error, the wallet will continually
      * attempt to re-broadcast the transaction on start up, until it enters the
@@ -2122,6 +2460,18 @@ export declare const WalletKit: GenService<{
         methodKind: "unary";
         input: typeof TransactionSchema;
         output: typeof PublishResponseSchema;
+    };
+    /**
+     * lncli: `wallet removetx`
+     * RemoveTransaction attempts to remove the provided transaction from the
+     * internal transaction store of the wallet.
+     *
+     * @generated from rpc walletrpc.WalletKit.RemoveTransaction
+     */
+    removeTransaction: {
+        methodKind: "unary";
+        input: typeof GetTransactionRequestSchema;
+        output: typeof RemoveTransactionResponseSchema;
     };
     /**
      *
@@ -2150,7 +2500,7 @@ export declare const WalletKit: GenService<{
         output: typeof EstimateFeeResponseSchema;
     };
     /**
-     *
+     * lncli: `pendingsweeps`
      * PendingSweeps returns lists of on-chain outputs that lnd is currently
      * attempting to sweep within its central batching engine. Outputs with similar
      * fee rates are batched together in order to sweep them within a single
@@ -2168,32 +2518,35 @@ export declare const WalletKit: GenService<{
         output: typeof PendingSweepsResponseSchema;
     };
     /**
+     * lncli: `wallet bumpfee`
+     * BumpFee is an endpoint that allows users to interact with lnd's sweeper
+     * directly. It takes an outpoint from an unconfirmed transaction and sends it
+     * to the sweeper for potential fee bumping. Depending on whether the outpoint
+     * has been registered in the sweeper (an existing input, e.g., an anchor
+     * output) or not (a new input, e.g., an unconfirmed wallet utxo), this will
+     * either be an RBF or CPFP attempt.
      *
-     * BumpFee bumps the fee of an arbitrary input within a transaction. This RPC
-     * takes a different approach than bitcoind's bumpfee command. lnd has a
-     * central batching engine in which inputs with similar fee rates are batched
-     * together to save on transaction fees. Due to this, we cannot rely on
-     * bumping the fee on a specific transaction, since transactions can change at
-     * any point with the addition of new inputs. The list of inputs that
-     * currently exist within lnd's central batching engine can be retrieved
-     * through the PendingSweeps RPC.
+     * When receiving an input, lnd’s sweeper needs to understand its time
+     * sensitivity to make economical fee bumps - internally a fee function is
+     * created using the deadline and budget to guide the process. When the
+     * deadline is approaching, the fee function will increase the fee rate and
+     * perform an RBF.
      *
-     * When bumping the fee of an input that currently exists within lnd's central
-     * batching engine, a higher fee transaction will be created that replaces the
-     * lower fee transaction through the Replace-By-Fee (RBF) policy. If it
+     * When a force close happens, all the outputs from the force closing
+     * transaction will be registered in the sweeper. The sweeper will then handle
+     * the creation, publish, and fee bumping of the sweeping transactions.
+     * Everytime a new block comes in, unless the sweeping transaction is
+     * confirmed, an RBF is attempted. To interfere with this automatic process,
+     * users can use BumpFee to specify customized fee rate, budget, deadline, and
+     * whether the sweep should happen immediately. It's recommended to call
+     * `ListSweeps` to understand the shape of the existing sweeping transaction
+     * first - depending on the number of inputs in this transaction, the RBF
+     * requirements can be quite different.
      *
      * This RPC also serves useful when wanting to perform a Child-Pays-For-Parent
      * (CPFP), where the child transaction pays for its parent's fee. This can be
      * done by specifying an outpoint within the low fee transaction that is under
      * the control of the wallet.
-     *
-     * The fee preference can be expressed either as a specific fee rate or a delta
-     * of blocks in which the output should be swept on-chain within. If a fee
-     * preference is not explicitly specified, then an error is returned.
-     *
-     * Note that this RPC currently doesn't perform any validation checks on the
-     * fee preference being provided. For now, the responsibility of ensuring that
-     * the new fee preference is sufficient is delegated to the user.
      *
      * @generated from rpc walletrpc.WalletKit.BumpFee
      */
@@ -2203,7 +2556,7 @@ export declare const WalletKit: GenService<{
         output: typeof BumpFeeResponseSchema;
     };
     /**
-     *
+     * lncli: `wallet listsweeps`
      * ListSweeps returns a list of the sweep transactions our node has produced.
      * Note that these sweeps may not be confirmed yet, as we record sweeps on
      * broadcast, not confirmation.
@@ -2216,10 +2569,10 @@ export declare const WalletKit: GenService<{
         output: typeof ListSweepsResponseSchema;
     };
     /**
-     *
+     * lncli: `wallet labeltx`
      * LabelTransaction adds a label to a transaction. If the transaction already
      * has a label the call will fail unless the overwrite bool is set. This will
-     * overwrite the exiting transaction label. Labels must not be empty, and
+     * overwrite the existing transaction label. Labels must not be empty, and
      * cannot exceed 500 characters.
      *
      * @generated from rpc walletrpc.WalletKit.LabelTransaction
@@ -2230,17 +2583,27 @@ export declare const WalletKit: GenService<{
         output: typeof LabelTransactionResponseSchema;
     };
     /**
-     *
+     * lncli: `wallet psbt fund`
      * FundPsbt creates a fully populated PSBT that contains enough inputs to fund
-     * the outputs specified in the template. There are two ways of specifying a
-     * template: Either by passing in a PSBT with at least one output declared or
-     * by passing in a raw TxTemplate message.
+     * the outputs specified in the template. There are three ways a user can
+     * specify what we call the template (a list of inputs and outputs to use in
+     * the PSBT): Either as a PSBT packet directly with no coin selection (using
+     * the legacy "psbt" field), a PSBT with advanced coin selection support (using
+     * the new "coin_select" field) or as a raw RPC message (using the "raw"
+     * field).
+     * The legacy "psbt" and "raw" modes, the following restrictions apply:
+     * 1. If there are no inputs specified in the template, coin selection is
+     * performed automatically.
+     * 2. If the template does contain any inputs, it is assumed that full
+     * coin selection happened externally and no additional inputs are added. If
+     * the specified inputs aren't enough to fund the outputs with the given fee
+     * rate, an error is returned.
      *
-     * If there are no inputs specified in the template, coin selection is
-     * performed automatically. If the template does contain any inputs, it is
-     * assumed that full coin selection happened externally and no additional
-     * inputs are added. If the specified inputs aren't enough to fund the outputs
-     * with the given fee rate, an error is returned.
+     * The new "coin_select" mode does not have these restrictions and allows the
+     * user to specify a PSBT with inputs and outputs and still perform coin
+     * selection on top of that.
+     * For all modes this RPC requires any inputs that are specified to be locked
+     * by the user (if they belong to this node in the first place).
      *
      * After either selecting or verifying the inputs, all input UTXOs are locked
      * with an internal app ID.
@@ -2279,7 +2642,7 @@ export declare const WalletKit: GenService<{
         output: typeof SignPsbtResponseSchema;
     };
     /**
-     *
+     * lncli: `wallet psbt finalize`
      * FinalizePsbt expects a partial transaction with all inputs and outputs fully
      * declared and tries to sign all inputs that belong to the wallet. Lnd must be
      * the last signer of the transaction. That means, if there are any unsigned
