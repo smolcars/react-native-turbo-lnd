@@ -25,5 +25,6 @@
     "target": "esnext",
     "verbatimModuleSyntax": true,
   },
-  "exclude": ["protoc-generator"],
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["protoc-generator", "**/node_modules", "**/Pods"]
 }

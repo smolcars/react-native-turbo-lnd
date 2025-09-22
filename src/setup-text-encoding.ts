@@ -7,7 +7,7 @@ const te = new FastTextEncoder();
 const td = new FastTextDecoder();
 
 configureTextEncoding({
-  encodeUtf8: te.encode as (str: string) => Uint8Array,
+  encodeUtf8: te.encode as (str: string) => Uint8Array<ArrayBuffer>,
   decodeUtf8: td.decode as (data: Uint8Array) => string,
 
   checkUtf8: (text: string) => {
