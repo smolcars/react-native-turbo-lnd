@@ -4,7 +4,7 @@
   "description": "C++ TurboModule for lnd! ⚡️",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
-  "types": "lib/typescript/src/index.d.ts",
+  "types": "lib/typescript/commonjs/src/index.d.ts",
   "react-native": "src/index",
   "source": "src/index",
   "files": [
@@ -28,20 +28,36 @@
   ],
   "exports": {
     ".": {
-      "require": "./lib/commonjs/index.js",
-      "import": "./lib/module/index.js",
-      "types": "./lib/typescript/src/index.d.ts"
+      "require": {
+        "types": "./lib/typescript/commonjs/src/index.d.ts",
+        "defaultx": "./lib/commonjs/index.js"
+      },
+      "import": {
+        "types": "./lib/typescript/module/src/index.d.ts",
+        "default": "./lib/module/index.js"
+      }
     },
     "./core": {
-      "require": "./lib/commonjs/core/NativeTurboLnd",
-      "import": "./lib/module/core/NativeTurboLnd",
-      "types": "./lib/typescript/src/core/NativeTurboLnd.d.ts"
+      "require": {
+        "types": "./lib/typescript/commonjs/src/core/NativeTurboLnd.d.ts",
+        "default": "./lib/commonjs/core/NativeTurboLnd"
+      },
+      "import": {
+        "types": "./lib/typescript/module/src/core/NativeTurboLnd.d.ts",
+        "default": "./lib/module/core/NativeTurboLnd"
+      }
     },
     "./protos/*": {
-      "require": "./lib/commonjs/proto/*.js",
-      "import": "./lib/module/proto/*.js",
-      "types": "./lib/typescript/src/proto/*.d.ts"
+      "require": {
+        "types": "./lib/typescript/commonjs/src/proto/*.d.ts",
+        "default": "./lib/commonjs/proto/*.js"
+      },
+      "import": {
+        "types": "./lib/typescript/module/src/proto/*.d.ts",
+        "default": "./lib/module/proto/*.js"
+      }
     }
+
   },
   "scripts": {
     "example": "yarn workspace react-native-turbo-lnd-example",
@@ -94,7 +110,7 @@
     "prettier": "^3.0.3",
     "react": "19.1.0",
     "react-native": "0.81.4",
-    "react-native-builder-bob": "0.30.0",
+    "react-native-builder-bob": "0.40.13",
     "release-it": "^15.0.0",
     "turbo": "^1.10.7",
     "typescript": "^5.8.3"
