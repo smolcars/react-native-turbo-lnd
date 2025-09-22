@@ -11,7 +11,7 @@ fs.rmSync(path.resolve(targetDir, 'build'), { recursive: true, force: true });
 console.log('Running @react-native-community/cli codegen...');
 
 // Run the codegen command
-const codegenCommand = `npx @react-native-community/cli codegen --platform android --path . --outputPath .\\cpp\\`;
+const codegenCommand = `npx @react-native-community/cli codegen --platform android --path . --outputPath ./cpp/`;
 execSync(codegenCommand, {
   cwd: projectRoot,
   stdio: 'inherit'
