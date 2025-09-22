@@ -21,6 +21,6 @@ export class FastTextEncoder {
    */
   encode(string: string, options?: { stream: boolean }): Uint8Array {
     maybeThrowFailedToOption(options?.stream, "encode", "stream");
-    return encodeImpl(string);
+    return encodeImpl(string) as Uint8Array;
   }
 }

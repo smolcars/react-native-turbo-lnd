@@ -17,6 +17,6 @@ describe("TurboLnd mock", () => {
     });
     const onError = jest.fn();
 
-    subscribeState("", onResponse, onError);
+    subscribeState("" as any, onResponse, onError);
   });
 });
