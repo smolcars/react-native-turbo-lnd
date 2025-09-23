@@ -25,6 +25,12 @@ public:
     }
 
     void invokeResponseCallback(uint64_t id, const std::string& data) {
+        // falafel will send an "EOF" message when the stream is stopped
+        // Ignore this error message
+        // if (data == "EOF") {
+        //     return
+        // }
+
         std::lock_guard<std::mutex> lock(mutex_);
         auto it = callbacks_.find(id);
         if (it != callbacks_.end() && it->second.onResponse) {

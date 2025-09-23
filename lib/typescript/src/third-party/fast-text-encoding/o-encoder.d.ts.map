@@ -1,1 +1,0 @@
-{"version":3,"file":"o-encoder.d.ts","sourceRoot":"","sources":["../../../../../src/third-party/fast-text-encoding/o-encoder.ts"],"names":[],"mappings":"AACA,OAAO,EAAE,cAAc,EAAE,MAAM,YAAY,CAAC;AAI5C,eAAO,IAAI,UAAU,sDAAgD,CAAC;AAEtE,qBAAa,eAAe;IACnB,QAAQ,EAAE,MAAM,CAAC;;IAQxB;;;;OAIG;IACH,MAAM,CAAC,MAAM,EAAE,MAAM,EAAE,OAAO,CAAC,EAAE;QAAE,MAAM,EAAE,OAAO,CAAA;KAAE,GAAG,UAAU;CAIlE"}
