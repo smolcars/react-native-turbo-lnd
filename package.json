@@ -37,6 +37,10 @@
         "default": "./lib/module/index.js"
       }
     },
+    "./package.json": {
+      "require": "./package.json",
+      "import": "./package.json"
+    },
     "./core": {
       "require": {
         "types": "./lib/typescript/commonjs/src/core/NativeTurboLnd.d.ts",
@@ -57,7 +61,6 @@
         "default": "./lib/module/proto/*.js"
       }
     }
-
   },
   "scripts": {
     "example": "yarn workspace react-native-turbo-lnd-example",
