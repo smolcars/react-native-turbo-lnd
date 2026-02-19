@@ -1,7 +1,8 @@
-#!/usr/bin/env -S deno run --allow-read --allow-write
+#!/usr/bin/env bun
 /* eslint-disable */
-import * as path from "https://deno.land/std/path/mod.ts";
-import protobuf from "npm:protobufjs@7.4.0";
+import { readFileSync } from "node:fs";
+import * as path from "node:path";
+import protobuf from "protobufjs";
 
 interface ProtoFile {
   name: string;
@@ -34,7 +35,7 @@ const contributorNotice = `// Note to react-native-turbo-lnd contributors:
 const lowercaseFirst = (str: string): string => str.charAt(0).toLowerCase() + str.slice(1);
 
 async function loadProtoFiles() {
-  const protoDir = path.resolve(Deno.cwd(), "protos");
+  const protoDir = path.resolve(process.cwd(), "protos");
   const descriptorPath = path.resolve(protoDir, "google", "protobuf", "descriptor.proto");
   const pluginPath = path.resolve(protoDir, "plugin.proto");
 
@@ -45,7 +46,7 @@ async function loadProtoFiles() {
 }
 
 function extractComments(filePath: string): Record<string, string> {
-  const content = Deno.readTextFileSync(path.join("..", "proto", filePath));
+  const content = readFileSync(path.join("..", "proto", filePath), "utf8");
   const lines = content.split("\n");
   const comments: Record<string, string> = {};
   let currentComment: string[] = [];
@@ -126,7 +127,7 @@ function generateCode(request: any): { cppContent: string; cppHeaderContent: str
   });
 
   request.proto_file.forEach((protoFile: ProtoFile) => {
-    // console.log("protoFile",protoFile);Deno.exit(0);
+    // console.log("protoFile",protoFile);process.exit(0);
     // console.log(protoFile,"protoFile");return;
     if (protoFile.service && Array.isArray(protoFile.service)) {
       protoFile.service.forEach((service: Service) => {
@@ -545,7 +546,7 @@ async function main() {
     const PluginRequest = root.lookupType("google.protobuf.compiler.CodeGeneratorRequest");
     const PluginResponse = root.lookupType("google.protobuf.compiler.CodeGeneratorResponse");
 
-    const inputBuffer = await Deno.readAll(Deno.stdin);
+    const inputBuffer = await readStdin();
     const uint8Array = new Uint8Array(inputBuffer);
     const request = PluginRequest.decode(uint8Array);
     const { cppContent, cppHeaderContent, turboSpec, protobufEsWrapper } = generateCode(request);
@@ -572,11 +573,36 @@ async function main() {
     });
 
     const responseBuffer = PluginResponse.encode(response).finish();
-    await Deno.writeAll(Deno.stdout, responseBuffer);
+    await writeStdout(responseBuffer);
   } catch (error) {
-    console.error("Error in plugin:", error.stack);
-    Deno.exit(1);
+    if (error instanceof Error) {
+      console.error("Error in plugin:", error.stack || error.message);
+    } else {
+      console.error("Error in plugin:", error);
+    }
+    process.exit(1);
   }
+}
+
+async function readStdin(): Promise<Uint8Array> {
+  const chunks: Buffer[] = [];
+  for await (const chunk of process.stdin) {
+    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+  }
+
+  return new Uint8Array(Buffer.concat(chunks));
+}
+
+function writeStdout(data: Uint8Array): Promise<void> {
+  return new Promise((resolve, reject) => {
+    process.stdout.write(Buffer.from(data), (error) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+      resolve();
+    });
+  });
 }
 
 main();

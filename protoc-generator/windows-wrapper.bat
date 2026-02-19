@@ -1,1 +1,1 @@
-@deno.exe run --allow-read --allow-write .\protoc-gen-cpp-functions.ts
+@bun.exe .\protoc-gen-cpp-functions.ts

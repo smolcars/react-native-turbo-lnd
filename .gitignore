@@ -89,3 +89,4 @@ liblnd.a
 # Generated files
 /example/src/proto
 /src/proto
+/src/core

@@ -30,6 +30,8 @@ echo "[protoc-generator] Merged"
 
 echo "[protoc-generator] Copying files to cpp and src folders"
 
+mkdir -p ../src/core
+
 cp \
   ./build/TurboLndModule.h ../cpp/TurboLndModule.h && \
 cp \

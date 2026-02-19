@@ -6,6 +6,7 @@
   },
   "dependencies": {
     "@bufbuild/buf": "^1.57.2",
-    "@bufbuild/protoc-gen-es": "^2.0.0"
+    "@bufbuild/protoc-gen-es": "^2.0.0",
+    "protobufjs": "^7.4.0"
   }
 }
