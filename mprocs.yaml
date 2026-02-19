@@ -4,17 +4,17 @@ procs:
     cwd: example/ios
     autostart: false
   Generate Codegen:
-    shell: yarn generate-codegen-specs
+    shell: bun run generate-codegen-specs
     autostart: false
   Build Android:
-    shell: yarn android
+    shell: bun run android
     cwd: example
     autostart: false
   React Native Config:
-    shell: yarn react-native config
+    shell: bunx react-native config
     cwd: example
     autostart: false
   Start example:
-    shell: yarn start
+    shell: bun run start
     cwd: example
   Build server: xcode-build-server

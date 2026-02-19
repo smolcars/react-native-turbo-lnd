@@ -4,13 +4,13 @@ pre-commit:
     lint:
       glob: "*.{js,ts,jsx,tsx}"
       exclude: "protoc-generator/*.ts"
-      run: npx eslint {staged_files}
+      run: bunx eslint {staged_files}
     types:
       glob: "*.{js,ts, jsx, tsx}"
       exclude: "protoc-generator/*.ts"
-      run: npx tsc --noEmit
+      run: bunx tsc --noEmit
 commit-msg:
   parallel: true
   commands:
     commitlint:
-      run: npx commitlint --edit
+      run: bunx commitlint --edit

@@ -1,4 +1,5 @@
 #!/bin/sh
+
 echo "[protoc-generator] Generating C++ and Typescript bindings based on lnd proto files"
 
 # Detect the environment
@@ -19,7 +20,7 @@ echo "[protoc-generator] C++ and Typescript bindings generated"
 
 echo "[protoc-generator] Generating Typescript proto bindings for lnd by protobuf-es"
 
-npx @bufbuild/buf generate
+bunx @bufbuild/buf generate
 
 echo "[protoc-generator] Merging rpcs"
 
