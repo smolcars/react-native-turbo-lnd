@@ -63,18 +63,18 @@
     }
   },
   "scripts": {
-    "example": "bun --cwd example",
+    "example": "bun run --cwd example",
     "build": "bun run generate-bindings && bun run generate-codegen-specs && bun run bob",
-    "bob": "bob build",
+    "bob": "node ./scripts/ensure-tsc-cmd.cjs && bob build",
     "test": "jest",
     "typecheck": "tsc --noEmit",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
     "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build lib",
-    "prepare": "echo \"Skipping prepare. Use 'bun run build' when needed.\"",
+    "prepare": "lefthook install && node ./scripts/fix-lefthook-hooks.cjs",
     "prepack": "bun run build",
     "release": "release-it",
     "generate-codegen-specs": "node ./scripts/generate-codegen-specs.cjs",
-    "generate-bindings": "bun --cwd protoc-generator generate"
+    "generate-bindings": "bun run --cwd protoc-generator generate"
   },
   "keywords": [
     "react-native",
@@ -94,6 +94,9 @@
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },
+  "dependencies": {
+    "@babel/runtime": "^7.25.0"
+  },
   "devDependencies": {
     "@babel/eslint-parser": "^7.25.1",
     "@bufbuild/protobuf": "^2.0.0",
@@ -101,7 +104,7 @@
     "@eslint/compat": "^1.3.2",
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.35.0",
-    "@evilmartians/lefthook": "^1.5.0",
+    "@evilmartians/lefthook": "^2.1.1",
     "@react-native-community/cli": "20.0.1",
     "@react-native/babel-preset": "0.81.1",
     "@react-native/eslint-config": "0.78.3",
