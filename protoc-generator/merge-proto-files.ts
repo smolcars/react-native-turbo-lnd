@@ -1,43 +1,37 @@
 /* eslint-disable */
-import { basename } from "https://deno.land/std/path/mod.ts";
+import { readFile, writeFile } from "node:fs/promises";
+import { basename } from "node:path";
 
 async function mergeProtoFiles(mainFile: string, ...filesToMerge: string[]) {
-  // Read the main file
-  let mainContent = await Deno.readTextFile(mainFile);
+  let mainContent = await readFile(mainFile, "utf8");
 
-  // Process each file to merge
   for (const file of filesToMerge) {
-    const content = await Deno.readTextFile(file);
+    const content = await readFile(file, "utf8");
+    const exportIndex = content.indexOf("export const");
 
-    // Find the first export statement
-    const exportIndex = content.indexOf('export const');
-
-    if (exportIndex !== -1) {
-      // Extract the relevant content starting from the first export
-      const relevantContent = content.slice(exportIndex).trim();
-
-      // Append the relevant content
-      if (relevantContent) {
-        mainContent += '\n\n\n\n// Merged from ' + basename(file) + '\n' + relevantContent;
-      }
-    } else {
+    if (exportIndex === -1) {
       console.warn(`No export statement found in ${file}. Skipping this file.`);
+      continue;
+    }
+
+    const relevantContent = content.slice(exportIndex).trim();
+    if (relevantContent) {
+      mainContent += `\n\n\n\n// Merged from ${basename(file)}\n${relevantContent}`;
     }
   }
 
-  // Write the merged content back to the main file
-  await Deno.writeTextFile(mainFile, mainContent);
+  await writeFile(mainFile, mainContent, "utf8");
   console.log(`[protoc-generator] Merged ${filesToMerge.join(", ")} into ${mainFile}`);
 }
 
 if (import.meta.main) {
   await mergeProtoFiles(
-    'build/proto/lightning_pb.ts',
-    'build/proto/walletunlocker_pb.ts',
-    'build/proto/stateservice_pb.ts'
+    "build/proto/lightning_pb.ts",
+    "build/proto/walletunlocker_pb.ts",
+    "build/proto/stateservice_pb.ts"
   );
   await mergeProtoFiles(
-    'build/proto/chainrpc/chainnotifier_pb.ts',
-    'build/proto/chainrpc/chainkit_pb.ts',
+    "build/proto/chainrpc/chainnotifier_pb.ts",
+    "build/proto/chainrpc/chainkit_pb.ts"
   );
 }

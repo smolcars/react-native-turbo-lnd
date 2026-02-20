@@ -24,7 +24,7 @@ bunx @bufbuild/buf generate
 
 echo "[protoc-generator] Merging rpcs"
 
-deno run --allow-read --allow-write merge-proto-files.ts
+bun merge-proto-files.ts
 
 echo "[protoc-generator] Merged"
 

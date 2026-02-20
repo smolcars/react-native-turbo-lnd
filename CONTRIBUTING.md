@@ -20,8 +20,6 @@ Most files are generated using the protoc plugin in the `protoc-generator` folde
 
 In order to generate these files, you need [protoc](https://github.com/protocolbuffers/protobuf/releases/tag/v28.0) installed and in your `PATH`.
 
-You also need [Deno](https://deno.com) installed.
-
 Once you have protoc, run `bun run generate-bindings` in the root directory.
 
 > Since the project relies on Bun workspaces, use Bun commands for development.
