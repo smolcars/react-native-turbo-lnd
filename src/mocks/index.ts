@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { base64Encode, base64Decode } from "@bufbuild/protobuf/wire";
 
 import { create, toBinary, fromBinary } from "@bufbuild/protobuf";
@@ -48,6 +47,20 @@ let subscribeStateOnResponseCallbacks: {
   onResponse: OnResponseCallback;
   onError: OnErrorCallback;
 }[] = [];
+
+const hexToUint8Array = (hex: string): Uint8Array => {
+  const normalizedHex = hex.trim();
+  const safeHex =
+    normalizedHex.length % 2 === 0 ? normalizedHex : `0${normalizedHex}`;
+  const bytes = new Uint8Array(safeHex.length / 2);
+
+  for (let i = 0; i < bytes.length; i += 1) {
+    const value = Number.parseInt(safeHex.slice(i * 2, i * 2 + 2), 16);
+    bytes[i] = Number.isNaN(value) ? 0 : value;
+  }
+
+  return bytes;
+};
 
 const callSubscribeStateOnResponseCallbacks = () => {
   subscribeStateOnResponseCallbacks.forEach((cb) => {
@@ -206,7 +219,7 @@ const TurboLnd: Spec = {
       address: mockAddress,
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await new Promise<void>((resolve) => setTimeout(() => resolve(), 100));
 
     return base64Encode(toBinary(NewAddressResponseSchema, response));
   },
@@ -286,7 +299,7 @@ const TurboLnd: Spec = {
         update: {
           case: "closePending",
           value: create(PendingUpdateSchema, {
-            txid: new Uint8Array(Buffer.from(generateMockTxid(), "hex")),
+            txid: hexToUint8Array(generateMockTxid()),
             outputIndex: decodedRequest?.channelPoint?.outputIndex,
           }),
         },
@@ -303,7 +316,7 @@ const TurboLnd: Spec = {
         update: {
           case: "chanClose",
           value: create(ChannelCloseUpdateSchema, {
-            closingTxid: new Uint8Array(Buffer.from(generateMockTxid(), "hex")),
+            closingTxid: hexToUint8Array(generateMockTxid()),
             success: true,
           }),
         },

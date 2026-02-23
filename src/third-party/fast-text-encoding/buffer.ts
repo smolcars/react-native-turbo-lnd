@@ -1,3 +1,5 @@
+declare const Buffer: any;
+
 /**
  * @param {Uint8Array} bytes
  * @param {string} encoding
@@ -6,7 +8,7 @@
 export function decodeBuffer(bytes: Uint8Array, encoding: string) {
   /** @type {Buffer} */
   var b;
-  if (bytes instanceof Buffer) {
+  if (Buffer.isBuffer(bytes)) {
     // @ts-ignore
     b = bytes;
   } else {

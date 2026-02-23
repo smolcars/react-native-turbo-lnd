@@ -4,6 +4,8 @@ import { failedToString, maybeThrowFailedToOption } from "./shared";
 import { hasBufferFrom } from "./support";
 import { decodeSyncXHR } from "./xhr";
 
+declare const Buffer: any;
+
 const trySyncXHR =
   !hasBufferFrom &&
   typeof Blob === "function" &&
