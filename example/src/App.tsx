@@ -139,6 +139,7 @@ export default function App() {
           title="connectPeer"
         />
       </View>
+
     </View>
   );
 }
