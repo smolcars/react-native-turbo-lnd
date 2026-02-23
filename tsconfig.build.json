@@ -1,4 +1,11 @@
 {
   "extends": "./tsconfig",
-  "exclude": ["example", "protoc-generator"]
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": [
+    "example",
+    "protoc-generator",
+    "tests",
+    "**/*.test.ts",
+    "**/*.test.tsx"
+  ]
 }
