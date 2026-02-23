@@ -51,6 +51,16 @@
         "default": "./lib/module/core/NativeTurboLnd"
       }
     },
+    "./mock": {
+      "require": {
+        "types": "./lib/typescript/commonjs/src/mock.d.ts",
+        "default": "./lib/commonjs/mock.js"
+      },
+      "import": {
+        "types": "./lib/typescript/module/src/mock.d.ts",
+        "default": "./lib/module/mock.js"
+      }
+    },
     "./protos/*": {
       "require": {
         "types": "./lib/typescript/commonjs/src/proto/*.d.ts",

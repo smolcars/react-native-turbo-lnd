@@ -114,7 +114,13 @@ function formatComment(comment: string, method: Method): string {
   return `/**\n${formattedLines.join("\n")}\n   */`;
 }
 
-function generateCode(request: any): { cppContent: string; cppHeaderContent: string; turboSpec: string, protobufEsWrapper: string } {
+function generateCode(request: any): {
+  cppContent: string;
+  cppHeaderContent: string;
+  turboSpec: string;
+  protobufEsWrapper: string;
+  protobufEsWrapperMock: string;
+} {
   const cppHeaderResult: string[] = [];
   const cppResult: string[] = [];
   const turboSpecResult: string[] = [];
@@ -495,17 +501,12 @@ ${turboSpecResult.join("\n\n")}
 export default TurboModuleRegistry.getEnforcing<Spec>("TurboLndModuleCxx");
 `;
 
-  const protobufEsWrapper =
+  const buildProtobufEsWrapper = (backendModulePath: string): string =>
 `${contributorNotice}
 /* eslint-disable */
 import "./setup-text-encoding";
 
-let TurboLnd: any;
-if ((globalThis as any)["fakelnd"] || typeof (globalThis as any)["jest"] !== "undefined") {
-  TurboLnd = require('./mocks/index').default;
-} else {
-  TurboLnd = require('./core/NativeTurboLnd').default;
-}
+const TurboLnd = require('${backendModulePath}').default;
 import { type OnResponseCallback, type OnErrorCallback, type UnsubscribeFromStream } from "./core/NativeTurboLnd";
 
 import { create, toBinary, fromBinary, type MessageInitShape } from "@bufbuild/protobuf";
@@ -539,9 +540,12 @@ import * as wtclientrpc from "./proto/wtclientrpc/wtclient_pb";
 export const start = TurboLnd.start;
 
 ${protobufEsWrapperResult.join("\n\n")}
-`
+`;
 
-  return { cppContent, cppHeaderContent, turboSpec, protobufEsWrapper };
+  const protobufEsWrapper = buildProtobufEsWrapper("./core/NativeTurboLnd");
+  const protobufEsWrapperMock = buildProtobufEsWrapper("./mocks/index");
+
+  return { cppContent, cppHeaderContent, turboSpec, protobufEsWrapper, protobufEsWrapperMock };
 }
 
 async function main() {
@@ -553,7 +557,7 @@ async function main() {
     const inputBuffer = await readStdin();
     const uint8Array = new Uint8Array(inputBuffer);
     const request = PluginRequest.decode(uint8Array);
-    const { cppContent, cppHeaderContent, turboSpec, protobufEsWrapper } = generateCode(request);
+    const { cppContent, cppHeaderContent, turboSpec, protobufEsWrapper, protobufEsWrapperMock } = generateCode(request);
 
     const response = PluginResponse.create({
       file: [
@@ -572,6 +576,10 @@ async function main() {
         {
           name: "index.ts",
           content: protobufEsWrapper,
+        },
+        {
+          name: "mock.ts",
+          content: protobufEsWrapperMock,
         },
       ],
     });

@@ -8,7 +8,7 @@ describe("TurboLnd mock", () => {
   });
 
   test("subscribeState should initially return LOCKED state", async () => {
-    const { subscribeState } = await import("../src/");
+    const { subscribeState } = await import("../src/mock");
 
     await new Promise<void>((resolve, reject) => {
       const timeout = setTimeout(() => {

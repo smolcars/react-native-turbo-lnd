@@ -5,12 +5,7 @@
 /* eslint-disable */
 import "./setup-text-encoding";
 
-let TurboLnd: any;
-if ((globalThis as any)["fakelnd"] || typeof (globalThis as any)["jest"] !== "undefined") {
-  TurboLnd = require('./mocks/index').default;
-} else {
-  TurboLnd = require('./core/NativeTurboLnd').default;
-}
+const TurboLnd = require('./core/NativeTurboLnd').default;
 import { type OnResponseCallback, type OnErrorCallback, type UnsubscribeFromStream } from "./core/NativeTurboLnd";
 
 import { create, toBinary, fromBinary, type MessageInitShape } from "@bufbuild/protobuf";
