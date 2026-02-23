@@ -1,5 +1,6 @@
 #pragma once
 
+#include <climits>
 #include <jsi/jsi.h>
 
 #include "base64.hpp"
@@ -11,7 +12,7 @@ using namespace facebook;
 class WritableStreamHostObject : public jsi::HostObject {
 private:
     uintptr_t streamPtr;
-    uint8_t recvrStreamId;
+    uint64_t recvrStreamId;
 
 public:
     WritableStreamHostObject(uintptr_t ptr, uint64_t recvrStreamId) : streamPtr(ptr), recvrStreamId(recvrStreamId) {}
@@ -23,6 +24,9 @@ public:
 
         std::string base64Data = arguments[0].asString(runtime).utf8(runtime);
         std::string decodedData = base64::from_base64(base64Data);
+        if (decodedData.size() > static_cast<size_t>(INT_MAX)) {
+            throw jsi::JSError(runtime, "send payload too large");
+        }
 
         int sendResult = SendStreamC(streamPtr, decodedData.data(), static_cast<int>(decodedData.size()));
         return jsi::Value(sendResult == 0);

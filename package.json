@@ -126,7 +126,7 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-native": "^4.0.0",
     "prettier": "^3.0.3",
-    "react": "19.1.0",
+    "react": "19.2.3",
     "react-native": "0.84.0",
     "react-native-builder-bob": "0.40.13",
     "release-it": "^15.0.0",

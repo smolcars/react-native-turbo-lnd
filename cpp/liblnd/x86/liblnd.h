@@ -605,6 +605,7 @@ extern void autopilotStatus(char* data, int length, CCallback callback);
 extern void autopilotModifyStatus(char* data, int length, CCallback callback);
 extern void autopilotQueryScores(char* data, int length, CCallback callback);
 extern void autopilotSetScores(char* data, int length, CCallback callback);
+extern void lndFree(void* ptr);
 extern int SendStreamC(uintptr_t streamPtr, char* data, int length);
 extern int StopStreamC(uintptr_t streamPtr);
 extern void chainKitGetBlock(char* data, int length, CCallback callback);
