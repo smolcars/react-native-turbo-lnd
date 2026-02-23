@@ -16,6 +16,7 @@
 #include <string>
 
 #include <react/bridging/Promise.h>
+#include <react/bridging/Uint8Array.h>
 
 namespace facebook::react {
 
@@ -31,317 +32,333 @@ class TurboLndModule : public NativeTurboLndCxxSpec<TurboLndModule> {
 
   facebook::react::AsyncPromise<std::string> start(jsi::Runtime &rt, jsi::String args);
 
-  facebook::react::AsyncPromise<std::string> walletBalance(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> walletBalance(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> channelBalance(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> channelBalance(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> getTransactions(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> getTransactions(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> estimateFee(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> estimateFee(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> sendCoins(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> sendCoins(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> listUnspent(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> listUnspent(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::jsi::Function subscribeTransactions(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError);
+  facebook::jsi::Function subscribeTransactions(jsi::Runtime &rt, facebook::react::Uint8Array data, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError);
 
-  facebook::react::AsyncPromise<std::string> sendMany(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> sendMany(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> newAddress(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> newAddress(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> signMessage(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> signMessage(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> verifyMessage(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> verifyMessage(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> connectPeer(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> connectPeer(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> disconnectPeer(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> disconnectPeer(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> listPeers(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> listPeers(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::jsi::Function subscribePeerEvents(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError);
+  facebook::jsi::Function subscribePeerEvents(jsi::Runtime &rt, facebook::react::Uint8Array data, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError);
 
-  facebook::react::AsyncPromise<std::string> getInfo(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> getInfo(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> getRecoveryInfo(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> getDebugInfo(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> pendingChannels(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> getRecoveryInfo(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> listChannels(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> pendingChannels(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::jsi::Function subscribeChannelEvents(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> listChannels(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> closedChannels(jsi::Runtime &rt, jsi::String data);
+  facebook::jsi::Function subscribeChannelEvents(jsi::Runtime &rt, facebook::react::Uint8Array data, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError);
 
-  facebook::react::AsyncPromise<std::string> openChannelSync(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> closedChannels(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::jsi::Function openChannel(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> openChannelSync(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> batchOpenChannel(jsi::Runtime &rt, jsi::String data);
+  facebook::jsi::Function openChannel(jsi::Runtime &rt, facebook::react::Uint8Array data, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError);
 
-  facebook::react::AsyncPromise<std::string> fundingStateStep(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> batchOpenChannel(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  jsi::Object channelAcceptor(jsi::Runtime &rt, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> fundingStateStep(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::jsi::Function closeChannel(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError);
+  jsi::Object channelAcceptor(jsi::Runtime &rt, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError);
 
-  facebook::react::AsyncPromise<std::string> abandonChannel(jsi::Runtime &rt, jsi::String data);
+  facebook::jsi::Function closeChannel(jsi::Runtime &rt, facebook::react::Uint8Array data, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError);
 
-  jsi::Object sendPayment(jsi::Runtime &rt, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> abandonChannel(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> sendPaymentSync(jsi::Runtime &rt, jsi::String data);
+  jsi::Object sendPayment(jsi::Runtime &rt, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError);
 
-  jsi::Object sendToRoute(jsi::Runtime &rt, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> sendPaymentSync(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> sendToRouteSync(jsi::Runtime &rt, jsi::String data);
+  jsi::Object sendToRoute(jsi::Runtime &rt, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError);
 
-  facebook::react::AsyncPromise<std::string> addInvoice(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> sendToRouteSync(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> listInvoices(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> addInvoice(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> lookupInvoice(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> listInvoices(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::jsi::Function subscribeInvoices(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> lookupInvoice(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> decodePayReq(jsi::Runtime &rt, jsi::String data);
+  facebook::jsi::Function subscribeInvoices(jsi::Runtime &rt, facebook::react::Uint8Array data, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError);
 
-  facebook::react::AsyncPromise<std::string> listPayments(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> decodePayReq(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> deletePayment(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> listPayments(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> deleteAllPayments(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> deletePayment(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> describeGraph(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> deleteAllPayments(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> getNodeMetrics(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> describeGraph(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> getChanInfo(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> getNodeMetrics(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> getNodeInfo(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> getChanInfo(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> queryRoutes(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> getNodeInfo(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> getNetworkInfo(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> queryRoutes(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> stopDaemon(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> getNetworkInfo(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::jsi::Function subscribeChannelGraph(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> stopDaemon(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> debugLevel(jsi::Runtime &rt, jsi::String data);
+  facebook::jsi::Function subscribeChannelGraph(jsi::Runtime &rt, facebook::react::Uint8Array data, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError);
 
-  facebook::react::AsyncPromise<std::string> feeReport(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> debugLevel(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> updateChannelPolicy(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> feeReport(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> forwardingHistory(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> updateChannelPolicy(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> exportChannelBackup(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> forwardingHistory(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> exportAllChannelBackups(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> exportChannelBackup(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> verifyChanBackup(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> exportAllChannelBackups(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> restoreChannelBackups(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> verifyChanBackup(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::jsi::Function subscribeChannelBackups(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> restoreChannelBackups(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> bakeMacaroon(jsi::Runtime &rt, jsi::String data);
+  facebook::jsi::Function subscribeChannelBackups(jsi::Runtime &rt, facebook::react::Uint8Array data, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError);
 
-  facebook::react::AsyncPromise<std::string> listMacaroonIDs(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> bakeMacaroon(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> deleteMacaroonID(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> listMacaroonIDs(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> listPermissions(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> deleteMacaroonID(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> checkMacaroonPermissions(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> listPermissions(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  jsi::Object registerRPCMiddleware(jsi::Runtime &rt, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> checkMacaroonPermissions(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> sendCustomMessage(jsi::Runtime &rt, jsi::String data);
+  jsi::Object registerRPCMiddleware(jsi::Runtime &rt, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError);
 
-  facebook::jsi::Function subscribeCustomMessages(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> sendCustomMessage(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> listAliases(jsi::Runtime &rt, jsi::String data);
+  facebook::jsi::Function subscribeCustomMessages(jsi::Runtime &rt, facebook::react::Uint8Array data, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError);
 
-  facebook::react::AsyncPromise<std::string> lookupHtlcResolution(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> listAliases(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> genSeed(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> lookupHtlcResolution(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> initWallet(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> genSeed(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> unlockWallet(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> initWallet(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> changePassword(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> unlockWallet(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::jsi::Function subscribeState(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> changePassword(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> getState(jsi::Runtime &rt, jsi::String data);
+  facebook::jsi::Function subscribeState(jsi::Runtime &rt, facebook::react::Uint8Array data, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError);
 
-  facebook::react::AsyncPromise<std::string> autopilotStatus(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> getState(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> autopilotModifyStatus(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> autopilotStatus(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> autopilotQueryScores(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> autopilotModifyStatus(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> autopilotSetScores(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> autopilotQueryScores(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::jsi::Function chainNotifierRegisterConfirmationsNtfn(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> autopilotSetScores(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::jsi::Function chainNotifierRegisterSpendNtfn(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError);
+  facebook::jsi::Function chainNotifierRegisterConfirmationsNtfn(jsi::Runtime &rt, facebook::react::Uint8Array data, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError);
 
-  facebook::jsi::Function chainNotifierRegisterBlockEpochNtfn(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError);
+  facebook::jsi::Function chainNotifierRegisterSpendNtfn(jsi::Runtime &rt, facebook::react::Uint8Array data, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError);
 
-  facebook::jsi::Function invoicesSubscribeSingleInvoice(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError);
+  facebook::jsi::Function chainNotifierRegisterBlockEpochNtfn(jsi::Runtime &rt, facebook::react::Uint8Array data, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError);
 
-  facebook::react::AsyncPromise<std::string> invoicesCancelInvoice(jsi::Runtime &rt, jsi::String data);
+  facebook::jsi::Function invoicesSubscribeSingleInvoice(jsi::Runtime &rt, facebook::react::Uint8Array data, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError);
 
-  facebook::react::AsyncPromise<std::string> invoicesAddHoldInvoice(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> invoicesCancelInvoice(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> invoicesSettleInvoice(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> invoicesAddHoldInvoice(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> invoicesLookupInvoiceV2(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> invoicesSettleInvoice(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> neutrinoKitStatus(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> invoicesLookupInvoiceV2(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> neutrinoKitAddPeer(jsi::Runtime &rt, jsi::String data);
+  jsi::Object invoicesHtlcModifier(jsi::Runtime &rt, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError);
 
-  facebook::react::AsyncPromise<std::string> neutrinoKitDisconnectPeer(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> neutrinoKitStatus(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> neutrinoKitIsBanned(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> neutrinoKitAddPeer(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> neutrinoKitGetBlockHeader(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> neutrinoKitDisconnectPeer(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> neutrinoKitGetBlock(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> neutrinoKitIsBanned(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> neutrinoKitGetCFilter(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> neutrinoKitGetBlockHeader(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> neutrinoKitGetBlockHash(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> neutrinoKitGetBlock(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> peersUpdateNodeAnnouncement(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> neutrinoKitGetCFilter(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::jsi::Function routerSendPaymentV2(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> neutrinoKitGetBlockHash(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::jsi::Function routerTrackPaymentV2(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> peersUpdateNodeAnnouncement(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::jsi::Function routerTrackPayments(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError);
+  facebook::jsi::Function routerSendPaymentV2(jsi::Runtime &rt, facebook::react::Uint8Array data, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError);
 
-  facebook::react::AsyncPromise<std::string> routerEstimateRouteFee(jsi::Runtime &rt, jsi::String data);
+  facebook::jsi::Function routerTrackPaymentV2(jsi::Runtime &rt, facebook::react::Uint8Array data, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError);
 
-  facebook::react::AsyncPromise<std::string> routerSendToRoute(jsi::Runtime &rt, jsi::String data);
+  facebook::jsi::Function routerTrackPayments(jsi::Runtime &rt, facebook::react::Uint8Array data, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError);
 
-  facebook::react::AsyncPromise<std::string> routerSendToRouteV2(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> routerEstimateRouteFee(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> routerResetMissionControl(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> routerSendToRoute(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> routerQueryMissionControl(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> routerSendToRouteV2(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> routerXImportMissionControl(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> routerResetMissionControl(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> routerGetMissionControlConfig(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> routerQueryMissionControl(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> routerSetMissionControlConfig(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> routerXImportMissionControl(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> routerQueryProbability(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> routerGetMissionControlConfig(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> routerBuildRoute(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> routerSetMissionControlConfig(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::jsi::Function routerSubscribeHtlcEvents(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> routerQueryProbability(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::jsi::Function routerSendPayment(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> routerBuildRoute(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::jsi::Function routerTrackPayment(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError);
+  facebook::jsi::Function routerSubscribeHtlcEvents(jsi::Runtime &rt, facebook::react::Uint8Array data, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError);
 
-  jsi::Object routerHtlcInterceptor(jsi::Runtime &rt, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError);
+  facebook::jsi::Function routerSendPayment(jsi::Runtime &rt, facebook::react::Uint8Array data, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError);
 
-  facebook::react::AsyncPromise<std::string> routerUpdateChanStatus(jsi::Runtime &rt, jsi::String data);
+  facebook::jsi::Function routerTrackPayment(jsi::Runtime &rt, facebook::react::Uint8Array data, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError);
 
-  facebook::react::AsyncPromise<std::string> signerSignOutputRaw(jsi::Runtime &rt, jsi::String data);
+  jsi::Object routerHtlcInterceptor(jsi::Runtime &rt, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError);
 
-  facebook::react::AsyncPromise<std::string> signerComputeInputScript(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> routerUpdateChanStatus(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> signerSignMessage(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> routerXAddLocalChanAliases(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> signerVerifyMessage(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> routerXDeleteLocalChanAliases(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> signerDeriveSharedKey(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> signerSignOutputRaw(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> signerMuSig2CombineKeys(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> signerComputeInputScript(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> signerMuSig2CreateSession(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> signerSignMessage(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> signerMuSig2RegisterNonces(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> signerVerifyMessage(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> signerMuSig2Sign(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> signerDeriveSharedKey(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> signerMuSig2CombineSig(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> signerMuSig2CombineKeys(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> signerMuSig2Cleanup(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> signerMuSig2CreateSession(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> versionerGetVersion(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> signerMuSig2RegisterNonces(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> walletKitListUnspent(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> signerMuSig2Sign(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> walletKitLeaseOutput(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> signerMuSig2CombineSig(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> walletKitReleaseOutput(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> signerMuSig2Cleanup(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> walletKitListLeases(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> versionerGetVersion(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> walletKitDeriveNextKey(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> walletKitListUnspent(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> walletKitDeriveKey(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> walletKitLeaseOutput(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> walletKitNextAddr(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> walletKitReleaseOutput(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> walletKitListAccounts(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> walletKitListLeases(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> walletKitRequiredReserve(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> walletKitDeriveNextKey(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> walletKitListAddresses(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> walletKitDeriveKey(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> walletKitSignMessageWithAddr(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> walletKitNextAddr(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> walletKitVerifyMessageWithAddr(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> walletKitGetTransaction(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> walletKitImportAccount(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> walletKitListAccounts(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> walletKitImportPublicKey(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> walletKitRequiredReserve(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> walletKitImportTapscript(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> walletKitListAddresses(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> walletKitPublishTransaction(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> walletKitSignMessageWithAddr(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> walletKitSendOutputs(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> walletKitVerifyMessageWithAddr(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> walletKitEstimateFee(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> walletKitImportAccount(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> walletKitPendingSweeps(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> walletKitImportPublicKey(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> walletKitBumpFee(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> walletKitImportTapscript(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> walletKitListSweeps(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> walletKitPublishTransaction(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> walletKitLabelTransaction(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> walletKitRemoveTransaction(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> walletKitFundPsbt(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> walletKitSendOutputs(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> walletKitSignPsbt(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> walletKitEstimateFee(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> walletKitFinalizePsbt(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> walletKitPendingSweeps(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> watchtowerGetInfo(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> walletKitBumpFee(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> watchtowerClientAddTower(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> walletKitListSweeps(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> watchtowerClientRemoveTower(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> walletKitLabelTransaction(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> watchtowerClientListTowers(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> walletKitFundPsbt(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> watchtowerClientGetTowerInfo(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> walletKitSignPsbt(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> watchtowerClientStats(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> walletKitFinalizePsbt(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
-  facebook::react::AsyncPromise<std::string> watchtowerClientPolicy(jsi::Runtime &rt, jsi::String data);
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> watchtowerGetInfo(jsi::Runtime &rt, facebook::react::Uint8Array data);
+
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> watchtowerClientAddTower(jsi::Runtime &rt, facebook::react::Uint8Array data);
+
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> watchtowerClientRemoveTower(jsi::Runtime &rt, facebook::react::Uint8Array data);
+
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> watchtowerClientDeactivateTower(jsi::Runtime &rt, facebook::react::Uint8Array data);
+
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> watchtowerClientTerminateSession(jsi::Runtime &rt, facebook::react::Uint8Array data);
+
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> watchtowerClientListTowers(jsi::Runtime &rt, facebook::react::Uint8Array data);
+
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> watchtowerClientGetTowerInfo(jsi::Runtime &rt, facebook::react::Uint8Array data);
+
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> watchtowerClientStats(jsi::Runtime &rt, facebook::react::Uint8Array data);
+
+  facebook::react::AsyncPromise<facebook::react::Uint8Array> watchtowerClientPolicy(jsi::Runtime &rt, facebook::react::Uint8Array data);
 
 
 };

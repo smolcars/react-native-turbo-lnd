@@ -95,6 +95,12 @@ export default function App() {
           }, (error) => {
             console.error(error);
           });
+
+          setTimeout(() => {
+            console.log("closing", acceptor.close());
+            console.log("closed");
+          }, 1000);
+
           console.log("channelAcceptor", acceptor);
         }}
       />

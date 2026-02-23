@@ -162,11 +162,11 @@ function generateCode(request: any): { cppContent: string; cppHeaderContent: str
 
             if (!isServerStreaming && !isClientStreaming) {
               // Unary RPC
-              cppMethodDeclaration = `  facebook::react::AsyncPromise<std::string> ${methodName}(jsi::Runtime &rt, jsi::String data);`;
+              cppMethodDeclaration = `  facebook::react::AsyncPromise<facebook::react::Uint8Array> ${methodName}(jsi::Runtime &rt, facebook::react::Uint8Array data);`;
               cppMethodImplementation = `
-facebook::react::AsyncPromise<std::string> TurboLndModule::${methodName}(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::${methodName}(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -175,13 +175,12 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::${methodName}(jsi::Ru
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::${methodName}(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::${methodName}(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }`;
-              rnMethodSpec = `  ${comment}\n  ${methodName}(data: ProtobufBase64): Promise<ProtobufBase64>;`;
-
+              rnMethodSpec = `  ${comment}\n  ${methodName}(data: Uint8Array): Promise<Uint8Array>;`;
 
               protobufEsWrapperMethod = `${comment}
 export async function ${methodName}(
@@ -191,26 +190,24 @@ export async function ${methodName}(
     ${inputTypeService}.${inputType}Schema,
     request
   );
-  const b64 = await TurboLnd.${methodName}(
-    base64Encode(
-      toBinary(${inputTypeService}.${inputType}Schema, message)
-    )
+  const responseBytes = await TurboLnd.${methodName}(
+    toBinary(${inputTypeService}.${inputType}Schema, message)
   );
   const response = fromBinary(
     ${outputTypeService}.${outputType}Schema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
 `;
             } else if (isServerStreaming && !isClientStreaming) {
               // Server streaming RPC
-              cppMethodDeclaration = `  facebook::jsi::Function ${methodName}(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError);`;
+              cppMethodDeclaration = `  facebook::jsi::Function ${methodName}(jsi::Runtime &rt, facebook::react::Uint8Array data, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError);`;
               cppMethodImplementation = `
-facebook::jsi::Function TurboLndModule::${methodName}(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError) {
-    auto sharedOnResponse = std::make_shared<AsyncCallback<std::string>>(std::move(onResponse));
+facebook::jsi::Function TurboLndModule::${methodName}(jsi::Runtime &rt, facebook::react::Uint8Array data, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError) {
+    auto sharedOnResponse = std::make_shared<AsyncCallback<facebook::react::Uint8Array>>(std::move(onResponse));
     auto sharedOnError = std::make_shared<AsyncCallback<std::string>>(std::move(onError));
-    uint64_t callbackId = CallbackKeeper::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
+    uint64_t callbackId = CallbackKeeper<facebook::react::Uint8Array>::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
 
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
@@ -219,22 +216,22 @@ facebook::jsi::Function TurboLndModule::${methodName}(jsi::Runtime &rt, jsi::Str
         .errorContext = reinterpret_cast<void*>(callbackId),
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::${methodName}(decodedData.data(), static_cast<int>(decodedData.size()), recvStream);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::${methodName}(req.data(), static_cast<int>(req.size()), recvStream);
 
     auto unsubscribeFunc = jsi::Function::createFromHostFunction(
         rt,
         jsi::PropNameID::forAscii(rt, "unsubscribe"),
         0,
         [callbackId](jsi::Runtime& rt, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
-            CallbackKeeper::getInstance().removeCallbacks(callbackId);
+            CallbackKeeper<facebook::react::Uint8Array>::getInstance().removeCallbacks(callbackId);
             return jsi::Value::undefined();
         }
     );
 
     return unsubscribeFunc;
 }`;
-              rnMethodSpec = `  ${comment}\n  ${methodName}(data: ProtobufBase64, onResponse: OnResponseCallback, onError: OnErrorCallback): UnsubscribeFromStream;`;
+              rnMethodSpec = `  ${comment}\n  ${methodName}(data: Uint8Array, onResponse: OnResponseCallback, onError: OnErrorCallback): UnsubscribeFromStream;`;
 
               protobufEsWrapperMethod = `${comment}
 export function ${methodName}(
@@ -246,30 +243,30 @@ export function ${methodName}(
     ${inputTypeService}.${inputType}Schema,
     request
   );
-  const requestB64 = base64Encode(
-    toBinary(${inputTypeService}.${inputType}Schema, message)
+  const requestBytes = toBinary(
+    ${inputTypeService}.${inputType}Schema,
+    message
   );
 
-  const onResponseWrapper: OnResponseCallback = (responseB64) => {
+  const onResponseWrapper: OnResponseCallback = (responseBytes) => {
     onResponse(fromBinary(
       ${outputTypeService}.${outputType}Schema,
-      base64Decode(responseB64)
+      responseBytes
     ));
   }
   const onErrorWrapper: OnErrorCallback = (error: string) => onError(error);
 
-
-  return TurboLnd.${methodName}(requestB64, onResponseWrapper, onErrorWrapper);
+  return TurboLnd.${methodName}(requestBytes, onResponseWrapper, onErrorWrapper);
 }
 `
             } else if (isClientStreaming && isServerStreaming) {
               // Bidirectional streaming RPC
-              cppMethodDeclaration = `  jsi::Object ${methodName}(jsi::Runtime &rt, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError);`;
+              cppMethodDeclaration = `  jsi::Object ${methodName}(jsi::Runtime &rt, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError);`;
               cppMethodImplementation = `
-jsi::Object TurboLndModule::${methodName}(jsi::Runtime &rt, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError) {
-    auto sharedOnResponse = std::make_shared<AsyncCallback<std::string>>(std::move(onResponse));
+jsi::Object TurboLndModule::${methodName}(jsi::Runtime &rt, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError) {
+    auto sharedOnResponse = std::make_shared<AsyncCallback<facebook::react::Uint8Array>>(std::move(onResponse));
     auto sharedOnError = std::make_shared<AsyncCallback<std::string>>(std::move(onError));
-    uint64_t callbackId = CallbackKeeper::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
+    uint64_t callbackId = CallbackKeeper<facebook::react::Uint8Array>::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
 
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
@@ -294,10 +291,10 @@ export function ${methodName}(
   onResponse: (response: ${outputTypeService}.${outputType}) => void,
   onError: (error: string) => void
 ) {
-  const onResponseWrapper: OnResponseCallback = (responseB64) => {
+  const onResponseWrapper: OnResponseCallback = (responseBytes) => {
     onResponse(fromBinary(
       ${outputTypeService}.${outputType}Schema,
-      base64Decode(responseB64)
+      responseBytes
     ));
   }
   const onErrorWrapper: OnErrorCallback = (error: string) => onError(error);
@@ -310,10 +307,11 @@ export function ${methodName}(
         ${inputTypeService}.${inputType}Schema,
         response
       );
-      const responseB64 = base64Encode(
-        toBinary(${inputTypeService}.${inputType}Schema, message)
+      const responseBytes = toBinary(
+        ${inputTypeService}.${inputType}Schema,
+        message
       );
-      writeableStream.send(responseB64);
+      writeableStream.send(responseBytes);
     },
     close: () => {
       writeableStream.stop();
@@ -357,6 +355,7 @@ export function ${methodName}(
 #include <string>
 
 #include <react/bridging/Promise.h>
+#include <react/bridging/Uint8Array.h>
 
 namespace facebook::react {
 
@@ -389,8 +388,10 @@ ${cppHeaderResult.join("\n\n")}
 #include "utils/PromiseKeeper.h"
 #include "utils/CallbackKeeper.h"
 #include "utils/WritableStreamHostObject.h"
-#include "utils/base64.hpp"
 #include "utils/log.h"
+
+#include <cstring>
+#include <vector>
 
 namespace facebook::react {
 
@@ -399,39 +400,66 @@ TurboLndModule::TurboLndModule(std::shared_ptr<CallInvoker> jsInvoker)
 
 void TurboLndModule::promiseOnResponseStatic(void* context, const char* data, int length) {
     uint64_t id = reinterpret_cast<uint64_t>(context);
-    std::string encoded = base64::to_base64(std::string_view(data, length));
-    PromiseKeeper::getInstance().resolvePromise(id, std::move(encoded));
+
+    if (length < 0) {
+        PromiseKeeper<facebook::react::Uint8Array>::getInstance().rejectPromise(id, "Negative response length");
+        return;
+    }
+
+    std::vector<uint8_t> bytes(static_cast<size_t>(length));
+    if (length > 0 && data != nullptr) {
+        std::memcpy(bytes.data(), data, static_cast<size_t>(length));
+    }
+
+    PromiseKeeper<facebook::react::Uint8Array>::getInstance().resolvePromise(id, std::move(bytes));
 }
 
 void TurboLndModule::promiseOnErrorStatic(void* context, const char* error) {
     uint64_t id = reinterpret_cast<uint64_t>(context);
-    PromiseKeeper::getInstance().rejectPromise(id, std::string(error));
+    PromiseKeeper<facebook::react::Uint8Array>::getInstance().rejectPromise(
+        id,
+        error == nullptr ? "Unknown error" : std::string(error));
 }
 
 void TurboLndModule::callbackOnResponseStatic(void* context, const char* data, int length) {
     uint64_t id = reinterpret_cast<uint64_t>(context);
-    std::string encoded = base64::to_base64(std::string_view(data, length));
-    CallbackKeeper::getInstance().invokeResponseCallback(id, std::move(encoded));
+
+    if (length < 0) {
+        CallbackKeeper<facebook::react::Uint8Array>::getInstance().invokeErrorCallback(id, "Negative response length");
+        return;
+    }
+
+    std::vector<uint8_t> bytes(static_cast<size_t>(length));
+    if (length > 0 && data != nullptr) {
+        std::memcpy(bytes.data(), data, static_cast<size_t>(length));
+    }
+
+    CallbackKeeper<facebook::react::Uint8Array>::getInstance().invokeResponseCallback(id, std::move(bytes));
 }
 
 void TurboLndModule::callbackOnErrorStatic(void* context, const char* error) {
     uint64_t id = reinterpret_cast<uint64_t>(context);
-    CallbackKeeper::getInstance().invokeErrorCallback(id, std::string(error));
+    CallbackKeeper<facebook::react::Uint8Array>::getInstance().invokeErrorCallback(
+        id,
+        error == nullptr ? "Unknown error" : std::string(error));
 }
 
 facebook::react::AsyncPromise<std::string> TurboLndModule::start(jsi::Runtime &rt, jsi::String args) {
     auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+    uint64_t promiseId = PromiseKeeper<std::string>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = [](void* context, const char* data, int length) {
             uint64_t id = reinterpret_cast<uint64_t>(context);
-            std::string encoded = base64::to_base64(std::string_view(data, length));
-            PromiseKeeper::getInstance().resolvePromise(id, std::move(encoded));
+            PromiseKeeper<std::string>::getInstance().resolvePromise(
+                id,
+                data == nullptr ? std::string() : std::string(data, static_cast<size_t>(length)));
         },
         .onError = [](void* context, const char* error) {
             uint64_t id = reinterpret_cast<uint64_t>(context);
-            PromiseKeeper::getInstance().rejectPromise(id, std::string(error));
+            PromiseKeeper<std::string>::getInstance().rejectPromise(
+                id,
+                error == nullptr ? "Unknown error" : std::string(error));
         },
         .responseContext = reinterpret_cast<void*>(promiseId),
         .errorContext = reinterpret_cast<void*>(promiseId)
@@ -458,20 +486,16 @@ ${cppResult.join("\n\n")}
 import type { TurboModule } from "react-native";
 import { TurboModuleRegistry } from "react-native";
 
-// Protobufs will be encoded as base64 strings.
-// Use a protobuf utility like protobufjs or protobuf-es to encode/decode them.
-export type ProtobufBase64 = string;
-
 // Bidi streams will return this interface for where can send data to the
 // stream.
 export interface WriteableStream {
-  send: (data: ProtobufBase64) => boolean;
+  send: (data: Uint8Array) => boolean;
   stop: () => boolean;
 }
 
 // Read streams will call OnResponseCallback when data is available.
 // UnsubscribeFromStream can be used to stop the stream.
-export type OnResponseCallback = (data: ProtobufBase64) => void;
+export type OnResponseCallback = (data: Uint8Array) => void;
 export type OnErrorCallback = (error: string) => void;
 export type UnsubscribeFromStream = () => void;
 
@@ -505,7 +529,6 @@ if ((globalThis as any)["fakelnd"] || typeof jest !== 'undefined') {
 import { type OnResponseCallback, type OnErrorCallback, type UnsubscribeFromStream } from "./core/NativeTurboLnd";
 
 import { create, toBinary, fromBinary, type MessageInitShape } from "@bufbuild/protobuf";
-import { base64Encode, base64Decode } from "@bufbuild/protobuf/wire";
 
 import * as lnrpc from "./proto/lightning_pb";
 // import * as walletunlocker from "./proto/walletunlocker_pb";

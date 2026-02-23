@@ -9,8 +9,10 @@
 #include "utils/PromiseKeeper.h"
 #include "utils/CallbackKeeper.h"
 #include "utils/WritableStreamHostObject.h"
-#include "utils/base64.hpp"
 #include "utils/log.h"
+
+#include <cstring>
+#include <vector>
 
 namespace facebook::react {
 
@@ -19,39 +21,66 @@ TurboLndModule::TurboLndModule(std::shared_ptr<CallInvoker> jsInvoker)
 
 void TurboLndModule::promiseOnResponseStatic(void* context, const char* data, int length) {
     uint64_t id = reinterpret_cast<uint64_t>(context);
-    std::string encoded = base64::to_base64(std::string_view(data, length));
-    PromiseKeeper::getInstance().resolvePromise(id, std::move(encoded));
+
+    if (length < 0) {
+        PromiseKeeper<facebook::react::Uint8Array>::getInstance().rejectPromise(id, "Negative response length");
+        return;
+    }
+
+    std::vector<uint8_t> bytes(static_cast<size_t>(length));
+    if (length > 0 && data != nullptr) {
+        std::memcpy(bytes.data(), data, static_cast<size_t>(length));
+    }
+
+    PromiseKeeper<facebook::react::Uint8Array>::getInstance().resolvePromise(id, std::move(bytes));
 }
 
 void TurboLndModule::promiseOnErrorStatic(void* context, const char* error) {
     uint64_t id = reinterpret_cast<uint64_t>(context);
-    PromiseKeeper::getInstance().rejectPromise(id, std::string(error));
+    PromiseKeeper<facebook::react::Uint8Array>::getInstance().rejectPromise(
+        id,
+        error == nullptr ? "Unknown error" : std::string(error));
 }
 
 void TurboLndModule::callbackOnResponseStatic(void* context, const char* data, int length) {
     uint64_t id = reinterpret_cast<uint64_t>(context);
-    std::string encoded = base64::to_base64(std::string_view(data, length));
-    CallbackKeeper::getInstance().invokeResponseCallback(id, std::move(encoded));
+
+    if (length < 0) {
+        CallbackKeeper<facebook::react::Uint8Array>::getInstance().invokeErrorCallback(id, "Negative response length");
+        return;
+    }
+
+    std::vector<uint8_t> bytes(static_cast<size_t>(length));
+    if (length > 0 && data != nullptr) {
+        std::memcpy(bytes.data(), data, static_cast<size_t>(length));
+    }
+
+    CallbackKeeper<facebook::react::Uint8Array>::getInstance().invokeResponseCallback(id, std::move(bytes));
 }
 
 void TurboLndModule::callbackOnErrorStatic(void* context, const char* error) {
     uint64_t id = reinterpret_cast<uint64_t>(context);
-    CallbackKeeper::getInstance().invokeErrorCallback(id, std::string(error));
+    CallbackKeeper<facebook::react::Uint8Array>::getInstance().invokeErrorCallback(
+        id,
+        error == nullptr ? "Unknown error" : std::string(error));
 }
 
 facebook::react::AsyncPromise<std::string> TurboLndModule::start(jsi::Runtime &rt, jsi::String args) {
     auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+    uint64_t promiseId = PromiseKeeper<std::string>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = [](void* context, const char* data, int length) {
             uint64_t id = reinterpret_cast<uint64_t>(context);
-            std::string encoded = base64::to_base64(std::string_view(data, length));
-            PromiseKeeper::getInstance().resolvePromise(id, std::move(encoded));
+            PromiseKeeper<std::string>::getInstance().resolvePromise(
+                id,
+                data == nullptr ? std::string() : std::string(data, static_cast<size_t>(length)));
         },
         .onError = [](void* context, const char* error) {
             uint64_t id = reinterpret_cast<uint64_t>(context);
-            PromiseKeeper::getInstance().rejectPromise(id, std::string(error));
+            PromiseKeeper<std::string>::getInstance().rejectPromise(
+                id,
+                error == nullptr ? "Unknown error" : std::string(error));
         },
         .responseContext = reinterpret_cast<void*>(promiseId),
         .errorContext = reinterpret_cast<void*>(promiseId)
@@ -67,9 +96,9 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::start(jsi::Runtime &r
 
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::walletBalance(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::walletBalance(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -78,16 +107,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletBalance(jsi::Ru
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletBalance(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::walletBalance(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::channelBalance(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::channelBalance(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -96,16 +125,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::channelBalance(jsi::R
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::channelBalance(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::channelBalance(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::getTransactions(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::getTransactions(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -114,16 +143,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::getTransactions(jsi::
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::getTransactions(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::getTransactions(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::estimateFee(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::estimateFee(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -132,16 +161,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::estimateFee(jsi::Runt
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::estimateFee(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::estimateFee(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::sendCoins(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::sendCoins(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -150,16 +179,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::sendCoins(jsi::Runtim
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::sendCoins(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::sendCoins(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::listUnspent(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::listUnspent(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -168,17 +197,17 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::listUnspent(jsi::Runt
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::listUnspent(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::listUnspent(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::jsi::Function TurboLndModule::subscribeTransactions(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError) {
-    auto sharedOnResponse = std::make_shared<AsyncCallback<std::string>>(std::move(onResponse));
+facebook::jsi::Function TurboLndModule::subscribeTransactions(jsi::Runtime &rt, facebook::react::Uint8Array data, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError) {
+    auto sharedOnResponse = std::make_shared<AsyncCallback<facebook::react::Uint8Array>>(std::move(onResponse));
     auto sharedOnError = std::make_shared<AsyncCallback<std::string>>(std::move(onError));
-    uint64_t callbackId = CallbackKeeper::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
+    uint64_t callbackId = CallbackKeeper<facebook::react::Uint8Array>::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
 
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
@@ -187,15 +216,15 @@ facebook::jsi::Function TurboLndModule::subscribeTransactions(jsi::Runtime &rt, 
         .errorContext = reinterpret_cast<void*>(callbackId),
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::subscribeTransactions(decodedData.data(), static_cast<int>(decodedData.size()), recvStream);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::subscribeTransactions(req.data(), static_cast<int>(req.size()), recvStream);
 
     auto unsubscribeFunc = jsi::Function::createFromHostFunction(
         rt,
         jsi::PropNameID::forAscii(rt, "unsubscribe"),
         0,
         [callbackId](jsi::Runtime& rt, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
-            CallbackKeeper::getInstance().removeCallbacks(callbackId);
+            CallbackKeeper<facebook::react::Uint8Array>::getInstance().removeCallbacks(callbackId);
             return jsi::Value::undefined();
         }
     );
@@ -204,9 +233,9 @@ facebook::jsi::Function TurboLndModule::subscribeTransactions(jsi::Runtime &rt, 
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::sendMany(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::sendMany(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -215,16 +244,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::sendMany(jsi::Runtime
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::sendMany(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::sendMany(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::newAddress(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::newAddress(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -233,16 +262,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::newAddress(jsi::Runti
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::newAddress(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::newAddress(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::signMessage(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::signMessage(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -251,16 +280,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::signMessage(jsi::Runt
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::signMessage(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::signMessage(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::verifyMessage(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::verifyMessage(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -269,16 +298,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::verifyMessage(jsi::Ru
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::verifyMessage(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::verifyMessage(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::connectPeer(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::connectPeer(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -287,16 +316,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::connectPeer(jsi::Runt
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::connectPeer(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::connectPeer(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::disconnectPeer(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::disconnectPeer(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -305,16 +334,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::disconnectPeer(jsi::R
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::disconnectPeer(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::disconnectPeer(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::listPeers(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::listPeers(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -323,17 +352,17 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::listPeers(jsi::Runtim
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::listPeers(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::listPeers(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::jsi::Function TurboLndModule::subscribePeerEvents(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError) {
-    auto sharedOnResponse = std::make_shared<AsyncCallback<std::string>>(std::move(onResponse));
+facebook::jsi::Function TurboLndModule::subscribePeerEvents(jsi::Runtime &rt, facebook::react::Uint8Array data, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError) {
+    auto sharedOnResponse = std::make_shared<AsyncCallback<facebook::react::Uint8Array>>(std::move(onResponse));
     auto sharedOnError = std::make_shared<AsyncCallback<std::string>>(std::move(onError));
-    uint64_t callbackId = CallbackKeeper::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
+    uint64_t callbackId = CallbackKeeper<facebook::react::Uint8Array>::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
 
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
@@ -342,15 +371,15 @@ facebook::jsi::Function TurboLndModule::subscribePeerEvents(jsi::Runtime &rt, js
         .errorContext = reinterpret_cast<void*>(callbackId),
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::subscribePeerEvents(decodedData.data(), static_cast<int>(decodedData.size()), recvStream);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::subscribePeerEvents(req.data(), static_cast<int>(req.size()), recvStream);
 
     auto unsubscribeFunc = jsi::Function::createFromHostFunction(
         rt,
         jsi::PropNameID::forAscii(rt, "unsubscribe"),
         0,
         [callbackId](jsi::Runtime& rt, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
-            CallbackKeeper::getInstance().removeCallbacks(callbackId);
+            CallbackKeeper<facebook::react::Uint8Array>::getInstance().removeCallbacks(callbackId);
             return jsi::Value::undefined();
         }
     );
@@ -359,9 +388,9 @@ facebook::jsi::Function TurboLndModule::subscribePeerEvents(jsi::Runtime &rt, js
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::getInfo(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::getInfo(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -370,16 +399,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::getInfo(jsi::Runtime 
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::getInfo(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::getInfo(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::getRecoveryInfo(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::getDebugInfo(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -388,16 +417,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::getRecoveryInfo(jsi::
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::getRecoveryInfo(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::getDebugInfo(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::pendingChannels(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::getRecoveryInfo(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -406,16 +435,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::pendingChannels(jsi::
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::pendingChannels(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::getRecoveryInfo(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::listChannels(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::pendingChannels(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -424,17 +453,35 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::listChannels(jsi::Run
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::listChannels(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::pendingChannels(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::jsi::Function TurboLndModule::subscribeChannelEvents(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError) {
-    auto sharedOnResponse = std::make_shared<AsyncCallback<std::string>>(std::move(onResponse));
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::listChannels(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
+
+    CCallback callback = {
+        .onResponse = &promiseOnResponseStatic,
+        .onError = &promiseOnErrorStatic,
+        .responseContext = reinterpret_cast<void*>(promiseId),
+        .errorContext = reinterpret_cast<void*>(promiseId)
+    };
+
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::listChannels(req.data(), static_cast<int>(req.size()), callback);
+
+    return *promise;
+}
+
+
+facebook::jsi::Function TurboLndModule::subscribeChannelEvents(jsi::Runtime &rt, facebook::react::Uint8Array data, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError) {
+    auto sharedOnResponse = std::make_shared<AsyncCallback<facebook::react::Uint8Array>>(std::move(onResponse));
     auto sharedOnError = std::make_shared<AsyncCallback<std::string>>(std::move(onError));
-    uint64_t callbackId = CallbackKeeper::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
+    uint64_t callbackId = CallbackKeeper<facebook::react::Uint8Array>::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
 
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
@@ -443,15 +490,15 @@ facebook::jsi::Function TurboLndModule::subscribeChannelEvents(jsi::Runtime &rt,
         .errorContext = reinterpret_cast<void*>(callbackId),
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::subscribeChannelEvents(decodedData.data(), static_cast<int>(decodedData.size()), recvStream);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::subscribeChannelEvents(req.data(), static_cast<int>(req.size()), recvStream);
 
     auto unsubscribeFunc = jsi::Function::createFromHostFunction(
         rt,
         jsi::PropNameID::forAscii(rt, "unsubscribe"),
         0,
         [callbackId](jsi::Runtime& rt, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
-            CallbackKeeper::getInstance().removeCallbacks(callbackId);
+            CallbackKeeper<facebook::react::Uint8Array>::getInstance().removeCallbacks(callbackId);
             return jsi::Value::undefined();
         }
     );
@@ -460,9 +507,9 @@ facebook::jsi::Function TurboLndModule::subscribeChannelEvents(jsi::Runtime &rt,
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::closedChannels(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::closedChannels(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -471,16 +518,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::closedChannels(jsi::R
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::closedChannels(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::closedChannels(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::openChannelSync(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::openChannelSync(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -489,17 +536,17 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::openChannelSync(jsi::
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::openChannelSync(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::openChannelSync(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::jsi::Function TurboLndModule::openChannel(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError) {
-    auto sharedOnResponse = std::make_shared<AsyncCallback<std::string>>(std::move(onResponse));
+facebook::jsi::Function TurboLndModule::openChannel(jsi::Runtime &rt, facebook::react::Uint8Array data, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError) {
+    auto sharedOnResponse = std::make_shared<AsyncCallback<facebook::react::Uint8Array>>(std::move(onResponse));
     auto sharedOnError = std::make_shared<AsyncCallback<std::string>>(std::move(onError));
-    uint64_t callbackId = CallbackKeeper::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
+    uint64_t callbackId = CallbackKeeper<facebook::react::Uint8Array>::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
 
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
@@ -508,15 +555,15 @@ facebook::jsi::Function TurboLndModule::openChannel(jsi::Runtime &rt, jsi::Strin
         .errorContext = reinterpret_cast<void*>(callbackId),
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::openChannel(decodedData.data(), static_cast<int>(decodedData.size()), recvStream);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::openChannel(req.data(), static_cast<int>(req.size()), recvStream);
 
     auto unsubscribeFunc = jsi::Function::createFromHostFunction(
         rt,
         jsi::PropNameID::forAscii(rt, "unsubscribe"),
         0,
         [callbackId](jsi::Runtime& rt, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
-            CallbackKeeper::getInstance().removeCallbacks(callbackId);
+            CallbackKeeper<facebook::react::Uint8Array>::getInstance().removeCallbacks(callbackId);
             return jsi::Value::undefined();
         }
     );
@@ -525,9 +572,9 @@ facebook::jsi::Function TurboLndModule::openChannel(jsi::Runtime &rt, jsi::Strin
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::batchOpenChannel(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::batchOpenChannel(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -536,16 +583,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::batchOpenChannel(jsi:
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::batchOpenChannel(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::batchOpenChannel(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::fundingStateStep(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::fundingStateStep(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -554,17 +601,17 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::fundingStateStep(jsi:
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::fundingStateStep(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::fundingStateStep(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-jsi::Object TurboLndModule::channelAcceptor(jsi::Runtime &rt, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError) {
-    auto sharedOnResponse = std::make_shared<AsyncCallback<std::string>>(std::move(onResponse));
+jsi::Object TurboLndModule::channelAcceptor(jsi::Runtime &rt, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError) {
+    auto sharedOnResponse = std::make_shared<AsyncCallback<facebook::react::Uint8Array>>(std::move(onResponse));
     auto sharedOnError = std::make_shared<AsyncCallback<std::string>>(std::move(onError));
-    uint64_t callbackId = CallbackKeeper::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
+    uint64_t callbackId = CallbackKeeper<facebook::react::Uint8Array>::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
 
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
@@ -584,10 +631,10 @@ jsi::Object TurboLndModule::channelAcceptor(jsi::Runtime &rt, AsyncCallback<std:
 }
 
 
-facebook::jsi::Function TurboLndModule::closeChannel(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError) {
-    auto sharedOnResponse = std::make_shared<AsyncCallback<std::string>>(std::move(onResponse));
+facebook::jsi::Function TurboLndModule::closeChannel(jsi::Runtime &rt, facebook::react::Uint8Array data, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError) {
+    auto sharedOnResponse = std::make_shared<AsyncCallback<facebook::react::Uint8Array>>(std::move(onResponse));
     auto sharedOnError = std::make_shared<AsyncCallback<std::string>>(std::move(onError));
-    uint64_t callbackId = CallbackKeeper::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
+    uint64_t callbackId = CallbackKeeper<facebook::react::Uint8Array>::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
 
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
@@ -596,15 +643,15 @@ facebook::jsi::Function TurboLndModule::closeChannel(jsi::Runtime &rt, jsi::Stri
         .errorContext = reinterpret_cast<void*>(callbackId),
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::closeChannel(decodedData.data(), static_cast<int>(decodedData.size()), recvStream);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::closeChannel(req.data(), static_cast<int>(req.size()), recvStream);
 
     auto unsubscribeFunc = jsi::Function::createFromHostFunction(
         rt,
         jsi::PropNameID::forAscii(rt, "unsubscribe"),
         0,
         [callbackId](jsi::Runtime& rt, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
-            CallbackKeeper::getInstance().removeCallbacks(callbackId);
+            CallbackKeeper<facebook::react::Uint8Array>::getInstance().removeCallbacks(callbackId);
             return jsi::Value::undefined();
         }
     );
@@ -613,9 +660,9 @@ facebook::jsi::Function TurboLndModule::closeChannel(jsi::Runtime &rt, jsi::Stri
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::abandonChannel(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::abandonChannel(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -624,17 +671,17 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::abandonChannel(jsi::R
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::abandonChannel(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::abandonChannel(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-jsi::Object TurboLndModule::sendPayment(jsi::Runtime &rt, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError) {
-    auto sharedOnResponse = std::make_shared<AsyncCallback<std::string>>(std::move(onResponse));
+jsi::Object TurboLndModule::sendPayment(jsi::Runtime &rt, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError) {
+    auto sharedOnResponse = std::make_shared<AsyncCallback<facebook::react::Uint8Array>>(std::move(onResponse));
     auto sharedOnError = std::make_shared<AsyncCallback<std::string>>(std::move(onError));
-    uint64_t callbackId = CallbackKeeper::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
+    uint64_t callbackId = CallbackKeeper<facebook::react::Uint8Array>::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
 
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
@@ -654,9 +701,9 @@ jsi::Object TurboLndModule::sendPayment(jsi::Runtime &rt, AsyncCallback<std::str
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::sendPaymentSync(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::sendPaymentSync(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -665,17 +712,17 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::sendPaymentSync(jsi::
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::sendPaymentSync(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::sendPaymentSync(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-jsi::Object TurboLndModule::sendToRoute(jsi::Runtime &rt, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError) {
-    auto sharedOnResponse = std::make_shared<AsyncCallback<std::string>>(std::move(onResponse));
+jsi::Object TurboLndModule::sendToRoute(jsi::Runtime &rt, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError) {
+    auto sharedOnResponse = std::make_shared<AsyncCallback<facebook::react::Uint8Array>>(std::move(onResponse));
     auto sharedOnError = std::make_shared<AsyncCallback<std::string>>(std::move(onError));
-    uint64_t callbackId = CallbackKeeper::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
+    uint64_t callbackId = CallbackKeeper<facebook::react::Uint8Array>::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
 
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
@@ -695,9 +742,9 @@ jsi::Object TurboLndModule::sendToRoute(jsi::Runtime &rt, AsyncCallback<std::str
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::sendToRouteSync(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::sendToRouteSync(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -706,16 +753,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::sendToRouteSync(jsi::
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::sendToRouteSync(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::sendToRouteSync(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::addInvoice(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::addInvoice(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -724,16 +771,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::addInvoice(jsi::Runti
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::addInvoice(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::addInvoice(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::listInvoices(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::listInvoices(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -742,16 +789,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::listInvoices(jsi::Run
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::listInvoices(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::listInvoices(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::lookupInvoice(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::lookupInvoice(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -760,17 +807,17 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::lookupInvoice(jsi::Ru
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::lookupInvoice(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::lookupInvoice(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::jsi::Function TurboLndModule::subscribeInvoices(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError) {
-    auto sharedOnResponse = std::make_shared<AsyncCallback<std::string>>(std::move(onResponse));
+facebook::jsi::Function TurboLndModule::subscribeInvoices(jsi::Runtime &rt, facebook::react::Uint8Array data, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError) {
+    auto sharedOnResponse = std::make_shared<AsyncCallback<facebook::react::Uint8Array>>(std::move(onResponse));
     auto sharedOnError = std::make_shared<AsyncCallback<std::string>>(std::move(onError));
-    uint64_t callbackId = CallbackKeeper::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
+    uint64_t callbackId = CallbackKeeper<facebook::react::Uint8Array>::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
 
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
@@ -779,15 +826,15 @@ facebook::jsi::Function TurboLndModule::subscribeInvoices(jsi::Runtime &rt, jsi:
         .errorContext = reinterpret_cast<void*>(callbackId),
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::subscribeInvoices(decodedData.data(), static_cast<int>(decodedData.size()), recvStream);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::subscribeInvoices(req.data(), static_cast<int>(req.size()), recvStream);
 
     auto unsubscribeFunc = jsi::Function::createFromHostFunction(
         rt,
         jsi::PropNameID::forAscii(rt, "unsubscribe"),
         0,
         [callbackId](jsi::Runtime& rt, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
-            CallbackKeeper::getInstance().removeCallbacks(callbackId);
+            CallbackKeeper<facebook::react::Uint8Array>::getInstance().removeCallbacks(callbackId);
             return jsi::Value::undefined();
         }
     );
@@ -796,9 +843,9 @@ facebook::jsi::Function TurboLndModule::subscribeInvoices(jsi::Runtime &rt, jsi:
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::decodePayReq(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::decodePayReq(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -807,16 +854,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::decodePayReq(jsi::Run
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::decodePayReq(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::decodePayReq(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::listPayments(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::listPayments(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -825,16 +872,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::listPayments(jsi::Run
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::listPayments(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::listPayments(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::deletePayment(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::deletePayment(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -843,16 +890,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::deletePayment(jsi::Ru
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::deletePayment(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::deletePayment(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::deleteAllPayments(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::deleteAllPayments(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -861,16 +908,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::deleteAllPayments(jsi
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::deleteAllPayments(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::deleteAllPayments(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::describeGraph(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::describeGraph(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -879,16 +926,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::describeGraph(jsi::Ru
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::describeGraph(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::describeGraph(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::getNodeMetrics(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::getNodeMetrics(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -897,16 +944,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::getNodeMetrics(jsi::R
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::getNodeMetrics(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::getNodeMetrics(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::getChanInfo(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::getChanInfo(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -915,16 +962,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::getChanInfo(jsi::Runt
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::getChanInfo(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::getChanInfo(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::getNodeInfo(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::getNodeInfo(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -933,16 +980,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::getNodeInfo(jsi::Runt
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::getNodeInfo(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::getNodeInfo(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::queryRoutes(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::queryRoutes(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -951,16 +998,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::queryRoutes(jsi::Runt
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::queryRoutes(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::queryRoutes(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::getNetworkInfo(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::getNetworkInfo(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -969,16 +1016,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::getNetworkInfo(jsi::R
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::getNetworkInfo(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::getNetworkInfo(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::stopDaemon(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::stopDaemon(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -987,17 +1034,17 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::stopDaemon(jsi::Runti
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::stopDaemon(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::stopDaemon(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::jsi::Function TurboLndModule::subscribeChannelGraph(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError) {
-    auto sharedOnResponse = std::make_shared<AsyncCallback<std::string>>(std::move(onResponse));
+facebook::jsi::Function TurboLndModule::subscribeChannelGraph(jsi::Runtime &rt, facebook::react::Uint8Array data, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError) {
+    auto sharedOnResponse = std::make_shared<AsyncCallback<facebook::react::Uint8Array>>(std::move(onResponse));
     auto sharedOnError = std::make_shared<AsyncCallback<std::string>>(std::move(onError));
-    uint64_t callbackId = CallbackKeeper::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
+    uint64_t callbackId = CallbackKeeper<facebook::react::Uint8Array>::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
 
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
@@ -1006,15 +1053,15 @@ facebook::jsi::Function TurboLndModule::subscribeChannelGraph(jsi::Runtime &rt, 
         .errorContext = reinterpret_cast<void*>(callbackId),
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::subscribeChannelGraph(decodedData.data(), static_cast<int>(decodedData.size()), recvStream);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::subscribeChannelGraph(req.data(), static_cast<int>(req.size()), recvStream);
 
     auto unsubscribeFunc = jsi::Function::createFromHostFunction(
         rt,
         jsi::PropNameID::forAscii(rt, "unsubscribe"),
         0,
         [callbackId](jsi::Runtime& rt, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
-            CallbackKeeper::getInstance().removeCallbacks(callbackId);
+            CallbackKeeper<facebook::react::Uint8Array>::getInstance().removeCallbacks(callbackId);
             return jsi::Value::undefined();
         }
     );
@@ -1023,9 +1070,9 @@ facebook::jsi::Function TurboLndModule::subscribeChannelGraph(jsi::Runtime &rt, 
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::debugLevel(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::debugLevel(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -1034,16 +1081,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::debugLevel(jsi::Runti
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::debugLevel(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::debugLevel(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::feeReport(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::feeReport(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -1052,16 +1099,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::feeReport(jsi::Runtim
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::feeReport(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::feeReport(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::updateChannelPolicy(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::updateChannelPolicy(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -1070,16 +1117,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::updateChannelPolicy(j
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::updateChannelPolicy(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::updateChannelPolicy(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::forwardingHistory(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::forwardingHistory(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -1088,16 +1135,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::forwardingHistory(jsi
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::forwardingHistory(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::forwardingHistory(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::exportChannelBackup(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::exportChannelBackup(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -1106,16 +1153,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::exportChannelBackup(j
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::exportChannelBackup(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::exportChannelBackup(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::exportAllChannelBackups(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::exportAllChannelBackups(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -1124,16 +1171,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::exportAllChannelBacku
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::exportAllChannelBackups(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::exportAllChannelBackups(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::verifyChanBackup(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::verifyChanBackup(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -1142,16 +1189,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::verifyChanBackup(jsi:
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::verifyChanBackup(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::verifyChanBackup(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::restoreChannelBackups(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::restoreChannelBackups(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -1160,17 +1207,17 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::restoreChannelBackups
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::restoreChannelBackups(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::restoreChannelBackups(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::jsi::Function TurboLndModule::subscribeChannelBackups(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError) {
-    auto sharedOnResponse = std::make_shared<AsyncCallback<std::string>>(std::move(onResponse));
+facebook::jsi::Function TurboLndModule::subscribeChannelBackups(jsi::Runtime &rt, facebook::react::Uint8Array data, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError) {
+    auto sharedOnResponse = std::make_shared<AsyncCallback<facebook::react::Uint8Array>>(std::move(onResponse));
     auto sharedOnError = std::make_shared<AsyncCallback<std::string>>(std::move(onError));
-    uint64_t callbackId = CallbackKeeper::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
+    uint64_t callbackId = CallbackKeeper<facebook::react::Uint8Array>::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
 
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
@@ -1179,15 +1226,15 @@ facebook::jsi::Function TurboLndModule::subscribeChannelBackups(jsi::Runtime &rt
         .errorContext = reinterpret_cast<void*>(callbackId),
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::subscribeChannelBackups(decodedData.data(), static_cast<int>(decodedData.size()), recvStream);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::subscribeChannelBackups(req.data(), static_cast<int>(req.size()), recvStream);
 
     auto unsubscribeFunc = jsi::Function::createFromHostFunction(
         rt,
         jsi::PropNameID::forAscii(rt, "unsubscribe"),
         0,
         [callbackId](jsi::Runtime& rt, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
-            CallbackKeeper::getInstance().removeCallbacks(callbackId);
+            CallbackKeeper<facebook::react::Uint8Array>::getInstance().removeCallbacks(callbackId);
             return jsi::Value::undefined();
         }
     );
@@ -1196,9 +1243,9 @@ facebook::jsi::Function TurboLndModule::subscribeChannelBackups(jsi::Runtime &rt
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::bakeMacaroon(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::bakeMacaroon(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -1207,16 +1254,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::bakeMacaroon(jsi::Run
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::bakeMacaroon(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::bakeMacaroon(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::listMacaroonIDs(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::listMacaroonIDs(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -1225,16 +1272,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::listMacaroonIDs(jsi::
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::listMacaroonIDs(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::listMacaroonIDs(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::deleteMacaroonID(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::deleteMacaroonID(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -1243,16 +1290,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::deleteMacaroonID(jsi:
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::deleteMacaroonID(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::deleteMacaroonID(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::listPermissions(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::listPermissions(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -1261,16 +1308,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::listPermissions(jsi::
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::listPermissions(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::listPermissions(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::checkMacaroonPermissions(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::checkMacaroonPermissions(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -1279,17 +1326,17 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::checkMacaroonPermissi
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::checkMacaroonPermissions(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::checkMacaroonPermissions(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-jsi::Object TurboLndModule::registerRPCMiddleware(jsi::Runtime &rt, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError) {
-    auto sharedOnResponse = std::make_shared<AsyncCallback<std::string>>(std::move(onResponse));
+jsi::Object TurboLndModule::registerRPCMiddleware(jsi::Runtime &rt, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError) {
+    auto sharedOnResponse = std::make_shared<AsyncCallback<facebook::react::Uint8Array>>(std::move(onResponse));
     auto sharedOnError = std::make_shared<AsyncCallback<std::string>>(std::move(onError));
-    uint64_t callbackId = CallbackKeeper::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
+    uint64_t callbackId = CallbackKeeper<facebook::react::Uint8Array>::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
 
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
@@ -1309,9 +1356,9 @@ jsi::Object TurboLndModule::registerRPCMiddleware(jsi::Runtime &rt, AsyncCallbac
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::sendCustomMessage(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::sendCustomMessage(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -1320,17 +1367,17 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::sendCustomMessage(jsi
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::sendCustomMessage(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::sendCustomMessage(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::jsi::Function TurboLndModule::subscribeCustomMessages(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError) {
-    auto sharedOnResponse = std::make_shared<AsyncCallback<std::string>>(std::move(onResponse));
+facebook::jsi::Function TurboLndModule::subscribeCustomMessages(jsi::Runtime &rt, facebook::react::Uint8Array data, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError) {
+    auto sharedOnResponse = std::make_shared<AsyncCallback<facebook::react::Uint8Array>>(std::move(onResponse));
     auto sharedOnError = std::make_shared<AsyncCallback<std::string>>(std::move(onError));
-    uint64_t callbackId = CallbackKeeper::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
+    uint64_t callbackId = CallbackKeeper<facebook::react::Uint8Array>::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
 
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
@@ -1339,15 +1386,15 @@ facebook::jsi::Function TurboLndModule::subscribeCustomMessages(jsi::Runtime &rt
         .errorContext = reinterpret_cast<void*>(callbackId),
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::subscribeCustomMessages(decodedData.data(), static_cast<int>(decodedData.size()), recvStream);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::subscribeCustomMessages(req.data(), static_cast<int>(req.size()), recvStream);
 
     auto unsubscribeFunc = jsi::Function::createFromHostFunction(
         rt,
         jsi::PropNameID::forAscii(rt, "unsubscribe"),
         0,
         [callbackId](jsi::Runtime& rt, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
-            CallbackKeeper::getInstance().removeCallbacks(callbackId);
+            CallbackKeeper<facebook::react::Uint8Array>::getInstance().removeCallbacks(callbackId);
             return jsi::Value::undefined();
         }
     );
@@ -1356,9 +1403,9 @@ facebook::jsi::Function TurboLndModule::subscribeCustomMessages(jsi::Runtime &rt
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::listAliases(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::listAliases(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -1367,16 +1414,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::listAliases(jsi::Runt
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::listAliases(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::listAliases(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::lookupHtlcResolution(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::lookupHtlcResolution(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -1385,16 +1432,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::lookupHtlcResolution(
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::lookupHtlcResolution(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::lookupHtlcResolution(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::genSeed(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::genSeed(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -1403,16 +1450,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::genSeed(jsi::Runtime 
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::genSeed(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::genSeed(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::initWallet(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::initWallet(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -1421,16 +1468,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::initWallet(jsi::Runti
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::initWallet(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::initWallet(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::unlockWallet(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::unlockWallet(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -1439,16 +1486,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::unlockWallet(jsi::Run
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::unlockWallet(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::unlockWallet(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::changePassword(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::changePassword(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -1457,17 +1504,17 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::changePassword(jsi::R
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::changePassword(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::changePassword(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::jsi::Function TurboLndModule::subscribeState(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError) {
-    auto sharedOnResponse = std::make_shared<AsyncCallback<std::string>>(std::move(onResponse));
+facebook::jsi::Function TurboLndModule::subscribeState(jsi::Runtime &rt, facebook::react::Uint8Array data, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError) {
+    auto sharedOnResponse = std::make_shared<AsyncCallback<facebook::react::Uint8Array>>(std::move(onResponse));
     auto sharedOnError = std::make_shared<AsyncCallback<std::string>>(std::move(onError));
-    uint64_t callbackId = CallbackKeeper::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
+    uint64_t callbackId = CallbackKeeper<facebook::react::Uint8Array>::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
 
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
@@ -1476,15 +1523,15 @@ facebook::jsi::Function TurboLndModule::subscribeState(jsi::Runtime &rt, jsi::St
         .errorContext = reinterpret_cast<void*>(callbackId),
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::subscribeState(decodedData.data(), static_cast<int>(decodedData.size()), recvStream);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::subscribeState(req.data(), static_cast<int>(req.size()), recvStream);
 
     auto unsubscribeFunc = jsi::Function::createFromHostFunction(
         rt,
         jsi::PropNameID::forAscii(rt, "unsubscribe"),
         0,
         [callbackId](jsi::Runtime& rt, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
-            CallbackKeeper::getInstance().removeCallbacks(callbackId);
+            CallbackKeeper<facebook::react::Uint8Array>::getInstance().removeCallbacks(callbackId);
             return jsi::Value::undefined();
         }
     );
@@ -1493,9 +1540,9 @@ facebook::jsi::Function TurboLndModule::subscribeState(jsi::Runtime &rt, jsi::St
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::getState(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::getState(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -1504,16 +1551,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::getState(jsi::Runtime
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::getState(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::getState(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::autopilotStatus(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::autopilotStatus(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -1522,16 +1569,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::autopilotStatus(jsi::
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::autopilotStatus(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::autopilotStatus(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::autopilotModifyStatus(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::autopilotModifyStatus(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -1540,16 +1587,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::autopilotModifyStatus
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::autopilotModifyStatus(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::autopilotModifyStatus(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::autopilotQueryScores(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::autopilotQueryScores(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -1558,16 +1605,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::autopilotQueryScores(
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::autopilotQueryScores(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::autopilotQueryScores(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::autopilotSetScores(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::autopilotSetScores(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -1576,17 +1623,17 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::autopilotSetScores(js
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::autopilotSetScores(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::autopilotSetScores(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::jsi::Function TurboLndModule::chainNotifierRegisterConfirmationsNtfn(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError) {
-    auto sharedOnResponse = std::make_shared<AsyncCallback<std::string>>(std::move(onResponse));
+facebook::jsi::Function TurboLndModule::chainNotifierRegisterConfirmationsNtfn(jsi::Runtime &rt, facebook::react::Uint8Array data, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError) {
+    auto sharedOnResponse = std::make_shared<AsyncCallback<facebook::react::Uint8Array>>(std::move(onResponse));
     auto sharedOnError = std::make_shared<AsyncCallback<std::string>>(std::move(onError));
-    uint64_t callbackId = CallbackKeeper::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
+    uint64_t callbackId = CallbackKeeper<facebook::react::Uint8Array>::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
 
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
@@ -1595,15 +1642,15 @@ facebook::jsi::Function TurboLndModule::chainNotifierRegisterConfirmationsNtfn(j
         .errorContext = reinterpret_cast<void*>(callbackId),
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::chainNotifierRegisterConfirmationsNtfn(decodedData.data(), static_cast<int>(decodedData.size()), recvStream);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::chainNotifierRegisterConfirmationsNtfn(req.data(), static_cast<int>(req.size()), recvStream);
 
     auto unsubscribeFunc = jsi::Function::createFromHostFunction(
         rt,
         jsi::PropNameID::forAscii(rt, "unsubscribe"),
         0,
         [callbackId](jsi::Runtime& rt, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
-            CallbackKeeper::getInstance().removeCallbacks(callbackId);
+            CallbackKeeper<facebook::react::Uint8Array>::getInstance().removeCallbacks(callbackId);
             return jsi::Value::undefined();
         }
     );
@@ -1612,10 +1659,10 @@ facebook::jsi::Function TurboLndModule::chainNotifierRegisterConfirmationsNtfn(j
 }
 
 
-facebook::jsi::Function TurboLndModule::chainNotifierRegisterSpendNtfn(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError) {
-    auto sharedOnResponse = std::make_shared<AsyncCallback<std::string>>(std::move(onResponse));
+facebook::jsi::Function TurboLndModule::chainNotifierRegisterSpendNtfn(jsi::Runtime &rt, facebook::react::Uint8Array data, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError) {
+    auto sharedOnResponse = std::make_shared<AsyncCallback<facebook::react::Uint8Array>>(std::move(onResponse));
     auto sharedOnError = std::make_shared<AsyncCallback<std::string>>(std::move(onError));
-    uint64_t callbackId = CallbackKeeper::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
+    uint64_t callbackId = CallbackKeeper<facebook::react::Uint8Array>::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
 
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
@@ -1624,15 +1671,15 @@ facebook::jsi::Function TurboLndModule::chainNotifierRegisterSpendNtfn(jsi::Runt
         .errorContext = reinterpret_cast<void*>(callbackId),
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::chainNotifierRegisterSpendNtfn(decodedData.data(), static_cast<int>(decodedData.size()), recvStream);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::chainNotifierRegisterSpendNtfn(req.data(), static_cast<int>(req.size()), recvStream);
 
     auto unsubscribeFunc = jsi::Function::createFromHostFunction(
         rt,
         jsi::PropNameID::forAscii(rt, "unsubscribe"),
         0,
         [callbackId](jsi::Runtime& rt, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
-            CallbackKeeper::getInstance().removeCallbacks(callbackId);
+            CallbackKeeper<facebook::react::Uint8Array>::getInstance().removeCallbacks(callbackId);
             return jsi::Value::undefined();
         }
     );
@@ -1641,10 +1688,10 @@ facebook::jsi::Function TurboLndModule::chainNotifierRegisterSpendNtfn(jsi::Runt
 }
 
 
-facebook::jsi::Function TurboLndModule::chainNotifierRegisterBlockEpochNtfn(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError) {
-    auto sharedOnResponse = std::make_shared<AsyncCallback<std::string>>(std::move(onResponse));
+facebook::jsi::Function TurboLndModule::chainNotifierRegisterBlockEpochNtfn(jsi::Runtime &rt, facebook::react::Uint8Array data, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError) {
+    auto sharedOnResponse = std::make_shared<AsyncCallback<facebook::react::Uint8Array>>(std::move(onResponse));
     auto sharedOnError = std::make_shared<AsyncCallback<std::string>>(std::move(onError));
-    uint64_t callbackId = CallbackKeeper::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
+    uint64_t callbackId = CallbackKeeper<facebook::react::Uint8Array>::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
 
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
@@ -1653,15 +1700,15 @@ facebook::jsi::Function TurboLndModule::chainNotifierRegisterBlockEpochNtfn(jsi:
         .errorContext = reinterpret_cast<void*>(callbackId),
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::chainNotifierRegisterBlockEpochNtfn(decodedData.data(), static_cast<int>(decodedData.size()), recvStream);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::chainNotifierRegisterBlockEpochNtfn(req.data(), static_cast<int>(req.size()), recvStream);
 
     auto unsubscribeFunc = jsi::Function::createFromHostFunction(
         rt,
         jsi::PropNameID::forAscii(rt, "unsubscribe"),
         0,
         [callbackId](jsi::Runtime& rt, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
-            CallbackKeeper::getInstance().removeCallbacks(callbackId);
+            CallbackKeeper<facebook::react::Uint8Array>::getInstance().removeCallbacks(callbackId);
             return jsi::Value::undefined();
         }
     );
@@ -1670,10 +1717,10 @@ facebook::jsi::Function TurboLndModule::chainNotifierRegisterBlockEpochNtfn(jsi:
 }
 
 
-facebook::jsi::Function TurboLndModule::invoicesSubscribeSingleInvoice(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError) {
-    auto sharedOnResponse = std::make_shared<AsyncCallback<std::string>>(std::move(onResponse));
+facebook::jsi::Function TurboLndModule::invoicesSubscribeSingleInvoice(jsi::Runtime &rt, facebook::react::Uint8Array data, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError) {
+    auto sharedOnResponse = std::make_shared<AsyncCallback<facebook::react::Uint8Array>>(std::move(onResponse));
     auto sharedOnError = std::make_shared<AsyncCallback<std::string>>(std::move(onError));
-    uint64_t callbackId = CallbackKeeper::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
+    uint64_t callbackId = CallbackKeeper<facebook::react::Uint8Array>::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
 
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
@@ -1682,15 +1729,15 @@ facebook::jsi::Function TurboLndModule::invoicesSubscribeSingleInvoice(jsi::Runt
         .errorContext = reinterpret_cast<void*>(callbackId),
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::invoicesSubscribeSingleInvoice(decodedData.data(), static_cast<int>(decodedData.size()), recvStream);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::invoicesSubscribeSingleInvoice(req.data(), static_cast<int>(req.size()), recvStream);
 
     auto unsubscribeFunc = jsi::Function::createFromHostFunction(
         rt,
         jsi::PropNameID::forAscii(rt, "unsubscribe"),
         0,
         [callbackId](jsi::Runtime& rt, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
-            CallbackKeeper::getInstance().removeCallbacks(callbackId);
+            CallbackKeeper<facebook::react::Uint8Array>::getInstance().removeCallbacks(callbackId);
             return jsi::Value::undefined();
         }
     );
@@ -1699,9 +1746,9 @@ facebook::jsi::Function TurboLndModule::invoicesSubscribeSingleInvoice(jsi::Runt
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::invoicesCancelInvoice(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::invoicesCancelInvoice(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -1710,16 +1757,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::invoicesCancelInvoice
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::invoicesCancelInvoice(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::invoicesCancelInvoice(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::invoicesAddHoldInvoice(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::invoicesAddHoldInvoice(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -1728,16 +1775,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::invoicesAddHoldInvoic
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::invoicesAddHoldInvoice(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::invoicesAddHoldInvoice(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::invoicesSettleInvoice(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::invoicesSettleInvoice(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -1746,16 +1793,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::invoicesSettleInvoice
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::invoicesSettleInvoice(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::invoicesSettleInvoice(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::invoicesLookupInvoiceV2(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::invoicesLookupInvoiceV2(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -1764,179 +1811,17 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::invoicesLookupInvoice
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::invoicesLookupInvoiceV2(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::invoicesLookupInvoiceV2(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::neutrinoKitStatus(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
-
-    CCallback callback = {
-        .onResponse = &promiseOnResponseStatic,
-        .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
-    };
-
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::neutrinoKitStatus(decodedData.data(), static_cast<int>(decodedData.size()), callback);
-
-    return *promise;
-}
-
-
-facebook::react::AsyncPromise<std::string> TurboLndModule::neutrinoKitAddPeer(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
-
-    CCallback callback = {
-        .onResponse = &promiseOnResponseStatic,
-        .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
-    };
-
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::neutrinoKitAddPeer(decodedData.data(), static_cast<int>(decodedData.size()), callback);
-
-    return *promise;
-}
-
-
-facebook::react::AsyncPromise<std::string> TurboLndModule::neutrinoKitDisconnectPeer(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
-
-    CCallback callback = {
-        .onResponse = &promiseOnResponseStatic,
-        .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
-    };
-
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::neutrinoKitDisconnectPeer(decodedData.data(), static_cast<int>(decodedData.size()), callback);
-
-    return *promise;
-}
-
-
-facebook::react::AsyncPromise<std::string> TurboLndModule::neutrinoKitIsBanned(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
-
-    CCallback callback = {
-        .onResponse = &promiseOnResponseStatic,
-        .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
-    };
-
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::neutrinoKitIsBanned(decodedData.data(), static_cast<int>(decodedData.size()), callback);
-
-    return *promise;
-}
-
-
-facebook::react::AsyncPromise<std::string> TurboLndModule::neutrinoKitGetBlockHeader(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
-
-    CCallback callback = {
-        .onResponse = &promiseOnResponseStatic,
-        .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
-    };
-
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::neutrinoKitGetBlockHeader(decodedData.data(), static_cast<int>(decodedData.size()), callback);
-
-    return *promise;
-}
-
-
-facebook::react::AsyncPromise<std::string> TurboLndModule::neutrinoKitGetBlock(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
-
-    CCallback callback = {
-        .onResponse = &promiseOnResponseStatic,
-        .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
-    };
-
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::neutrinoKitGetBlock(decodedData.data(), static_cast<int>(decodedData.size()), callback);
-
-    return *promise;
-}
-
-
-facebook::react::AsyncPromise<std::string> TurboLndModule::neutrinoKitGetCFilter(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
-
-    CCallback callback = {
-        .onResponse = &promiseOnResponseStatic,
-        .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
-    };
-
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::neutrinoKitGetCFilter(decodedData.data(), static_cast<int>(decodedData.size()), callback);
-
-    return *promise;
-}
-
-
-facebook::react::AsyncPromise<std::string> TurboLndModule::neutrinoKitGetBlockHash(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
-
-    CCallback callback = {
-        .onResponse = &promiseOnResponseStatic,
-        .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
-    };
-
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::neutrinoKitGetBlockHash(decodedData.data(), static_cast<int>(decodedData.size()), callback);
-
-    return *promise;
-}
-
-
-facebook::react::AsyncPromise<std::string> TurboLndModule::peersUpdateNodeAnnouncement(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
-
-    CCallback callback = {
-        .onResponse = &promiseOnResponseStatic,
-        .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
-    };
-
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::peersUpdateNodeAnnouncement(decodedData.data(), static_cast<int>(decodedData.size()), callback);
-
-    return *promise;
-}
-
-
-facebook::jsi::Function TurboLndModule::routerSendPaymentV2(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError) {
-    auto sharedOnResponse = std::make_shared<AsyncCallback<std::string>>(std::move(onResponse));
+jsi::Object TurboLndModule::invoicesHtlcModifier(jsi::Runtime &rt, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError) {
+    auto sharedOnResponse = std::make_shared<AsyncCallback<facebook::react::Uint8Array>>(std::move(onResponse));
     auto sharedOnError = std::make_shared<AsyncCallback<std::string>>(std::move(onError));
-    uint64_t callbackId = CallbackKeeper::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
+    uint64_t callbackId = CallbackKeeper<facebook::react::Uint8Array>::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
 
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
@@ -1945,27 +1830,183 @@ facebook::jsi::Function TurboLndModule::routerSendPaymentV2(jsi::Runtime &rt, js
         .errorContext = reinterpret_cast<void*>(callbackId),
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::routerSendPaymentV2(decodedData.data(), static_cast<int>(decodedData.size()), recvStream);
+    uintptr_t streamPtr = ::invoicesHtlcModifier(recvStream);
 
-    auto unsubscribeFunc = jsi::Function::createFromHostFunction(
-        rt,
-        jsi::PropNameID::forAscii(rt, "unsubscribe"),
-        0,
-        [callbackId](jsi::Runtime& rt, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
-            CallbackKeeper::getInstance().removeCallbacks(callbackId);
-            return jsi::Value::undefined();
-        }
-    );
-
-    return unsubscribeFunc;
+    if (streamPtr != 0) {
+        auto hostObject = std::make_shared<WritableStreamHostObject>(streamPtr, callbackId);
+        return jsi::Object::createFromHostObject(rt, hostObject);
+    } else {
+        throw jsi::JSError(rt, "Failed to start invoicesHtlcModifier");
+    }
 }
 
 
-facebook::jsi::Function TurboLndModule::routerTrackPaymentV2(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError) {
-    auto sharedOnResponse = std::make_shared<AsyncCallback<std::string>>(std::move(onResponse));
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::neutrinoKitStatus(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
+
+    CCallback callback = {
+        .onResponse = &promiseOnResponseStatic,
+        .onError = &promiseOnErrorStatic,
+        .responseContext = reinterpret_cast<void*>(promiseId),
+        .errorContext = reinterpret_cast<void*>(promiseId)
+    };
+
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::neutrinoKitStatus(req.data(), static_cast<int>(req.size()), callback);
+
+    return *promise;
+}
+
+
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::neutrinoKitAddPeer(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
+
+    CCallback callback = {
+        .onResponse = &promiseOnResponseStatic,
+        .onError = &promiseOnErrorStatic,
+        .responseContext = reinterpret_cast<void*>(promiseId),
+        .errorContext = reinterpret_cast<void*>(promiseId)
+    };
+
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::neutrinoKitAddPeer(req.data(), static_cast<int>(req.size()), callback);
+
+    return *promise;
+}
+
+
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::neutrinoKitDisconnectPeer(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
+
+    CCallback callback = {
+        .onResponse = &promiseOnResponseStatic,
+        .onError = &promiseOnErrorStatic,
+        .responseContext = reinterpret_cast<void*>(promiseId),
+        .errorContext = reinterpret_cast<void*>(promiseId)
+    };
+
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::neutrinoKitDisconnectPeer(req.data(), static_cast<int>(req.size()), callback);
+
+    return *promise;
+}
+
+
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::neutrinoKitIsBanned(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
+
+    CCallback callback = {
+        .onResponse = &promiseOnResponseStatic,
+        .onError = &promiseOnErrorStatic,
+        .responseContext = reinterpret_cast<void*>(promiseId),
+        .errorContext = reinterpret_cast<void*>(promiseId)
+    };
+
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::neutrinoKitIsBanned(req.data(), static_cast<int>(req.size()), callback);
+
+    return *promise;
+}
+
+
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::neutrinoKitGetBlockHeader(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
+
+    CCallback callback = {
+        .onResponse = &promiseOnResponseStatic,
+        .onError = &promiseOnErrorStatic,
+        .responseContext = reinterpret_cast<void*>(promiseId),
+        .errorContext = reinterpret_cast<void*>(promiseId)
+    };
+
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::neutrinoKitGetBlockHeader(req.data(), static_cast<int>(req.size()), callback);
+
+    return *promise;
+}
+
+
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::neutrinoKitGetBlock(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
+
+    CCallback callback = {
+        .onResponse = &promiseOnResponseStatic,
+        .onError = &promiseOnErrorStatic,
+        .responseContext = reinterpret_cast<void*>(promiseId),
+        .errorContext = reinterpret_cast<void*>(promiseId)
+    };
+
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::neutrinoKitGetBlock(req.data(), static_cast<int>(req.size()), callback);
+
+    return *promise;
+}
+
+
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::neutrinoKitGetCFilter(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
+
+    CCallback callback = {
+        .onResponse = &promiseOnResponseStatic,
+        .onError = &promiseOnErrorStatic,
+        .responseContext = reinterpret_cast<void*>(promiseId),
+        .errorContext = reinterpret_cast<void*>(promiseId)
+    };
+
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::neutrinoKitGetCFilter(req.data(), static_cast<int>(req.size()), callback);
+
+    return *promise;
+}
+
+
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::neutrinoKitGetBlockHash(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
+
+    CCallback callback = {
+        .onResponse = &promiseOnResponseStatic,
+        .onError = &promiseOnErrorStatic,
+        .responseContext = reinterpret_cast<void*>(promiseId),
+        .errorContext = reinterpret_cast<void*>(promiseId)
+    };
+
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::neutrinoKitGetBlockHash(req.data(), static_cast<int>(req.size()), callback);
+
+    return *promise;
+}
+
+
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::peersUpdateNodeAnnouncement(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
+
+    CCallback callback = {
+        .onResponse = &promiseOnResponseStatic,
+        .onError = &promiseOnErrorStatic,
+        .responseContext = reinterpret_cast<void*>(promiseId),
+        .errorContext = reinterpret_cast<void*>(promiseId)
+    };
+
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::peersUpdateNodeAnnouncement(req.data(), static_cast<int>(req.size()), callback);
+
+    return *promise;
+}
+
+
+facebook::jsi::Function TurboLndModule::routerSendPaymentV2(jsi::Runtime &rt, facebook::react::Uint8Array data, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError) {
+    auto sharedOnResponse = std::make_shared<AsyncCallback<facebook::react::Uint8Array>>(std::move(onResponse));
     auto sharedOnError = std::make_shared<AsyncCallback<std::string>>(std::move(onError));
-    uint64_t callbackId = CallbackKeeper::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
+    uint64_t callbackId = CallbackKeeper<facebook::react::Uint8Array>::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
 
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
@@ -1974,15 +2015,15 @@ facebook::jsi::Function TurboLndModule::routerTrackPaymentV2(jsi::Runtime &rt, j
         .errorContext = reinterpret_cast<void*>(callbackId),
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::routerTrackPaymentV2(decodedData.data(), static_cast<int>(decodedData.size()), recvStream);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::routerSendPaymentV2(req.data(), static_cast<int>(req.size()), recvStream);
 
     auto unsubscribeFunc = jsi::Function::createFromHostFunction(
         rt,
         jsi::PropNameID::forAscii(rt, "unsubscribe"),
         0,
         [callbackId](jsi::Runtime& rt, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
-            CallbackKeeper::getInstance().removeCallbacks(callbackId);
+            CallbackKeeper<facebook::react::Uint8Array>::getInstance().removeCallbacks(callbackId);
             return jsi::Value::undefined();
         }
     );
@@ -1991,10 +2032,10 @@ facebook::jsi::Function TurboLndModule::routerTrackPaymentV2(jsi::Runtime &rt, j
 }
 
 
-facebook::jsi::Function TurboLndModule::routerTrackPayments(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError) {
-    auto sharedOnResponse = std::make_shared<AsyncCallback<std::string>>(std::move(onResponse));
+facebook::jsi::Function TurboLndModule::routerTrackPaymentV2(jsi::Runtime &rt, facebook::react::Uint8Array data, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError) {
+    auto sharedOnResponse = std::make_shared<AsyncCallback<facebook::react::Uint8Array>>(std::move(onResponse));
     auto sharedOnError = std::make_shared<AsyncCallback<std::string>>(std::move(onError));
-    uint64_t callbackId = CallbackKeeper::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
+    uint64_t callbackId = CallbackKeeper<facebook::react::Uint8Array>::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
 
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
@@ -2003,15 +2044,15 @@ facebook::jsi::Function TurboLndModule::routerTrackPayments(jsi::Runtime &rt, js
         .errorContext = reinterpret_cast<void*>(callbackId),
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::routerTrackPayments(decodedData.data(), static_cast<int>(decodedData.size()), recvStream);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::routerTrackPaymentV2(req.data(), static_cast<int>(req.size()), recvStream);
 
     auto unsubscribeFunc = jsi::Function::createFromHostFunction(
         rt,
         jsi::PropNameID::forAscii(rt, "unsubscribe"),
         0,
         [callbackId](jsi::Runtime& rt, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
-            CallbackKeeper::getInstance().removeCallbacks(callbackId);
+            CallbackKeeper<facebook::react::Uint8Array>::getInstance().removeCallbacks(callbackId);
             return jsi::Value::undefined();
         }
     );
@@ -2020,190 +2061,10 @@ facebook::jsi::Function TurboLndModule::routerTrackPayments(jsi::Runtime &rt, js
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::routerEstimateRouteFee(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
-
-    CCallback callback = {
-        .onResponse = &promiseOnResponseStatic,
-        .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
-    };
-
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::routerEstimateRouteFee(decodedData.data(), static_cast<int>(decodedData.size()), callback);
-
-    return *promise;
-}
-
-
-facebook::react::AsyncPromise<std::string> TurboLndModule::routerSendToRoute(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
-
-    CCallback callback = {
-        .onResponse = &promiseOnResponseStatic,
-        .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
-    };
-
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::routerSendToRoute(decodedData.data(), static_cast<int>(decodedData.size()), callback);
-
-    return *promise;
-}
-
-
-facebook::react::AsyncPromise<std::string> TurboLndModule::routerSendToRouteV2(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
-
-    CCallback callback = {
-        .onResponse = &promiseOnResponseStatic,
-        .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
-    };
-
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::routerSendToRouteV2(decodedData.data(), static_cast<int>(decodedData.size()), callback);
-
-    return *promise;
-}
-
-
-facebook::react::AsyncPromise<std::string> TurboLndModule::routerResetMissionControl(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
-
-    CCallback callback = {
-        .onResponse = &promiseOnResponseStatic,
-        .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
-    };
-
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::routerResetMissionControl(decodedData.data(), static_cast<int>(decodedData.size()), callback);
-
-    return *promise;
-}
-
-
-facebook::react::AsyncPromise<std::string> TurboLndModule::routerQueryMissionControl(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
-
-    CCallback callback = {
-        .onResponse = &promiseOnResponseStatic,
-        .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
-    };
-
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::routerQueryMissionControl(decodedData.data(), static_cast<int>(decodedData.size()), callback);
-
-    return *promise;
-}
-
-
-facebook::react::AsyncPromise<std::string> TurboLndModule::routerXImportMissionControl(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
-
-    CCallback callback = {
-        .onResponse = &promiseOnResponseStatic,
-        .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
-    };
-
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::routerXImportMissionControl(decodedData.data(), static_cast<int>(decodedData.size()), callback);
-
-    return *promise;
-}
-
-
-facebook::react::AsyncPromise<std::string> TurboLndModule::routerGetMissionControlConfig(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
-
-    CCallback callback = {
-        .onResponse = &promiseOnResponseStatic,
-        .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
-    };
-
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::routerGetMissionControlConfig(decodedData.data(), static_cast<int>(decodedData.size()), callback);
-
-    return *promise;
-}
-
-
-facebook::react::AsyncPromise<std::string> TurboLndModule::routerSetMissionControlConfig(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
-
-    CCallback callback = {
-        .onResponse = &promiseOnResponseStatic,
-        .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
-    };
-
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::routerSetMissionControlConfig(decodedData.data(), static_cast<int>(decodedData.size()), callback);
-
-    return *promise;
-}
-
-
-facebook::react::AsyncPromise<std::string> TurboLndModule::routerQueryProbability(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
-
-    CCallback callback = {
-        .onResponse = &promiseOnResponseStatic,
-        .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
-    };
-
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::routerQueryProbability(decodedData.data(), static_cast<int>(decodedData.size()), callback);
-
-    return *promise;
-}
-
-
-facebook::react::AsyncPromise<std::string> TurboLndModule::routerBuildRoute(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
-
-    CCallback callback = {
-        .onResponse = &promiseOnResponseStatic,
-        .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
-    };
-
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::routerBuildRoute(decodedData.data(), static_cast<int>(decodedData.size()), callback);
-
-    return *promise;
-}
-
-
-facebook::jsi::Function TurboLndModule::routerSubscribeHtlcEvents(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError) {
-    auto sharedOnResponse = std::make_shared<AsyncCallback<std::string>>(std::move(onResponse));
+facebook::jsi::Function TurboLndModule::routerTrackPayments(jsi::Runtime &rt, facebook::react::Uint8Array data, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError) {
+    auto sharedOnResponse = std::make_shared<AsyncCallback<facebook::react::Uint8Array>>(std::move(onResponse));
     auto sharedOnError = std::make_shared<AsyncCallback<std::string>>(std::move(onError));
-    uint64_t callbackId = CallbackKeeper::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
+    uint64_t callbackId = CallbackKeeper<facebook::react::Uint8Array>::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
 
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
@@ -2212,15 +2073,15 @@ facebook::jsi::Function TurboLndModule::routerSubscribeHtlcEvents(jsi::Runtime &
         .errorContext = reinterpret_cast<void*>(callbackId),
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::routerSubscribeHtlcEvents(decodedData.data(), static_cast<int>(decodedData.size()), recvStream);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::routerTrackPayments(req.data(), static_cast<int>(req.size()), recvStream);
 
     auto unsubscribeFunc = jsi::Function::createFromHostFunction(
         rt,
         jsi::PropNameID::forAscii(rt, "unsubscribe"),
         0,
         [callbackId](jsi::Runtime& rt, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
-            CallbackKeeper::getInstance().removeCallbacks(callbackId);
+            CallbackKeeper<facebook::react::Uint8Array>::getInstance().removeCallbacks(callbackId);
             return jsi::Value::undefined();
         }
     );
@@ -2229,10 +2090,190 @@ facebook::jsi::Function TurboLndModule::routerSubscribeHtlcEvents(jsi::Runtime &
 }
 
 
-facebook::jsi::Function TurboLndModule::routerSendPayment(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError) {
-    auto sharedOnResponse = std::make_shared<AsyncCallback<std::string>>(std::move(onResponse));
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::routerEstimateRouteFee(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
+
+    CCallback callback = {
+        .onResponse = &promiseOnResponseStatic,
+        .onError = &promiseOnErrorStatic,
+        .responseContext = reinterpret_cast<void*>(promiseId),
+        .errorContext = reinterpret_cast<void*>(promiseId)
+    };
+
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::routerEstimateRouteFee(req.data(), static_cast<int>(req.size()), callback);
+
+    return *promise;
+}
+
+
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::routerSendToRoute(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
+
+    CCallback callback = {
+        .onResponse = &promiseOnResponseStatic,
+        .onError = &promiseOnErrorStatic,
+        .responseContext = reinterpret_cast<void*>(promiseId),
+        .errorContext = reinterpret_cast<void*>(promiseId)
+    };
+
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::routerSendToRoute(req.data(), static_cast<int>(req.size()), callback);
+
+    return *promise;
+}
+
+
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::routerSendToRouteV2(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
+
+    CCallback callback = {
+        .onResponse = &promiseOnResponseStatic,
+        .onError = &promiseOnErrorStatic,
+        .responseContext = reinterpret_cast<void*>(promiseId),
+        .errorContext = reinterpret_cast<void*>(promiseId)
+    };
+
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::routerSendToRouteV2(req.data(), static_cast<int>(req.size()), callback);
+
+    return *promise;
+}
+
+
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::routerResetMissionControl(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
+
+    CCallback callback = {
+        .onResponse = &promiseOnResponseStatic,
+        .onError = &promiseOnErrorStatic,
+        .responseContext = reinterpret_cast<void*>(promiseId),
+        .errorContext = reinterpret_cast<void*>(promiseId)
+    };
+
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::routerResetMissionControl(req.data(), static_cast<int>(req.size()), callback);
+
+    return *promise;
+}
+
+
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::routerQueryMissionControl(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
+
+    CCallback callback = {
+        .onResponse = &promiseOnResponseStatic,
+        .onError = &promiseOnErrorStatic,
+        .responseContext = reinterpret_cast<void*>(promiseId),
+        .errorContext = reinterpret_cast<void*>(promiseId)
+    };
+
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::routerQueryMissionControl(req.data(), static_cast<int>(req.size()), callback);
+
+    return *promise;
+}
+
+
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::routerXImportMissionControl(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
+
+    CCallback callback = {
+        .onResponse = &promiseOnResponseStatic,
+        .onError = &promiseOnErrorStatic,
+        .responseContext = reinterpret_cast<void*>(promiseId),
+        .errorContext = reinterpret_cast<void*>(promiseId)
+    };
+
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::routerXImportMissionControl(req.data(), static_cast<int>(req.size()), callback);
+
+    return *promise;
+}
+
+
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::routerGetMissionControlConfig(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
+
+    CCallback callback = {
+        .onResponse = &promiseOnResponseStatic,
+        .onError = &promiseOnErrorStatic,
+        .responseContext = reinterpret_cast<void*>(promiseId),
+        .errorContext = reinterpret_cast<void*>(promiseId)
+    };
+
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::routerGetMissionControlConfig(req.data(), static_cast<int>(req.size()), callback);
+
+    return *promise;
+}
+
+
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::routerSetMissionControlConfig(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
+
+    CCallback callback = {
+        .onResponse = &promiseOnResponseStatic,
+        .onError = &promiseOnErrorStatic,
+        .responseContext = reinterpret_cast<void*>(promiseId),
+        .errorContext = reinterpret_cast<void*>(promiseId)
+    };
+
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::routerSetMissionControlConfig(req.data(), static_cast<int>(req.size()), callback);
+
+    return *promise;
+}
+
+
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::routerQueryProbability(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
+
+    CCallback callback = {
+        .onResponse = &promiseOnResponseStatic,
+        .onError = &promiseOnErrorStatic,
+        .responseContext = reinterpret_cast<void*>(promiseId),
+        .errorContext = reinterpret_cast<void*>(promiseId)
+    };
+
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::routerQueryProbability(req.data(), static_cast<int>(req.size()), callback);
+
+    return *promise;
+}
+
+
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::routerBuildRoute(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
+
+    CCallback callback = {
+        .onResponse = &promiseOnResponseStatic,
+        .onError = &promiseOnErrorStatic,
+        .responseContext = reinterpret_cast<void*>(promiseId),
+        .errorContext = reinterpret_cast<void*>(promiseId)
+    };
+
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::routerBuildRoute(req.data(), static_cast<int>(req.size()), callback);
+
+    return *promise;
+}
+
+
+facebook::jsi::Function TurboLndModule::routerSubscribeHtlcEvents(jsi::Runtime &rt, facebook::react::Uint8Array data, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError) {
+    auto sharedOnResponse = std::make_shared<AsyncCallback<facebook::react::Uint8Array>>(std::move(onResponse));
     auto sharedOnError = std::make_shared<AsyncCallback<std::string>>(std::move(onError));
-    uint64_t callbackId = CallbackKeeper::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
+    uint64_t callbackId = CallbackKeeper<facebook::react::Uint8Array>::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
 
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
@@ -2241,15 +2282,15 @@ facebook::jsi::Function TurboLndModule::routerSendPayment(jsi::Runtime &rt, jsi:
         .errorContext = reinterpret_cast<void*>(callbackId),
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::routerSendPayment(decodedData.data(), static_cast<int>(decodedData.size()), recvStream);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::routerSubscribeHtlcEvents(req.data(), static_cast<int>(req.size()), recvStream);
 
     auto unsubscribeFunc = jsi::Function::createFromHostFunction(
         rt,
         jsi::PropNameID::forAscii(rt, "unsubscribe"),
         0,
         [callbackId](jsi::Runtime& rt, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
-            CallbackKeeper::getInstance().removeCallbacks(callbackId);
+            CallbackKeeper<facebook::react::Uint8Array>::getInstance().removeCallbacks(callbackId);
             return jsi::Value::undefined();
         }
     );
@@ -2258,10 +2299,10 @@ facebook::jsi::Function TurboLndModule::routerSendPayment(jsi::Runtime &rt, jsi:
 }
 
 
-facebook::jsi::Function TurboLndModule::routerTrackPayment(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError) {
-    auto sharedOnResponse = std::make_shared<AsyncCallback<std::string>>(std::move(onResponse));
+facebook::jsi::Function TurboLndModule::routerSendPayment(jsi::Runtime &rt, facebook::react::Uint8Array data, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError) {
+    auto sharedOnResponse = std::make_shared<AsyncCallback<facebook::react::Uint8Array>>(std::move(onResponse));
     auto sharedOnError = std::make_shared<AsyncCallback<std::string>>(std::move(onError));
-    uint64_t callbackId = CallbackKeeper::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
+    uint64_t callbackId = CallbackKeeper<facebook::react::Uint8Array>::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
 
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
@@ -2270,15 +2311,15 @@ facebook::jsi::Function TurboLndModule::routerTrackPayment(jsi::Runtime &rt, jsi
         .errorContext = reinterpret_cast<void*>(callbackId),
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::routerTrackPayment(decodedData.data(), static_cast<int>(decodedData.size()), recvStream);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::routerSendPayment(req.data(), static_cast<int>(req.size()), recvStream);
 
     auto unsubscribeFunc = jsi::Function::createFromHostFunction(
         rt,
         jsi::PropNameID::forAscii(rt, "unsubscribe"),
         0,
         [callbackId](jsi::Runtime& rt, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
-            CallbackKeeper::getInstance().removeCallbacks(callbackId);
+            CallbackKeeper<facebook::react::Uint8Array>::getInstance().removeCallbacks(callbackId);
             return jsi::Value::undefined();
         }
     );
@@ -2287,10 +2328,39 @@ facebook::jsi::Function TurboLndModule::routerTrackPayment(jsi::Runtime &rt, jsi
 }
 
 
-jsi::Object TurboLndModule::routerHtlcInterceptor(jsi::Runtime &rt, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError) {
-    auto sharedOnResponse = std::make_shared<AsyncCallback<std::string>>(std::move(onResponse));
+facebook::jsi::Function TurboLndModule::routerTrackPayment(jsi::Runtime &rt, facebook::react::Uint8Array data, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError) {
+    auto sharedOnResponse = std::make_shared<AsyncCallback<facebook::react::Uint8Array>>(std::move(onResponse));
     auto sharedOnError = std::make_shared<AsyncCallback<std::string>>(std::move(onError));
-    uint64_t callbackId = CallbackKeeper::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
+    uint64_t callbackId = CallbackKeeper<facebook::react::Uint8Array>::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
+
+    CRecvStream recvStream = {
+        .onResponse = &callbackOnResponseStatic,
+        .onError = &callbackOnErrorStatic,
+        .responseContext = reinterpret_cast<void*>(callbackId),
+        .errorContext = reinterpret_cast<void*>(callbackId),
+    };
+
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::routerTrackPayment(req.data(), static_cast<int>(req.size()), recvStream);
+
+    auto unsubscribeFunc = jsi::Function::createFromHostFunction(
+        rt,
+        jsi::PropNameID::forAscii(rt, "unsubscribe"),
+        0,
+        [callbackId](jsi::Runtime& rt, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
+            CallbackKeeper<facebook::react::Uint8Array>::getInstance().removeCallbacks(callbackId);
+            return jsi::Value::undefined();
+        }
+    );
+
+    return unsubscribeFunc;
+}
+
+
+jsi::Object TurboLndModule::routerHtlcInterceptor(jsi::Runtime &rt, AsyncCallback<facebook::react::Uint8Array> onResponse, AsyncCallback<std::string> onError) {
+    auto sharedOnResponse = std::make_shared<AsyncCallback<facebook::react::Uint8Array>>(std::move(onResponse));
+    auto sharedOnError = std::make_shared<AsyncCallback<std::string>>(std::move(onError));
+    uint64_t callbackId = CallbackKeeper<facebook::react::Uint8Array>::getInstance().addCallbacks(sharedOnResponse, sharedOnError);
 
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
@@ -2310,9 +2380,9 @@ jsi::Object TurboLndModule::routerHtlcInterceptor(jsi::Runtime &rt, AsyncCallbac
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::routerUpdateChanStatus(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::routerUpdateChanStatus(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -2321,16 +2391,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::routerUpdateChanStatu
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::routerUpdateChanStatus(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::routerUpdateChanStatus(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::signerSignOutputRaw(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::routerXAddLocalChanAliases(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -2339,16 +2409,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::signerSignOutputRaw(j
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::signerSignOutputRaw(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::routerXAddLocalChanAliases(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::signerComputeInputScript(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::routerXDeleteLocalChanAliases(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -2357,16 +2427,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::signerComputeInputScr
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::signerComputeInputScript(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::routerXDeleteLocalChanAliases(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::signerSignMessage(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::signerSignOutputRaw(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -2375,16 +2445,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::signerSignMessage(jsi
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::signerSignMessage(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::signerSignOutputRaw(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::signerVerifyMessage(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::signerComputeInputScript(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -2393,16 +2463,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::signerVerifyMessage(j
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::signerVerifyMessage(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::signerComputeInputScript(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::signerDeriveSharedKey(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::signerSignMessage(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -2411,16 +2481,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::signerDeriveSharedKey
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::signerDeriveSharedKey(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::signerSignMessage(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::signerMuSig2CombineKeys(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::signerVerifyMessage(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -2429,16 +2499,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::signerMuSig2CombineKe
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::signerMuSig2CombineKeys(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::signerVerifyMessage(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::signerMuSig2CreateSession(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::signerDeriveSharedKey(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -2447,16 +2517,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::signerMuSig2CreateSes
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::signerMuSig2CreateSession(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::signerDeriveSharedKey(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::signerMuSig2RegisterNonces(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::signerMuSig2CombineKeys(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -2465,16 +2535,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::signerMuSig2RegisterN
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::signerMuSig2RegisterNonces(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::signerMuSig2CombineKeys(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::signerMuSig2Sign(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::signerMuSig2CreateSession(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -2483,16 +2553,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::signerMuSig2Sign(jsi:
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::signerMuSig2Sign(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::signerMuSig2CreateSession(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::signerMuSig2CombineSig(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::signerMuSig2RegisterNonces(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -2501,16 +2571,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::signerMuSig2CombineSi
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::signerMuSig2CombineSig(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::signerMuSig2RegisterNonces(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::signerMuSig2Cleanup(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::signerMuSig2Sign(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -2519,16 +2589,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::signerMuSig2Cleanup(j
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::signerMuSig2Cleanup(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::signerMuSig2Sign(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::versionerGetVersion(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::signerMuSig2CombineSig(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -2537,16 +2607,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::versionerGetVersion(j
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::versionerGetVersion(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::signerMuSig2CombineSig(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitListUnspent(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::signerMuSig2Cleanup(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -2555,16 +2625,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitListUnspent(
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitListUnspent(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::signerMuSig2Cleanup(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitLeaseOutput(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::versionerGetVersion(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -2573,16 +2643,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitLeaseOutput(
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitLeaseOutput(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::versionerGetVersion(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitReleaseOutput(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::walletKitListUnspent(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -2591,16 +2661,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitReleaseOutpu
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitReleaseOutput(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::walletKitListUnspent(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitListLeases(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::walletKitLeaseOutput(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -2609,16 +2679,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitListLeases(j
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitListLeases(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::walletKitLeaseOutput(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitDeriveNextKey(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::walletKitReleaseOutput(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -2627,16 +2697,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitDeriveNextKe
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitDeriveNextKey(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::walletKitReleaseOutput(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitDeriveKey(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::walletKitListLeases(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -2645,16 +2715,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitDeriveKey(js
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitDeriveKey(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::walletKitListLeases(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitNextAddr(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::walletKitDeriveNextKey(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -2663,16 +2733,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitNextAddr(jsi
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitNextAddr(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::walletKitDeriveNextKey(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitListAccounts(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::walletKitDeriveKey(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -2681,16 +2751,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitListAccounts
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitListAccounts(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::walletKitDeriveKey(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitRequiredReserve(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::walletKitNextAddr(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -2699,16 +2769,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitRequiredRese
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitRequiredReserve(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::walletKitNextAddr(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitListAddresses(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::walletKitGetTransaction(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -2717,16 +2787,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitListAddresse
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitListAddresses(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::walletKitGetTransaction(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitSignMessageWithAddr(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::walletKitListAccounts(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -2735,16 +2805,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitSignMessageW
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitSignMessageWithAddr(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::walletKitListAccounts(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitVerifyMessageWithAddr(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::walletKitRequiredReserve(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -2753,16 +2823,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitVerifyMessag
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitVerifyMessageWithAddr(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::walletKitRequiredReserve(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitImportAccount(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::walletKitListAddresses(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -2771,16 +2841,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitImportAccoun
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitImportAccount(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::walletKitListAddresses(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitImportPublicKey(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::walletKitSignMessageWithAddr(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -2789,16 +2859,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitImportPublic
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitImportPublicKey(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::walletKitSignMessageWithAddr(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitImportTapscript(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::walletKitVerifyMessageWithAddr(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -2807,16 +2877,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitImportTapscr
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitImportTapscript(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::walletKitVerifyMessageWithAddr(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitPublishTransaction(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::walletKitImportAccount(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -2825,16 +2895,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitPublishTrans
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitPublishTransaction(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::walletKitImportAccount(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitSendOutputs(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::walletKitImportPublicKey(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -2843,16 +2913,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitSendOutputs(
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitSendOutputs(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::walletKitImportPublicKey(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitEstimateFee(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::walletKitImportTapscript(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -2861,16 +2931,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitEstimateFee(
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitEstimateFee(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::walletKitImportTapscript(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitPendingSweeps(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::walletKitPublishTransaction(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -2879,16 +2949,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitPendingSweep
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitPendingSweeps(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::walletKitPublishTransaction(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitBumpFee(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::walletKitRemoveTransaction(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -2897,16 +2967,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitBumpFee(jsi:
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitBumpFee(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::walletKitRemoveTransaction(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitListSweeps(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::walletKitSendOutputs(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -2915,16 +2985,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitListSweeps(j
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitListSweeps(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::walletKitSendOutputs(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitLabelTransaction(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::walletKitEstimateFee(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -2933,16 +3003,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitLabelTransac
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitLabelTransaction(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::walletKitEstimateFee(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitFundPsbt(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::walletKitPendingSweeps(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -2951,16 +3021,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitFundPsbt(jsi
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitFundPsbt(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::walletKitPendingSweeps(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitSignPsbt(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::walletKitBumpFee(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -2969,16 +3039,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitSignPsbt(jsi
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitSignPsbt(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::walletKitBumpFee(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitFinalizePsbt(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::walletKitListSweeps(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -2987,16 +3057,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitFinalizePsbt
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitFinalizePsbt(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::walletKitListSweeps(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::watchtowerGetInfo(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::walletKitLabelTransaction(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -3005,16 +3075,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::watchtowerGetInfo(jsi
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::watchtowerGetInfo(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::walletKitLabelTransaction(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::watchtowerClientAddTower(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::walletKitFundPsbt(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -3023,16 +3093,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::watchtowerClientAddTo
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::watchtowerClientAddTower(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::walletKitFundPsbt(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::watchtowerClientRemoveTower(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::walletKitSignPsbt(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -3041,16 +3111,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::watchtowerClientRemov
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::watchtowerClientRemoveTower(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::walletKitSignPsbt(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::watchtowerClientListTowers(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::walletKitFinalizePsbt(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -3059,16 +3129,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::watchtowerClientListT
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::watchtowerClientListTowers(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::walletKitFinalizePsbt(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::watchtowerClientGetTowerInfo(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::watchtowerGetInfo(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -3077,16 +3147,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::watchtowerClientGetTo
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::watchtowerClientGetTowerInfo(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::watchtowerGetInfo(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::watchtowerClientStats(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::watchtowerClientAddTower(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -3095,16 +3165,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::watchtowerClientStats
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::watchtowerClientStats(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::watchtowerClientAddTower(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }
 
 
-facebook::react::AsyncPromise<std::string> TurboLndModule::watchtowerClientPolicy(jsi::Runtime &rt, jsi::String data) {
-    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
-    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::watchtowerClientRemoveTower(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
@@ -3113,8 +3183,116 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::watchtowerClientPolic
         .errorContext = reinterpret_cast<void*>(promiseId)
     };
 
-    std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::watchtowerClientPolicy(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::watchtowerClientRemoveTower(req.data(), static_cast<int>(req.size()), callback);
+
+    return *promise;
+}
+
+
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::watchtowerClientDeactivateTower(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
+
+    CCallback callback = {
+        .onResponse = &promiseOnResponseStatic,
+        .onError = &promiseOnErrorStatic,
+        .responseContext = reinterpret_cast<void*>(promiseId),
+        .errorContext = reinterpret_cast<void*>(promiseId)
+    };
+
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::watchtowerClientDeactivateTower(req.data(), static_cast<int>(req.size()), callback);
+
+    return *promise;
+}
+
+
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::watchtowerClientTerminateSession(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
+
+    CCallback callback = {
+        .onResponse = &promiseOnResponseStatic,
+        .onError = &promiseOnErrorStatic,
+        .responseContext = reinterpret_cast<void*>(promiseId),
+        .errorContext = reinterpret_cast<void*>(promiseId)
+    };
+
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::watchtowerClientTerminateSession(req.data(), static_cast<int>(req.size()), callback);
+
+    return *promise;
+}
+
+
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::watchtowerClientListTowers(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
+
+    CCallback callback = {
+        .onResponse = &promiseOnResponseStatic,
+        .onError = &promiseOnErrorStatic,
+        .responseContext = reinterpret_cast<void*>(promiseId),
+        .errorContext = reinterpret_cast<void*>(promiseId)
+    };
+
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::watchtowerClientListTowers(req.data(), static_cast<int>(req.size()), callback);
+
+    return *promise;
+}
+
+
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::watchtowerClientGetTowerInfo(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
+
+    CCallback callback = {
+        .onResponse = &promiseOnResponseStatic,
+        .onError = &promiseOnErrorStatic,
+        .responseContext = reinterpret_cast<void*>(promiseId),
+        .errorContext = reinterpret_cast<void*>(promiseId)
+    };
+
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::watchtowerClientGetTowerInfo(req.data(), static_cast<int>(req.size()), callback);
+
+    return *promise;
+}
+
+
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::watchtowerClientStats(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
+
+    CCallback callback = {
+        .onResponse = &promiseOnResponseStatic,
+        .onError = &promiseOnErrorStatic,
+        .responseContext = reinterpret_cast<void*>(promiseId),
+        .errorContext = reinterpret_cast<void*>(promiseId)
+    };
+
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::watchtowerClientStats(req.data(), static_cast<int>(req.size()), callback);
+
+    return *promise;
+}
+
+
+facebook::react::AsyncPromise<facebook::react::Uint8Array> TurboLndModule::watchtowerClientPolicy(jsi::Runtime &rt, facebook::react::Uint8Array data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<facebook::react::Uint8Array>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper<facebook::react::Uint8Array>::getInstance().addPromise(promise);
+
+    CCallback callback = {
+        .onResponse = &promiseOnResponseStatic,
+        .onError = &promiseOnErrorStatic,
+        .responseContext = reinterpret_cast<void*>(promiseId),
+        .errorContext = reinterpret_cast<void*>(promiseId)
+    };
+
+    std::string req(reinterpret_cast<const char*>(data.data()), data.size());
+    ::watchtowerClientPolicy(req.data(), static_cast<int>(req.size()), callback);
 
     return *promise;
 }

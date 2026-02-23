@@ -14,7 +14,6 @@ if ((globalThis as any)["fakelnd"] || typeof jest !== 'undefined') {
 import { type OnResponseCallback, type OnErrorCallback, type UnsubscribeFromStream } from "./core/NativeTurboLnd";
 
 import { create, toBinary, fromBinary, type MessageInitShape } from "@bufbuild/protobuf";
-import { base64Encode, base64Decode } from "@bufbuild/protobuf/wire";
 
 import * as lnrpc from "./proto/lightning_pb";
 // import * as walletunlocker from "./proto/walletunlocker_pb";
@@ -60,14 +59,12 @@ export async function walletBalance(
     lnrpc.WalletBalanceRequestSchema,
     request
   );
-  const b64 = await TurboLnd.walletBalance(
-    base64Encode(
-      toBinary(lnrpc.WalletBalanceRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.walletBalance(
+    toBinary(lnrpc.WalletBalanceRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.WalletBalanceResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -90,14 +87,12 @@ export async function channelBalance(
     lnrpc.ChannelBalanceRequestSchema,
     request
   );
-  const b64 = await TurboLnd.channelBalance(
-    base64Encode(
-      toBinary(lnrpc.ChannelBalanceRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.channelBalance(
+    toBinary(lnrpc.ChannelBalanceRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.ChannelBalanceResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -119,14 +114,12 @@ export async function getTransactions(
     lnrpc.GetTransactionsRequestSchema,
     request
   );
-  const b64 = await TurboLnd.getTransactions(
-    base64Encode(
-      toBinary(lnrpc.GetTransactionsRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.getTransactions(
+    toBinary(lnrpc.GetTransactionsRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.TransactionDetailsSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -149,14 +142,12 @@ export async function estimateFee(
     lnrpc.EstimateFeeRequestSchema,
     request
   );
-  const b64 = await TurboLnd.estimateFee(
-    base64Encode(
-      toBinary(lnrpc.EstimateFeeRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.estimateFee(
+    toBinary(lnrpc.EstimateFeeRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.EstimateFeeResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -181,14 +172,12 @@ export async function sendCoins(
     lnrpc.SendCoinsRequestSchema,
     request
   );
-  const b64 = await TurboLnd.sendCoins(
-    base64Encode(
-      toBinary(lnrpc.SendCoinsRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.sendCoins(
+    toBinary(lnrpc.SendCoinsRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.SendCoinsResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -212,14 +201,12 @@ export async function listUnspent(
     lnrpc.ListUnspentRequestSchema,
     request
   );
-  const b64 = await TurboLnd.listUnspent(
-    base64Encode(
-      toBinary(lnrpc.ListUnspentRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.listUnspent(
+    toBinary(lnrpc.ListUnspentRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.ListUnspentResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -244,20 +231,20 @@ export function subscribeTransactions(
     lnrpc.GetTransactionsRequestSchema,
     request
   );
-  const requestB64 = base64Encode(
-    toBinary(lnrpc.GetTransactionsRequestSchema, message)
+  const requestBytes = toBinary(
+    lnrpc.GetTransactionsRequestSchema,
+    message
   );
 
-  const onResponseWrapper: OnResponseCallback = (responseB64) => {
+  const onResponseWrapper: OnResponseCallback = (responseBytes) => {
     onResponse(fromBinary(
       lnrpc.TransactionSchema,
-      base64Decode(responseB64)
+      responseBytes
     ));
   }
   const onErrorWrapper: OnErrorCallback = (error: string) => onError(error);
 
-
-  return TurboLnd.subscribeTransactions(requestB64, onResponseWrapper, onErrorWrapper);
+  return TurboLnd.subscribeTransactions(requestBytes, onResponseWrapper, onErrorWrapper);
 }
 
 
@@ -279,14 +266,12 @@ export async function sendMany(
     lnrpc.SendManyRequestSchema,
     request
   );
-  const b64 = await TurboLnd.sendMany(
-    base64Encode(
-      toBinary(lnrpc.SendManyRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.sendMany(
+    toBinary(lnrpc.SendManyRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.SendManyResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -307,14 +292,12 @@ export async function newAddress(
     lnrpc.NewAddressRequestSchema,
     request
   );
-  const b64 = await TurboLnd.newAddress(
-    base64Encode(
-      toBinary(lnrpc.NewAddressRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.newAddress(
+    toBinary(lnrpc.NewAddressRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.NewAddressResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -339,14 +322,12 @@ export async function signMessage(
     lnrpc.SignMessageRequestSchema,
     request
   );
-  const b64 = await TurboLnd.signMessage(
-    base64Encode(
-      toBinary(lnrpc.SignMessageRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.signMessage(
+    toBinary(lnrpc.SignMessageRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.SignMessageResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -371,14 +352,12 @@ export async function verifyMessage(
     lnrpc.VerifyMessageRequestSchema,
     request
   );
-  const b64 = await TurboLnd.verifyMessage(
-    base64Encode(
-      toBinary(lnrpc.VerifyMessageRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.verifyMessage(
+    toBinary(lnrpc.VerifyMessageRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.VerifyMessageResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -401,14 +380,12 @@ export async function connectPeer(
     lnrpc.ConnectPeerRequestSchema,
     request
   );
-  const b64 = await TurboLnd.connectPeer(
-    base64Encode(
-      toBinary(lnrpc.ConnectPeerRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.connectPeer(
+    toBinary(lnrpc.ConnectPeerRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.ConnectPeerResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -431,14 +408,12 @@ export async function disconnectPeer(
     lnrpc.DisconnectPeerRequestSchema,
     request
   );
-  const b64 = await TurboLnd.disconnectPeer(
-    base64Encode(
-      toBinary(lnrpc.DisconnectPeerRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.disconnectPeer(
+    toBinary(lnrpc.DisconnectPeerRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.DisconnectPeerResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -459,14 +434,12 @@ export async function listPeers(
     lnrpc.ListPeersRequestSchema,
     request
   );
-  const b64 = await TurboLnd.listPeers(
-    base64Encode(
-      toBinary(lnrpc.ListPeersRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.listPeers(
+    toBinary(lnrpc.ListPeersRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.ListPeersResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -491,20 +464,20 @@ export function subscribePeerEvents(
     lnrpc.PeerEventSubscriptionSchema,
     request
   );
-  const requestB64 = base64Encode(
-    toBinary(lnrpc.PeerEventSubscriptionSchema, message)
+  const requestBytes = toBinary(
+    lnrpc.PeerEventSubscriptionSchema,
+    message
   );
 
-  const onResponseWrapper: OnResponseCallback = (responseB64) => {
+  const onResponseWrapper: OnResponseCallback = (responseBytes) => {
     onResponse(fromBinary(
       lnrpc.PeerEventSchema,
-      base64Decode(responseB64)
+      responseBytes
     ));
   }
   const onErrorWrapper: OnErrorCallback = (error: string) => onError(error);
 
-
-  return TurboLnd.subscribePeerEvents(requestB64, onResponseWrapper, onErrorWrapper);
+  return TurboLnd.subscribePeerEvents(requestBytes, onResponseWrapper, onErrorWrapper);
 }
 
 
@@ -525,14 +498,40 @@ export async function getInfo(
     lnrpc.GetInfoRequestSchema,
     request
   );
-  const b64 = await TurboLnd.getInfo(
-    base64Encode(
-      toBinary(lnrpc.GetInfoRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.getInfo(
+    toBinary(lnrpc.GetInfoRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.GetInfoResponseSchema,
-    base64Decode(b64)
+    responseBytes
+  );
+  return response;
+}
+
+
+/**
+   *
+   * GetDebugInfo returns debug information concerning the state of the daemon
+   * and its subsystems. This includes the full configuration and the latest log
+   * entries from the log file.
+   *
+   * @param [GetDebugInfoRequest]
+   * @returns [GetDebugInfoResponse]
+   *
+   */
+export async function getDebugInfo(
+  request: MessageInitShape<typeof lnrpc.GetDebugInfoRequestSchema>
+): Promise<lnrpc.GetDebugInfoResponse> {
+  const message = create(
+    lnrpc.GetDebugInfoRequestSchema,
+    request
+  );
+  const responseBytes = await TurboLnd.getDebugInfo(
+    toBinary(lnrpc.GetDebugInfoRequestSchema, message)
+  );
+  const response = fromBinary(
+    lnrpc.GetDebugInfoResponseSchema,
+    responseBytes
   );
   return response;
 }
@@ -555,14 +554,12 @@ export async function getRecoveryInfo(
     lnrpc.GetRecoveryInfoRequestSchema,
     request
   );
-  const b64 = await TurboLnd.getRecoveryInfo(
-    base64Encode(
-      toBinary(lnrpc.GetRecoveryInfoRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.getRecoveryInfo(
+    toBinary(lnrpc.GetRecoveryInfoRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.GetRecoveryInfoResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -586,14 +583,12 @@ export async function pendingChannels(
     lnrpc.PendingChannelsRequestSchema,
     request
   );
-  const b64 = await TurboLnd.pendingChannels(
-    base64Encode(
-      toBinary(lnrpc.PendingChannelsRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.pendingChannels(
+    toBinary(lnrpc.PendingChannelsRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.PendingChannelsResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -615,14 +610,12 @@ export async function listChannels(
     lnrpc.ListChannelsRequestSchema,
     request
   );
-  const b64 = await TurboLnd.listChannels(
-    base64Encode(
-      toBinary(lnrpc.ListChannelsRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.listChannels(
+    toBinary(lnrpc.ListChannelsRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.ListChannelsResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -648,20 +641,20 @@ export function subscribeChannelEvents(
     lnrpc.ChannelEventSubscriptionSchema,
     request
   );
-  const requestB64 = base64Encode(
-    toBinary(lnrpc.ChannelEventSubscriptionSchema, message)
+  const requestBytes = toBinary(
+    lnrpc.ChannelEventSubscriptionSchema,
+    message
   );
 
-  const onResponseWrapper: OnResponseCallback = (responseB64) => {
+  const onResponseWrapper: OnResponseCallback = (responseBytes) => {
     onResponse(fromBinary(
       lnrpc.ChannelEventUpdateSchema,
-      base64Decode(responseB64)
+      responseBytes
     ));
   }
   const onErrorWrapper: OnErrorCallback = (error: string) => onError(error);
 
-
-  return TurboLnd.subscribeChannelEvents(requestB64, onResponseWrapper, onErrorWrapper);
+  return TurboLnd.subscribeChannelEvents(requestBytes, onResponseWrapper, onErrorWrapper);
 }
 
 
@@ -681,14 +674,12 @@ export async function closedChannels(
     lnrpc.ClosedChannelsRequestSchema,
     request
   );
-  const b64 = await TurboLnd.closedChannels(
-    base64Encode(
-      toBinary(lnrpc.ClosedChannelsRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.closedChannels(
+    toBinary(lnrpc.ClosedChannelsRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.ClosedChannelsResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -712,14 +703,12 @@ export async function openChannelSync(
     lnrpc.OpenChannelRequestSchema,
     request
   );
-  const b64 = await TurboLnd.openChannelSync(
-    base64Encode(
-      toBinary(lnrpc.OpenChannelRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.openChannelSync(
+    toBinary(lnrpc.OpenChannelRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.ChannelPointSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -749,20 +738,20 @@ export function openChannel(
     lnrpc.OpenChannelRequestSchema,
     request
   );
-  const requestB64 = base64Encode(
-    toBinary(lnrpc.OpenChannelRequestSchema, message)
+  const requestBytes = toBinary(
+    lnrpc.OpenChannelRequestSchema,
+    message
   );
 
-  const onResponseWrapper: OnResponseCallback = (responseB64) => {
+  const onResponseWrapper: OnResponseCallback = (responseBytes) => {
     onResponse(fromBinary(
       lnrpc.OpenStatusUpdateSchema,
-      base64Decode(responseB64)
+      responseBytes
     ));
   }
   const onErrorWrapper: OnErrorCallback = (error: string) => onError(error);
 
-
-  return TurboLnd.openChannel(requestB64, onResponseWrapper, onErrorWrapper);
+  return TurboLnd.openChannel(requestBytes, onResponseWrapper, onErrorWrapper);
 }
 
 
@@ -785,14 +774,12 @@ export async function batchOpenChannel(
     lnrpc.BatchOpenChannelRequestSchema,
     request
   );
-  const b64 = await TurboLnd.batchOpenChannel(
-    base64Encode(
-      toBinary(lnrpc.BatchOpenChannelRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.batchOpenChannel(
+    toBinary(lnrpc.BatchOpenChannelRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.BatchOpenChannelResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -820,14 +807,12 @@ export async function fundingStateStep(
     lnrpc.FundingTransitionMsgSchema,
     request
   );
-  const b64 = await TurboLnd.fundingStateStep(
-    base64Encode(
-      toBinary(lnrpc.FundingTransitionMsgSchema, message)
-    )
+  const responseBytes = await TurboLnd.fundingStateStep(
+    toBinary(lnrpc.FundingTransitionMsgSchema, message)
   );
   const response = fromBinary(
     lnrpc.FundingStateStepRespSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -849,10 +834,10 @@ export function channelAcceptor(
   onResponse: (response: lnrpc.ChannelAcceptRequest) => void,
   onError: (error: string) => void
 ) {
-  const onResponseWrapper: OnResponseCallback = (responseB64) => {
+  const onResponseWrapper: OnResponseCallback = (responseBytes) => {
     onResponse(fromBinary(
       lnrpc.ChannelAcceptRequestSchema,
-      base64Decode(responseB64)
+      responseBytes
     ));
   }
   const onErrorWrapper: OnErrorCallback = (error: string) => onError(error);
@@ -865,10 +850,11 @@ export function channelAcceptor(
         lnrpc.ChannelAcceptResponseSchema,
         response
       );
-      const responseB64 = base64Encode(
-        toBinary(lnrpc.ChannelAcceptResponseSchema, message)
+      const responseBytes = toBinary(
+        lnrpc.ChannelAcceptResponseSchema,
+        message
       );
-      writeableStream.send(responseB64);
+      writeableStream.send(responseBytes);
     },
     close: () => {
       writeableStream.stop();
@@ -899,20 +885,20 @@ export function closeChannel(
     lnrpc.CloseChannelRequestSchema,
     request
   );
-  const requestB64 = base64Encode(
-    toBinary(lnrpc.CloseChannelRequestSchema, message)
+  const requestBytes = toBinary(
+    lnrpc.CloseChannelRequestSchema,
+    message
   );
 
-  const onResponseWrapper: OnResponseCallback = (responseB64) => {
+  const onResponseWrapper: OnResponseCallback = (responseBytes) => {
     onResponse(fromBinary(
       lnrpc.CloseStatusUpdateSchema,
-      base64Decode(responseB64)
+      responseBytes
     ));
   }
   const onErrorWrapper: OnErrorCallback = (error: string) => onError(error);
 
-
-  return TurboLnd.closeChannel(requestB64, onResponseWrapper, onErrorWrapper);
+  return TurboLnd.closeChannel(requestBytes, onResponseWrapper, onErrorWrapper);
 }
 
 
@@ -936,14 +922,12 @@ export async function abandonChannel(
     lnrpc.AbandonChannelRequestSchema,
     request
   );
-  const b64 = await TurboLnd.abandonChannel(
-    base64Encode(
-      toBinary(lnrpc.AbandonChannelRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.abandonChannel(
+    toBinary(lnrpc.AbandonChannelRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.AbandonChannelResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -963,10 +947,10 @@ export function sendPayment(
   onResponse: (response: lnrpc.SendResponse) => void,
   onError: (error: string) => void
 ) {
-  const onResponseWrapper: OnResponseCallback = (responseB64) => {
+  const onResponseWrapper: OnResponseCallback = (responseBytes) => {
     onResponse(fromBinary(
       lnrpc.SendResponseSchema,
-      base64Decode(responseB64)
+      responseBytes
     ));
   }
   const onErrorWrapper: OnErrorCallback = (error: string) => onError(error);
@@ -979,10 +963,11 @@ export function sendPayment(
         lnrpc.SendRequestSchema,
         response
       );
-      const responseB64 = base64Encode(
-        toBinary(lnrpc.SendRequestSchema, message)
+      const responseBytes = toBinary(
+        lnrpc.SendRequestSchema,
+        message
       );
-      writeableStream.send(responseB64);
+      writeableStream.send(responseBytes);
     },
     close: () => {
       writeableStream.stop();
@@ -1008,14 +993,12 @@ export async function sendPaymentSync(
     lnrpc.SendRequestSchema,
     request
   );
-  const b64 = await TurboLnd.sendPaymentSync(
-    base64Encode(
-      toBinary(lnrpc.SendRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.sendPaymentSync(
+    toBinary(lnrpc.SendRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.SendResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -1037,10 +1020,10 @@ export function sendToRoute(
   onResponse: (response: lnrpc.SendResponse) => void,
   onError: (error: string) => void
 ) {
-  const onResponseWrapper: OnResponseCallback = (responseB64) => {
+  const onResponseWrapper: OnResponseCallback = (responseBytes) => {
     onResponse(fromBinary(
       lnrpc.SendResponseSchema,
-      base64Decode(responseB64)
+      responseBytes
     ));
   }
   const onErrorWrapper: OnErrorCallback = (error: string) => onError(error);
@@ -1053,10 +1036,11 @@ export function sendToRoute(
         lnrpc.SendToRouteRequestSchema,
         response
       );
-      const responseB64 = base64Encode(
-        toBinary(lnrpc.SendToRouteRequestSchema, message)
+      const responseBytes = toBinary(
+        lnrpc.SendToRouteRequestSchema,
+        message
       );
-      writeableStream.send(responseB64);
+      writeableStream.send(responseBytes);
     },
     close: () => {
       writeableStream.stop();
@@ -1080,14 +1064,12 @@ export async function sendToRouteSync(
     lnrpc.SendToRouteRequestSchema,
     request
   );
-  const b64 = await TurboLnd.sendToRouteSync(
-    base64Encode(
-      toBinary(lnrpc.SendToRouteRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.sendToRouteSync(
+    toBinary(lnrpc.SendToRouteRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.SendResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -1110,14 +1092,12 @@ export async function addInvoice(
     lnrpc.InvoiceSchema,
     request
   );
-  const b64 = await TurboLnd.addInvoice(
-    base64Encode(
-      toBinary(lnrpc.InvoiceSchema, message)
-    )
+  const responseBytes = await TurboLnd.addInvoice(
+    toBinary(lnrpc.InvoiceSchema, message)
   );
   const response = fromBinary(
     lnrpc.AddInvoiceResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -1144,14 +1124,12 @@ export async function listInvoices(
     lnrpc.ListInvoiceRequestSchema,
     request
   );
-  const b64 = await TurboLnd.listInvoices(
-    base64Encode(
-      toBinary(lnrpc.ListInvoiceRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.listInvoices(
+    toBinary(lnrpc.ListInvoiceRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.ListInvoiceResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -1174,14 +1152,12 @@ export async function lookupInvoice(
     lnrpc.PaymentHashSchema,
     request
   );
-  const b64 = await TurboLnd.lookupInvoice(
-    base64Encode(
-      toBinary(lnrpc.PaymentHashSchema, message)
-    )
+  const responseBytes = await TurboLnd.lookupInvoice(
+    toBinary(lnrpc.PaymentHashSchema, message)
   );
   const response = fromBinary(
     lnrpc.InvoiceSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -1194,7 +1170,7 @@ export async function lookupInvoice(
    * optionally specify the add_index and/or the settle_index. If the add_index
    * is specified, then we'll first start by sending add invoice events for all
    * invoices with an add_index greater than the specified value. If the
-   * settle_index is specified, the next, we'll send out all settle events for
+   * settle_index is specified, then next, we'll send out all settle events for
    * invoices with a settle_index greater than the specified value. One or both
    * of these fields can be set. If no fields are set, then we'll only send out
    * the latest add/settle events.
@@ -1212,20 +1188,20 @@ export function subscribeInvoices(
     lnrpc.InvoiceSubscriptionSchema,
     request
   );
-  const requestB64 = base64Encode(
-    toBinary(lnrpc.InvoiceSubscriptionSchema, message)
+  const requestBytes = toBinary(
+    lnrpc.InvoiceSubscriptionSchema,
+    message
   );
 
-  const onResponseWrapper: OnResponseCallback = (responseB64) => {
+  const onResponseWrapper: OnResponseCallback = (responseBytes) => {
     onResponse(fromBinary(
       lnrpc.InvoiceSchema,
-      base64Decode(responseB64)
+      responseBytes
     ));
   }
   const onErrorWrapper: OnErrorCallback = (error: string) => onError(error);
 
-
-  return TurboLnd.subscribeInvoices(requestB64, onResponseWrapper, onErrorWrapper);
+  return TurboLnd.subscribeInvoices(requestBytes, onResponseWrapper, onErrorWrapper);
 }
 
 
@@ -1246,14 +1222,12 @@ export async function decodePayReq(
     lnrpc.PayReqStringSchema,
     request
   );
-  const b64 = await TurboLnd.decodePayReq(
-    base64Encode(
-      toBinary(lnrpc.PayReqStringSchema, message)
-    )
+  const responseBytes = await TurboLnd.decodePayReq(
+    toBinary(lnrpc.PayReqStringSchema, message)
   );
   const response = fromBinary(
     lnrpc.PayReqSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -1274,14 +1248,12 @@ export async function listPayments(
     lnrpc.ListPaymentsRequestSchema,
     request
   );
-  const b64 = await TurboLnd.listPayments(
-    base64Encode(
-      toBinary(lnrpc.ListPaymentsRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.listPayments(
+    toBinary(lnrpc.ListPaymentsRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.ListPaymentsResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -1303,14 +1275,12 @@ export async function deletePayment(
     lnrpc.DeletePaymentRequestSchema,
     request
   );
-  const b64 = await TurboLnd.deletePayment(
-    base64Encode(
-      toBinary(lnrpc.DeletePaymentRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.deletePayment(
+    toBinary(lnrpc.DeletePaymentRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.DeletePaymentResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -1332,14 +1302,12 @@ export async function deleteAllPayments(
     lnrpc.DeleteAllPaymentsRequestSchema,
     request
   );
-  const b64 = await TurboLnd.deleteAllPayments(
-    base64Encode(
-      toBinary(lnrpc.DeleteAllPaymentsRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.deleteAllPayments(
+    toBinary(lnrpc.DeleteAllPaymentsRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.DeleteAllPaymentsResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -1365,14 +1333,12 @@ export async function describeGraph(
     lnrpc.ChannelGraphRequestSchema,
     request
   );
-  const b64 = await TurboLnd.describeGraph(
-    base64Encode(
-      toBinary(lnrpc.ChannelGraphRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.describeGraph(
+    toBinary(lnrpc.ChannelGraphRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.ChannelGraphSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -1394,14 +1360,12 @@ export async function getNodeMetrics(
     lnrpc.NodeMetricsRequestSchema,
     request
   );
-  const b64 = await TurboLnd.getNodeMetrics(
-    base64Encode(
-      toBinary(lnrpc.NodeMetricsRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.getNodeMetrics(
+    toBinary(lnrpc.NodeMetricsRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.NodeMetricsResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -1425,14 +1389,12 @@ export async function getChanInfo(
     lnrpc.ChanInfoRequestSchema,
     request
   );
-  const b64 = await TurboLnd.getChanInfo(
-    base64Encode(
-      toBinary(lnrpc.ChanInfoRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.getChanInfo(
+    toBinary(lnrpc.ChanInfoRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.ChannelEdgeSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -1454,14 +1416,12 @@ export async function getNodeInfo(
     lnrpc.NodeInfoRequestSchema,
     request
   );
-  const b64 = await TurboLnd.getNodeInfo(
-    base64Encode(
-      toBinary(lnrpc.NodeInfoRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.getNodeInfo(
+    toBinary(lnrpc.NodeInfoRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.NodeInfoSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -1491,14 +1451,12 @@ export async function queryRoutes(
     lnrpc.QueryRoutesRequestSchema,
     request
   );
-  const b64 = await TurboLnd.queryRoutes(
-    base64Encode(
-      toBinary(lnrpc.QueryRoutesRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.queryRoutes(
+    toBinary(lnrpc.QueryRoutesRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.QueryRoutesResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -1520,14 +1478,12 @@ export async function getNetworkInfo(
     lnrpc.NetworkInfoRequestSchema,
     request
   );
-  const b64 = await TurboLnd.getNetworkInfo(
-    base64Encode(
-      toBinary(lnrpc.NetworkInfoRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.getNetworkInfo(
+    toBinary(lnrpc.NetworkInfoRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.NetworkInfoSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -1549,14 +1505,12 @@ export async function stopDaemon(
     lnrpc.StopRequestSchema,
     request
   );
-  const b64 = await TurboLnd.stopDaemon(
-    base64Encode(
-      toBinary(lnrpc.StopRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.stopDaemon(
+    toBinary(lnrpc.StopRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.StopResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -1584,20 +1538,20 @@ export function subscribeChannelGraph(
     lnrpc.GraphTopologySubscriptionSchema,
     request
   );
-  const requestB64 = base64Encode(
-    toBinary(lnrpc.GraphTopologySubscriptionSchema, message)
+  const requestBytes = toBinary(
+    lnrpc.GraphTopologySubscriptionSchema,
+    message
   );
 
-  const onResponseWrapper: OnResponseCallback = (responseB64) => {
+  const onResponseWrapper: OnResponseCallback = (responseBytes) => {
     onResponse(fromBinary(
       lnrpc.GraphTopologyUpdateSchema,
-      base64Decode(responseB64)
+      responseBytes
     ));
   }
   const onErrorWrapper: OnErrorCallback = (error: string) => onError(error);
 
-
-  return TurboLnd.subscribeChannelGraph(requestB64, onResponseWrapper, onErrorWrapper);
+  return TurboLnd.subscribeChannelGraph(requestBytes, onResponseWrapper, onErrorWrapper);
 }
 
 
@@ -1619,14 +1573,12 @@ export async function debugLevel(
     lnrpc.DebugLevelRequestSchema,
     request
   );
-  const b64 = await TurboLnd.debugLevel(
-    base64Encode(
-      toBinary(lnrpc.DebugLevelRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.debugLevel(
+    toBinary(lnrpc.DebugLevelRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.DebugLevelResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -1648,14 +1600,12 @@ export async function feeReport(
     lnrpc.FeeReportRequestSchema,
     request
   );
-  const b64 = await TurboLnd.feeReport(
-    base64Encode(
-      toBinary(lnrpc.FeeReportRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.feeReport(
+    toBinary(lnrpc.FeeReportRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.FeeReportResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -1677,14 +1627,12 @@ export async function updateChannelPolicy(
     lnrpc.PolicyUpdateRequestSchema,
     request
   );
-  const b64 = await TurboLnd.updateChannelPolicy(
-    base64Encode(
-      toBinary(lnrpc.PolicyUpdateRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.updateChannelPolicy(
+    toBinary(lnrpc.PolicyUpdateRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.PolicyUpdateResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -1715,14 +1663,12 @@ export async function forwardingHistory(
     lnrpc.ForwardingHistoryRequestSchema,
     request
   );
-  const b64 = await TurboLnd.forwardingHistory(
-    base64Encode(
-      toBinary(lnrpc.ForwardingHistoryRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.forwardingHistory(
+    toBinary(lnrpc.ForwardingHistoryRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.ForwardingHistoryResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -1748,14 +1694,12 @@ export async function exportChannelBackup(
     lnrpc.ExportChannelBackupRequestSchema,
     request
   );
-  const b64 = await TurboLnd.exportChannelBackup(
-    base64Encode(
-      toBinary(lnrpc.ExportChannelBackupRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.exportChannelBackup(
+    toBinary(lnrpc.ExportChannelBackupRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.ChannelBackupSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -1780,14 +1724,12 @@ export async function exportAllChannelBackups(
     lnrpc.ChanBackupExportRequestSchema,
     request
   );
-  const b64 = await TurboLnd.exportAllChannelBackups(
-    base64Encode(
-      toBinary(lnrpc.ChanBackupExportRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.exportAllChannelBackups(
+    toBinary(lnrpc.ChanBackupExportRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.ChanBackupSnapshotSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -1810,14 +1752,12 @@ export async function verifyChanBackup(
     lnrpc.ChanBackupSnapshotSchema,
     request
   );
-  const b64 = await TurboLnd.verifyChanBackup(
-    base64Encode(
-      toBinary(lnrpc.ChanBackupSnapshotSchema, message)
-    )
+  const responseBytes = await TurboLnd.verifyChanBackup(
+    toBinary(lnrpc.ChanBackupSnapshotSchema, message)
   );
   const response = fromBinary(
     lnrpc.VerifyChanBackupResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -1841,14 +1781,12 @@ export async function restoreChannelBackups(
     lnrpc.RestoreChanBackupRequestSchema,
     request
   );
-  const b64 = await TurboLnd.restoreChannelBackups(
-    base64Encode(
-      toBinary(lnrpc.RestoreChanBackupRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.restoreChannelBackups(
+    toBinary(lnrpc.RestoreChanBackupRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.RestoreBackupResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -1877,20 +1815,20 @@ export function subscribeChannelBackups(
     lnrpc.ChannelBackupSubscriptionSchema,
     request
   );
-  const requestB64 = base64Encode(
-    toBinary(lnrpc.ChannelBackupSubscriptionSchema, message)
+  const requestBytes = toBinary(
+    lnrpc.ChannelBackupSubscriptionSchema,
+    message
   );
 
-  const onResponseWrapper: OnResponseCallback = (responseB64) => {
+  const onResponseWrapper: OnResponseCallback = (responseBytes) => {
     onResponse(fromBinary(
       lnrpc.ChanBackupSnapshotSchema,
-      base64Decode(responseB64)
+      responseBytes
     ));
   }
   const onErrorWrapper: OnErrorCallback = (error: string) => onError(error);
 
-
-  return TurboLnd.subscribeChannelBackups(requestB64, onResponseWrapper, onErrorWrapper);
+  return TurboLnd.subscribeChannelBackups(requestBytes, onResponseWrapper, onErrorWrapper);
 }
 
 
@@ -1911,14 +1849,12 @@ export async function bakeMacaroon(
     lnrpc.BakeMacaroonRequestSchema,
     request
   );
-  const b64 = await TurboLnd.bakeMacaroon(
-    base64Encode(
-      toBinary(lnrpc.BakeMacaroonRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.bakeMacaroon(
+    toBinary(lnrpc.BakeMacaroonRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.BakeMacaroonResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -1939,14 +1875,12 @@ export async function listMacaroonIDs(
     lnrpc.ListMacaroonIDsRequestSchema,
     request
   );
-  const b64 = await TurboLnd.listMacaroonIDs(
-    base64Encode(
-      toBinary(lnrpc.ListMacaroonIDsRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.listMacaroonIDs(
+    toBinary(lnrpc.ListMacaroonIDsRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.ListMacaroonIDsResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -1968,14 +1902,12 @@ export async function deleteMacaroonID(
     lnrpc.DeleteMacaroonIDRequestSchema,
     request
   );
-  const b64 = await TurboLnd.deleteMacaroonID(
-    base64Encode(
-      toBinary(lnrpc.DeleteMacaroonIDRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.deleteMacaroonID(
+    toBinary(lnrpc.DeleteMacaroonIDRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.DeleteMacaroonIDResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -1997,14 +1929,12 @@ export async function listPermissions(
     lnrpc.ListPermissionsRequestSchema,
     request
   );
-  const b64 = await TurboLnd.listPermissions(
-    base64Encode(
-      toBinary(lnrpc.ListPermissionsRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.listPermissions(
+    toBinary(lnrpc.ListPermissionsRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.ListPermissionsResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -2027,14 +1957,12 @@ export async function checkMacaroonPermissions(
     lnrpc.CheckMacPermRequestSchema,
     request
   );
-  const b64 = await TurboLnd.checkMacaroonPermissions(
-    base64Encode(
-      toBinary(lnrpc.CheckMacPermRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.checkMacaroonPermissions(
+    toBinary(lnrpc.CheckMacPermRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.CheckMacPermResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -2063,10 +1991,10 @@ export function registerRPCMiddleware(
   onResponse: (response: lnrpc.RPCMiddlewareRequest) => void,
   onError: (error: string) => void
 ) {
-  const onResponseWrapper: OnResponseCallback = (responseB64) => {
+  const onResponseWrapper: OnResponseCallback = (responseBytes) => {
     onResponse(fromBinary(
       lnrpc.RPCMiddlewareRequestSchema,
-      base64Decode(responseB64)
+      responseBytes
     ));
   }
   const onErrorWrapper: OnErrorCallback = (error: string) => onError(error);
@@ -2079,10 +2007,11 @@ export function registerRPCMiddleware(
         lnrpc.RPCMiddlewareResponseSchema,
         response
       );
-      const responseB64 = base64Encode(
-        toBinary(lnrpc.RPCMiddlewareResponseSchema, message)
+      const responseBytes = toBinary(
+        lnrpc.RPCMiddlewareResponseSchema,
+        message
       );
-      writeableStream.send(responseB64);
+      writeableStream.send(responseBytes);
     },
     close: () => {
       writeableStream.stop();
@@ -2105,14 +2034,12 @@ export async function sendCustomMessage(
     lnrpc.SendCustomMessageRequestSchema,
     request
   );
-  const b64 = await TurboLnd.sendCustomMessage(
-    base64Encode(
-      toBinary(lnrpc.SendCustomMessageRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.sendCustomMessage(
+    toBinary(lnrpc.SendCustomMessageRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.SendCustomMessageResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -2140,20 +2067,20 @@ export function subscribeCustomMessages(
     lnrpc.SubscribeCustomMessagesRequestSchema,
     request
   );
-  const requestB64 = base64Encode(
-    toBinary(lnrpc.SubscribeCustomMessagesRequestSchema, message)
+  const requestBytes = toBinary(
+    lnrpc.SubscribeCustomMessagesRequestSchema,
+    message
   );
 
-  const onResponseWrapper: OnResponseCallback = (responseB64) => {
+  const onResponseWrapper: OnResponseCallback = (responseBytes) => {
     onResponse(fromBinary(
       lnrpc.CustomMessageSchema,
-      base64Decode(responseB64)
+      responseBytes
     ));
   }
   const onErrorWrapper: OnErrorCallback = (error: string) => onError(error);
 
-
-  return TurboLnd.subscribeCustomMessages(requestB64, onResponseWrapper, onErrorWrapper);
+  return TurboLnd.subscribeCustomMessages(requestBytes, onResponseWrapper, onErrorWrapper);
 }
 
 
@@ -2174,14 +2101,12 @@ export async function listAliases(
     lnrpc.ListAliasesRequestSchema,
     request
   );
-  const b64 = await TurboLnd.listAliases(
-    base64Encode(
-      toBinary(lnrpc.ListAliasesRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.listAliases(
+    toBinary(lnrpc.ListAliasesRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.ListAliasesResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -2203,14 +2128,12 @@ export async function lookupHtlcResolution(
     lnrpc.LookupHtlcResolutionRequestSchema,
     request
   );
-  const b64 = await TurboLnd.lookupHtlcResolution(
-    base64Encode(
-      toBinary(lnrpc.LookupHtlcResolutionRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.lookupHtlcResolution(
+    toBinary(lnrpc.LookupHtlcResolutionRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.LookupHtlcResolutionResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -2238,14 +2161,12 @@ export async function genSeed(
     lnrpc.GenSeedRequestSchema,
     request
   );
-  const b64 = await TurboLnd.genSeed(
-    base64Encode(
-      toBinary(lnrpc.GenSeedRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.genSeed(
+    toBinary(lnrpc.GenSeedRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.GenSeedResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -2277,14 +2198,12 @@ export async function initWallet(
     lnrpc.InitWalletRequestSchema,
     request
   );
-  const b64 = await TurboLnd.initWallet(
-    base64Encode(
-      toBinary(lnrpc.InitWalletRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.initWallet(
+    toBinary(lnrpc.InitWalletRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.InitWalletResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -2306,14 +2225,12 @@ export async function unlockWallet(
     lnrpc.UnlockWalletRequestSchema,
     request
   );
-  const b64 = await TurboLnd.unlockWallet(
-    base64Encode(
-      toBinary(lnrpc.UnlockWalletRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.unlockWallet(
+    toBinary(lnrpc.UnlockWalletRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.UnlockWalletResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -2339,14 +2256,12 @@ export async function changePassword(
     lnrpc.ChangePasswordRequestSchema,
     request
   );
-  const b64 = await TurboLnd.changePassword(
-    base64Encode(
-      toBinary(lnrpc.ChangePasswordRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.changePassword(
+    toBinary(lnrpc.ChangePasswordRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.ChangePasswordResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -2383,20 +2298,20 @@ export function subscribeState(
     lnrpc.SubscribeStateRequestSchema,
     request
   );
-  const requestB64 = base64Encode(
-    toBinary(lnrpc.SubscribeStateRequestSchema, message)
+  const requestBytes = toBinary(
+    lnrpc.SubscribeStateRequestSchema,
+    message
   );
 
-  const onResponseWrapper: OnResponseCallback = (responseB64) => {
+  const onResponseWrapper: OnResponseCallback = (responseBytes) => {
     onResponse(fromBinary(
       lnrpc.SubscribeStateResponseSchema,
-      base64Decode(responseB64)
+      responseBytes
     ));
   }
   const onErrorWrapper: OnErrorCallback = (error: string) => onError(error);
 
-
-  return TurboLnd.subscribeState(requestB64, onResponseWrapper, onErrorWrapper);
+  return TurboLnd.subscribeState(requestBytes, onResponseWrapper, onErrorWrapper);
 }
 
 
@@ -2413,14 +2328,12 @@ export async function getState(
     lnrpc.GetStateRequestSchema,
     request
   );
-  const b64 = await TurboLnd.getState(
-    base64Encode(
-      toBinary(lnrpc.GetStateRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.getState(
+    toBinary(lnrpc.GetStateRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.GetStateResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -2443,14 +2356,12 @@ export async function autopilotStatus(
     autopilotrpc.StatusRequestSchema,
     request
   );
-  const b64 = await TurboLnd.autopilotStatus(
-    base64Encode(
-      toBinary(autopilotrpc.StatusRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.autopilotStatus(
+    toBinary(autopilotrpc.StatusRequestSchema, message)
   );
   const response = fromBinary(
     autopilotrpc.StatusResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -2472,14 +2383,12 @@ export async function autopilotModifyStatus(
     autopilotrpc.ModifyStatusRequestSchema,
     request
   );
-  const b64 = await TurboLnd.autopilotModifyStatus(
-    base64Encode(
-      toBinary(autopilotrpc.ModifyStatusRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.autopilotModifyStatus(
+    toBinary(autopilotrpc.ModifyStatusRequestSchema, message)
   );
   const response = fromBinary(
     autopilotrpc.ModifyStatusResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -2502,14 +2411,12 @@ export async function autopilotQueryScores(
     autopilotrpc.QueryScoresRequestSchema,
     request
   );
-  const b64 = await TurboLnd.autopilotQueryScores(
-    base64Encode(
-      toBinary(autopilotrpc.QueryScoresRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.autopilotQueryScores(
+    toBinary(autopilotrpc.QueryScoresRequestSchema, message)
   );
   const response = fromBinary(
     autopilotrpc.QueryScoresResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -2531,14 +2438,12 @@ export async function autopilotSetScores(
     autopilotrpc.SetScoresRequestSchema,
     request
   );
-  const b64 = await TurboLnd.autopilotSetScores(
-    base64Encode(
-      toBinary(autopilotrpc.SetScoresRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.autopilotSetScores(
+    toBinary(autopilotrpc.SetScoresRequestSchema, message)
   );
   const response = fromBinary(
     autopilotrpc.SetScoresResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -2569,20 +2474,20 @@ export function chainNotifierRegisterConfirmationsNtfn(
     chainrpc.ConfRequestSchema,
     request
   );
-  const requestB64 = base64Encode(
-    toBinary(chainrpc.ConfRequestSchema, message)
+  const requestBytes = toBinary(
+    chainrpc.ConfRequestSchema,
+    message
   );
 
-  const onResponseWrapper: OnResponseCallback = (responseB64) => {
+  const onResponseWrapper: OnResponseCallback = (responseBytes) => {
     onResponse(fromBinary(
       chainrpc.ConfEventSchema,
-      base64Decode(responseB64)
+      responseBytes
     ));
   }
   const onErrorWrapper: OnErrorCallback = (error: string) => onError(error);
 
-
-  return TurboLnd.chainNotifierRegisterConfirmationsNtfn(requestB64, onResponseWrapper, onErrorWrapper);
+  return TurboLnd.chainNotifierRegisterConfirmationsNtfn(requestBytes, onResponseWrapper, onErrorWrapper);
 }
 
 
@@ -2608,20 +2513,20 @@ export function chainNotifierRegisterSpendNtfn(
     chainrpc.SpendRequestSchema,
     request
   );
-  const requestB64 = base64Encode(
-    toBinary(chainrpc.SpendRequestSchema, message)
+  const requestBytes = toBinary(
+    chainrpc.SpendRequestSchema,
+    message
   );
 
-  const onResponseWrapper: OnResponseCallback = (responseB64) => {
+  const onResponseWrapper: OnResponseCallback = (responseBytes) => {
     onResponse(fromBinary(
       chainrpc.SpendEventSchema,
-      base64Decode(responseB64)
+      responseBytes
     ));
   }
   const onErrorWrapper: OnErrorCallback = (error: string) => onError(error);
 
-
-  return TurboLnd.chainNotifierRegisterSpendNtfn(requestB64, onResponseWrapper, onErrorWrapper);
+  return TurboLnd.chainNotifierRegisterSpendNtfn(requestBytes, onResponseWrapper, onErrorWrapper);
 }
 
 
@@ -2643,20 +2548,20 @@ export function chainNotifierRegisterBlockEpochNtfn(
     chainrpc.BlockEpochSchema,
     request
   );
-  const requestB64 = base64Encode(
-    toBinary(chainrpc.BlockEpochSchema, message)
+  const requestBytes = toBinary(
+    chainrpc.BlockEpochSchema,
+    message
   );
 
-  const onResponseWrapper: OnResponseCallback = (responseB64) => {
+  const onResponseWrapper: OnResponseCallback = (responseBytes) => {
     onResponse(fromBinary(
       chainrpc.BlockEpochSchema,
-      base64Decode(responseB64)
+      responseBytes
     ));
   }
   const onErrorWrapper: OnErrorCallback = (error: string) => onError(error);
 
-
-  return TurboLnd.chainNotifierRegisterBlockEpochNtfn(requestB64, onResponseWrapper, onErrorWrapper);
+  return TurboLnd.chainNotifierRegisterBlockEpochNtfn(requestBytes, onResponseWrapper, onErrorWrapper);
 }
 
 
@@ -2679,20 +2584,20 @@ export function invoicesSubscribeSingleInvoice(
     invoicesrpc.SubscribeSingleInvoiceRequestSchema,
     request
   );
-  const requestB64 = base64Encode(
-    toBinary(invoicesrpc.SubscribeSingleInvoiceRequestSchema, message)
+  const requestBytes = toBinary(
+    invoicesrpc.SubscribeSingleInvoiceRequestSchema,
+    message
   );
 
-  const onResponseWrapper: OnResponseCallback = (responseB64) => {
+  const onResponseWrapper: OnResponseCallback = (responseBytes) => {
     onResponse(fromBinary(
       lnrpc.InvoiceSchema,
-      base64Decode(responseB64)
+      responseBytes
     ));
   }
   const onErrorWrapper: OnErrorCallback = (error: string) => onError(error);
 
-
-  return TurboLnd.invoicesSubscribeSingleInvoice(requestB64, onResponseWrapper, onErrorWrapper);
+  return TurboLnd.invoicesSubscribeSingleInvoice(requestBytes, onResponseWrapper, onErrorWrapper);
 }
 
 
@@ -2713,14 +2618,12 @@ export async function invoicesCancelInvoice(
     invoicesrpc.CancelInvoiceMsgSchema,
     request
   );
-  const b64 = await TurboLnd.invoicesCancelInvoice(
-    base64Encode(
-      toBinary(invoicesrpc.CancelInvoiceMsgSchema, message)
-    )
+  const responseBytes = await TurboLnd.invoicesCancelInvoice(
+    toBinary(invoicesrpc.CancelInvoiceMsgSchema, message)
   );
   const response = fromBinary(
     invoicesrpc.CancelInvoiceRespSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -2742,14 +2645,12 @@ export async function invoicesAddHoldInvoice(
     invoicesrpc.AddHoldInvoiceRequestSchema,
     request
   );
-  const b64 = await TurboLnd.invoicesAddHoldInvoice(
-    base64Encode(
-      toBinary(invoicesrpc.AddHoldInvoiceRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.invoicesAddHoldInvoice(
+    toBinary(invoicesrpc.AddHoldInvoiceRequestSchema, message)
   );
   const response = fromBinary(
     invoicesrpc.AddHoldInvoiceRespSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -2771,14 +2672,12 @@ export async function invoicesSettleInvoice(
     invoicesrpc.SettleInvoiceMsgSchema,
     request
   );
-  const b64 = await TurboLnd.invoicesSettleInvoice(
-    base64Encode(
-      toBinary(invoicesrpc.SettleInvoiceMsgSchema, message)
-    )
+  const responseBytes = await TurboLnd.invoicesSettleInvoice(
+    toBinary(invoicesrpc.SettleInvoiceMsgSchema, message)
   );
   const response = fromBinary(
     invoicesrpc.SettleInvoiceRespSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -2786,10 +2685,8 @@ export async function invoicesSettleInvoice(
 
 /**
    *
-   * Indicates that when a look up is done using a payment_addr, then no HTLCs
-   * related to the payment_addr should be returned. This is useful when one
-   * wants to be able to obtain the set of associated setIDs with a given
-   * invoice, then look up the sub-invoices "projected" by that set ID.
+   * LookupInvoiceV2 attempts to look up at invoice. An invoice can be referenced
+   * using either its payment hash, payment address, or set ID.
    *
    * @param [LookupInvoiceMsg]
    * @returns [Invoice]
@@ -2802,18 +2699,59 @@ export async function invoicesLookupInvoiceV2(
     invoicesrpc.LookupInvoiceMsgSchema,
     request
   );
-  const b64 = await TurboLnd.invoicesLookupInvoiceV2(
-    base64Encode(
-      toBinary(invoicesrpc.LookupInvoiceMsgSchema, message)
-    )
+  const responseBytes = await TurboLnd.invoicesLookupInvoiceV2(
+    toBinary(invoicesrpc.LookupInvoiceMsgSchema, message)
   );
   const response = fromBinary(
     lnrpc.InvoiceSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
 
+
+/**
+   *
+   * Indicates that when a look up is done using a payment_addr, then no HTLCs
+   * related to the payment_addr should be returned. This is useful when one
+   * wants to be able to obtain the set of associated setIDs with a given
+   * invoice, then look up the sub-invoices "projected" by that set ID.
+   *
+   * @param [HtlcModifyResponse]
+   * @returns [HtlcModifyRequest]
+   *
+   */
+export function invoicesHtlcModifier(
+  onResponse: (response: invoicesrpc.HtlcModifyRequest) => void,
+  onError: (error: string) => void
+) {
+  const onResponseWrapper: OnResponseCallback = (responseBytes) => {
+    onResponse(fromBinary(
+      invoicesrpc.HtlcModifyRequestSchema,
+      responseBytes
+    ));
+  }
+  const onErrorWrapper: OnErrorCallback = (error: string) => onError(error);
+
+  const writeableStream = TurboLnd.invoicesHtlcModifier(onResponseWrapper, onErrorWrapper);
+
+  return {
+    send: (response: MessageInitShape<typeof invoicesrpc.HtlcModifyResponseSchema>) => {
+      const message = create(
+        invoicesrpc.HtlcModifyResponseSchema,
+        response
+      );
+      const responseBytes = toBinary(
+        invoicesrpc.HtlcModifyResponseSchema,
+        message
+      );
+      writeableStream.send(responseBytes);
+    },
+    close: () => {
+      writeableStream.stop();
+    }
+  }
+}
 
 /**
    *
@@ -2832,14 +2770,12 @@ export async function neutrinoKitStatus(
     neutrinorpc.StatusRequestSchema,
     request
   );
-  const b64 = await TurboLnd.neutrinoKitStatus(
-    base64Encode(
-      toBinary(neutrinorpc.StatusRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.neutrinoKitStatus(
+    toBinary(neutrinorpc.StatusRequestSchema, message)
   );
   const response = fromBinary(
     neutrinorpc.StatusResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -2860,14 +2796,12 @@ export async function neutrinoKitAddPeer(
     neutrinorpc.AddPeerRequestSchema,
     request
   );
-  const b64 = await TurboLnd.neutrinoKitAddPeer(
-    base64Encode(
-      toBinary(neutrinorpc.AddPeerRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.neutrinoKitAddPeer(
+    toBinary(neutrinorpc.AddPeerRequestSchema, message)
   );
   const response = fromBinary(
     neutrinorpc.AddPeerResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -2890,14 +2824,12 @@ export async function neutrinoKitDisconnectPeer(
     neutrinorpc.DisconnectPeerRequestSchema,
     request
   );
-  const b64 = await TurboLnd.neutrinoKitDisconnectPeer(
-    base64Encode(
-      toBinary(neutrinorpc.DisconnectPeerRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.neutrinoKitDisconnectPeer(
+    toBinary(neutrinorpc.DisconnectPeerRequestSchema, message)
   );
   const response = fromBinary(
     neutrinorpc.DisconnectPeerResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -2918,14 +2850,12 @@ export async function neutrinoKitIsBanned(
     neutrinorpc.IsBannedRequestSchema,
     request
   );
-  const b64 = await TurboLnd.neutrinoKitIsBanned(
-    base64Encode(
-      toBinary(neutrinorpc.IsBannedRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.neutrinoKitIsBanned(
+    toBinary(neutrinorpc.IsBannedRequestSchema, message)
   );
   const response = fromBinary(
     neutrinorpc.IsBannedResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -2946,14 +2876,12 @@ export async function neutrinoKitGetBlockHeader(
     neutrinorpc.GetBlockHeaderRequestSchema,
     request
   );
-  const b64 = await TurboLnd.neutrinoKitGetBlockHeader(
-    base64Encode(
-      toBinary(neutrinorpc.GetBlockHeaderRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.neutrinoKitGetBlockHeader(
+    toBinary(neutrinorpc.GetBlockHeaderRequestSchema, message)
   );
   const response = fromBinary(
     neutrinorpc.GetBlockHeaderResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -2974,14 +2902,12 @@ export async function neutrinoKitGetBlock(
     neutrinorpc.GetBlockRequestSchema,
     request
   );
-  const b64 = await TurboLnd.neutrinoKitGetBlock(
-    base64Encode(
-      toBinary(neutrinorpc.GetBlockRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.neutrinoKitGetBlock(
+    toBinary(neutrinorpc.GetBlockRequestSchema, message)
   );
   const response = fromBinary(
     neutrinorpc.GetBlockResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -3002,14 +2928,12 @@ export async function neutrinoKitGetCFilter(
     neutrinorpc.GetCFilterRequestSchema,
     request
   );
-  const b64 = await TurboLnd.neutrinoKitGetCFilter(
-    base64Encode(
-      toBinary(neutrinorpc.GetCFilterRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.neutrinoKitGetCFilter(
+    toBinary(neutrinorpc.GetCFilterRequestSchema, message)
   );
   const response = fromBinary(
     neutrinorpc.GetCFilterResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -3031,14 +2955,12 @@ export async function neutrinoKitGetBlockHash(
     neutrinorpc.GetBlockHashRequestSchema,
     request
   );
-  const b64 = await TurboLnd.neutrinoKitGetBlockHash(
-    base64Encode(
-      toBinary(neutrinorpc.GetBlockHashRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.neutrinoKitGetBlockHash(
+    toBinary(neutrinorpc.GetBlockHashRequestSchema, message)
   );
   const response = fromBinary(
     neutrinorpc.GetBlockHashResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -3060,14 +2982,12 @@ export async function peersUpdateNodeAnnouncement(
     peersrpc.NodeAnnouncementUpdateRequestSchema,
     request
   );
-  const b64 = await TurboLnd.peersUpdateNodeAnnouncement(
-    base64Encode(
-      toBinary(peersrpc.NodeAnnouncementUpdateRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.peersUpdateNodeAnnouncement(
+    toBinary(peersrpc.NodeAnnouncementUpdateRequestSchema, message)
   );
   const response = fromBinary(
     peersrpc.NodeAnnouncementUpdateResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -3077,7 +2997,10 @@ export async function peersUpdateNodeAnnouncement(
    *
    * SendPaymentV2 attempts to route a payment described by the passed
    * PaymentRequest to the final destination. The call returns a stream of
-   * payment updates.
+   * payment updates. When using this RPC, make sure to set a fee limit, as the
+   * default routing fee limit is 0 sats. Without a non-zero fee limit only
+   * routes without fees will be attempted which often fails with
+   * FAILURE_REASON_NO_ROUTE.
    *
    * @param [SendPaymentRequest]
    * @returns [Payment]
@@ -3092,20 +3015,20 @@ export function routerSendPaymentV2(
     routerrpc.SendPaymentRequestSchema,
     request
   );
-  const requestB64 = base64Encode(
-    toBinary(routerrpc.SendPaymentRequestSchema, message)
+  const requestBytes = toBinary(
+    routerrpc.SendPaymentRequestSchema,
+    message
   );
 
-  const onResponseWrapper: OnResponseCallback = (responseB64) => {
+  const onResponseWrapper: OnResponseCallback = (responseBytes) => {
     onResponse(fromBinary(
       lnrpc.PaymentSchema,
-      base64Decode(responseB64)
+      responseBytes
     ));
   }
   const onErrorWrapper: OnErrorCallback = (error: string) => onError(error);
 
-
-  return TurboLnd.routerSendPaymentV2(requestB64, onResponseWrapper, onErrorWrapper);
+  return TurboLnd.routerSendPaymentV2(requestBytes, onResponseWrapper, onErrorWrapper);
 }
 
 
@@ -3127,20 +3050,20 @@ export function routerTrackPaymentV2(
     routerrpc.TrackPaymentRequestSchema,
     request
   );
-  const requestB64 = base64Encode(
-    toBinary(routerrpc.TrackPaymentRequestSchema, message)
+  const requestBytes = toBinary(
+    routerrpc.TrackPaymentRequestSchema,
+    message
   );
 
-  const onResponseWrapper: OnResponseCallback = (responseB64) => {
+  const onResponseWrapper: OnResponseCallback = (responseBytes) => {
     onResponse(fromBinary(
       lnrpc.PaymentSchema,
-      base64Decode(responseB64)
+      responseBytes
     ));
   }
   const onErrorWrapper: OnErrorCallback = (error: string) => onError(error);
 
-
-  return TurboLnd.routerTrackPaymentV2(requestB64, onResponseWrapper, onErrorWrapper);
+  return TurboLnd.routerTrackPaymentV2(requestBytes, onResponseWrapper, onErrorWrapper);
 }
 
 
@@ -3166,20 +3089,20 @@ export function routerTrackPayments(
     routerrpc.TrackPaymentsRequestSchema,
     request
   );
-  const requestB64 = base64Encode(
-    toBinary(routerrpc.TrackPaymentsRequestSchema, message)
+  const requestBytes = toBinary(
+    routerrpc.TrackPaymentsRequestSchema,
+    message
   );
 
-  const onResponseWrapper: OnResponseCallback = (responseB64) => {
+  const onResponseWrapper: OnResponseCallback = (responseBytes) => {
     onResponse(fromBinary(
       lnrpc.PaymentSchema,
-      base64Decode(responseB64)
+      responseBytes
     ));
   }
   const onErrorWrapper: OnErrorCallback = (error: string) => onError(error);
 
-
-  return TurboLnd.routerTrackPayments(requestB64, onResponseWrapper, onErrorWrapper);
+  return TurboLnd.routerTrackPayments(requestBytes, onResponseWrapper, onErrorWrapper);
 }
 
 
@@ -3199,14 +3122,12 @@ export async function routerEstimateRouteFee(
     routerrpc.RouteFeeRequestSchema,
     request
   );
-  const b64 = await TurboLnd.routerEstimateRouteFee(
-    base64Encode(
-      toBinary(routerrpc.RouteFeeRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.routerEstimateRouteFee(
+    toBinary(routerrpc.RouteFeeRequestSchema, message)
   );
   const response = fromBinary(
     routerrpc.RouteFeeResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -3231,14 +3152,12 @@ export async function routerSendToRoute(
     routerrpc.SendToRouteRequestSchema,
     request
   );
-  const b64 = await TurboLnd.routerSendToRoute(
-    base64Encode(
-      toBinary(routerrpc.SendToRouteRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.routerSendToRoute(
+    toBinary(routerrpc.SendToRouteRequestSchema, message)
   );
   const response = fromBinary(
     routerrpc.SendToRouteResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -3262,14 +3181,12 @@ export async function routerSendToRouteV2(
     routerrpc.SendToRouteRequestSchema,
     request
   );
-  const b64 = await TurboLnd.routerSendToRouteV2(
-    base64Encode(
-      toBinary(routerrpc.SendToRouteRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.routerSendToRouteV2(
+    toBinary(routerrpc.SendToRouteRequestSchema, message)
   );
   const response = fromBinary(
     lnrpc.HTLCAttemptSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -3291,14 +3208,12 @@ export async function routerResetMissionControl(
     routerrpc.ResetMissionControlRequestSchema,
     request
   );
-  const b64 = await TurboLnd.routerResetMissionControl(
-    base64Encode(
-      toBinary(routerrpc.ResetMissionControlRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.routerResetMissionControl(
+    toBinary(routerrpc.ResetMissionControlRequestSchema, message)
   );
   const response = fromBinary(
     routerrpc.ResetMissionControlResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -3320,14 +3235,12 @@ export async function routerQueryMissionControl(
     routerrpc.QueryMissionControlRequestSchema,
     request
   );
-  const b64 = await TurboLnd.routerQueryMissionControl(
-    base64Encode(
-      toBinary(routerrpc.QueryMissionControlRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.routerQueryMissionControl(
+    toBinary(routerrpc.QueryMissionControlRequestSchema, message)
   );
   const response = fromBinary(
     routerrpc.QueryMissionControlResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -3351,14 +3264,12 @@ export async function routerXImportMissionControl(
     routerrpc.XImportMissionControlRequestSchema,
     request
   );
-  const b64 = await TurboLnd.routerXImportMissionControl(
-    base64Encode(
-      toBinary(routerrpc.XImportMissionControlRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.routerXImportMissionControl(
+    toBinary(routerrpc.XImportMissionControlRequestSchema, message)
   );
   const response = fromBinary(
     routerrpc.XImportMissionControlResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -3379,14 +3290,12 @@ export async function routerGetMissionControlConfig(
     routerrpc.GetMissionControlConfigRequestSchema,
     request
   );
-  const b64 = await TurboLnd.routerGetMissionControlConfig(
-    base64Encode(
-      toBinary(routerrpc.GetMissionControlConfigRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.routerGetMissionControlConfig(
+    toBinary(routerrpc.GetMissionControlConfigRequestSchema, message)
   );
   const response = fromBinary(
     routerrpc.GetMissionControlConfigResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -3408,14 +3317,12 @@ export async function routerSetMissionControlConfig(
     routerrpc.SetMissionControlConfigRequestSchema,
     request
   );
-  const b64 = await TurboLnd.routerSetMissionControlConfig(
-    base64Encode(
-      toBinary(routerrpc.SetMissionControlConfigRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.routerSetMissionControlConfig(
+    toBinary(routerrpc.SetMissionControlConfigRequestSchema, message)
   );
   const response = fromBinary(
     routerrpc.SetMissionControlConfigResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -3439,14 +3346,12 @@ export async function routerQueryProbability(
     routerrpc.QueryProbabilityRequestSchema,
     request
   );
-  const b64 = await TurboLnd.routerQueryProbability(
-    base64Encode(
-      toBinary(routerrpc.QueryProbabilityRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.routerQueryProbability(
+    toBinary(routerrpc.QueryProbabilityRequestSchema, message)
   );
   const response = fromBinary(
     routerrpc.QueryProbabilityResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -3457,6 +3362,10 @@ export async function routerQueryProbability(
    * BuildRoute builds a fully specified route based on a list of hop public
    * keys. It retrieves the relevant channel policies from the graph in order to
    * calculate the correct fees and time locks.
+   * Note that LND will use its default final_cltv_delta if no value is supplied.
+   * Make sure to add the correct final_cltv_delta depending on the invoice
+   * restriction. Moreover the caller has to make sure to provide the
+   * payment_addr if the route is paying an invoice which signaled it.
    *
    * @param [BuildRouteRequest]
    * @returns [BuildRouteResponse]
@@ -3469,14 +3378,12 @@ export async function routerBuildRoute(
     routerrpc.BuildRouteRequestSchema,
     request
   );
-  const b64 = await TurboLnd.routerBuildRoute(
-    base64Encode(
-      toBinary(routerrpc.BuildRouteRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.routerBuildRoute(
+    toBinary(routerrpc.BuildRouteRequestSchema, message)
   );
   const response = fromBinary(
     routerrpc.BuildRouteResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -3500,20 +3407,20 @@ export function routerSubscribeHtlcEvents(
     routerrpc.SubscribeHtlcEventsRequestSchema,
     request
   );
-  const requestB64 = base64Encode(
-    toBinary(routerrpc.SubscribeHtlcEventsRequestSchema, message)
+  const requestBytes = toBinary(
+    routerrpc.SubscribeHtlcEventsRequestSchema,
+    message
   );
 
-  const onResponseWrapper: OnResponseCallback = (responseB64) => {
+  const onResponseWrapper: OnResponseCallback = (responseBytes) => {
     onResponse(fromBinary(
       routerrpc.HtlcEventSchema,
-      base64Decode(responseB64)
+      responseBytes
     ));
   }
   const onErrorWrapper: OnErrorCallback = (error: string) => onError(error);
 
-
-  return TurboLnd.routerSubscribeHtlcEvents(requestB64, onResponseWrapper, onErrorWrapper);
+  return TurboLnd.routerSubscribeHtlcEvents(requestBytes, onResponseWrapper, onErrorWrapper);
 }
 
 
@@ -3536,20 +3443,20 @@ export function routerSendPayment(
     routerrpc.SendPaymentRequestSchema,
     request
   );
-  const requestB64 = base64Encode(
-    toBinary(routerrpc.SendPaymentRequestSchema, message)
+  const requestBytes = toBinary(
+    routerrpc.SendPaymentRequestSchema,
+    message
   );
 
-  const onResponseWrapper: OnResponseCallback = (responseB64) => {
+  const onResponseWrapper: OnResponseCallback = (responseBytes) => {
     onResponse(fromBinary(
       routerrpc.PaymentStatusSchema,
-      base64Decode(responseB64)
+      responseBytes
     ));
   }
   const onErrorWrapper: OnErrorCallback = (error: string) => onError(error);
 
-
-  return TurboLnd.routerSendPayment(requestB64, onResponseWrapper, onErrorWrapper);
+  return TurboLnd.routerSendPayment(requestBytes, onResponseWrapper, onErrorWrapper);
 }
 
 
@@ -3571,20 +3478,20 @@ export function routerTrackPayment(
     routerrpc.TrackPaymentRequestSchema,
     request
   );
-  const requestB64 = base64Encode(
-    toBinary(routerrpc.TrackPaymentRequestSchema, message)
+  const requestBytes = toBinary(
+    routerrpc.TrackPaymentRequestSchema,
+    message
   );
 
-  const onResponseWrapper: OnResponseCallback = (responseB64) => {
+  const onResponseWrapper: OnResponseCallback = (responseBytes) => {
     onResponse(fromBinary(
       routerrpc.PaymentStatusSchema,
-      base64Decode(responseB64)
+      responseBytes
     ));
   }
   const onErrorWrapper: OnErrorCallback = (error: string) => onError(error);
 
-
-  return TurboLnd.routerTrackPayment(requestB64, onResponseWrapper, onErrorWrapper);
+  return TurboLnd.routerTrackPayment(requestBytes, onResponseWrapper, onErrorWrapper);
 }
 
 
@@ -3604,10 +3511,10 @@ export function routerHtlcInterceptor(
   onResponse: (response: routerrpc.ForwardHtlcInterceptRequest) => void,
   onError: (error: string) => void
 ) {
-  const onResponseWrapper: OnResponseCallback = (responseB64) => {
+  const onResponseWrapper: OnResponseCallback = (responseBytes) => {
     onResponse(fromBinary(
       routerrpc.ForwardHtlcInterceptRequestSchema,
-      base64Decode(responseB64)
+      responseBytes
     ));
   }
   const onErrorWrapper: OnErrorCallback = (error: string) => onError(error);
@@ -3620,10 +3527,11 @@ export function routerHtlcInterceptor(
         routerrpc.ForwardHtlcInterceptResponseSchema,
         response
       );
-      const responseB64 = base64Encode(
-        toBinary(routerrpc.ForwardHtlcInterceptResponseSchema, message)
+      const responseBytes = toBinary(
+        routerrpc.ForwardHtlcInterceptResponseSchema,
+        message
       );
-      writeableStream.send(responseB64);
+      writeableStream.send(responseBytes);
     },
     close: () => {
       writeableStream.stop();
@@ -3633,8 +3541,10 @@ export function routerHtlcInterceptor(
 
 /**
    *
-   * The key of this forwarded htlc. It defines the incoming channel id and
-   * the index in this channel.
+   * UpdateChanStatus attempts to manually set the state of a channel
+   * (enabled, disabled, or auto). A manual "disable" request will cause the
+   * channel to stay disabled until a subsequent manual request of either
+   * "enable" or "auto".
    *
    * @param [UpdateChanStatusRequest]
    * @returns [UpdateChanStatusResponse]
@@ -3647,14 +3557,70 @@ export async function routerUpdateChanStatus(
     routerrpc.UpdateChanStatusRequestSchema,
     request
   );
-  const b64 = await TurboLnd.routerUpdateChanStatus(
-    base64Encode(
-      toBinary(routerrpc.UpdateChanStatusRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.routerUpdateChanStatus(
+    toBinary(routerrpc.UpdateChanStatusRequestSchema, message)
   );
   const response = fromBinary(
     routerrpc.UpdateChanStatusResponseSchema,
-    base64Decode(b64)
+    responseBytes
+  );
+  return response;
+}
+
+
+/**
+   *
+   * XAddLocalChanAliases is an experimental API that creates a set of new
+   * channel SCID alias mappings. The final total set of aliases in the manager
+   * after the add operation is returned. This is only a locally stored alias,
+   * and will not be communicated to the channel peer via any message. Therefore,
+   * routing over such an alias will only work if the peer also calls this same
+   * RPC on their end. If an alias already exists, an error is returned
+   *
+   * @param [AddAliasesRequest]
+   * @returns [AddAliasesResponse]
+   *
+   */
+export async function routerXAddLocalChanAliases(
+  request: MessageInitShape<typeof routerrpc.AddAliasesRequestSchema>
+): Promise<routerrpc.AddAliasesResponse> {
+  const message = create(
+    routerrpc.AddAliasesRequestSchema,
+    request
+  );
+  const responseBytes = await TurboLnd.routerXAddLocalChanAliases(
+    toBinary(routerrpc.AddAliasesRequestSchema, message)
+  );
+  const response = fromBinary(
+    routerrpc.AddAliasesResponseSchema,
+    responseBytes
+  );
+  return response;
+}
+
+
+/**
+   *
+   * The key of this forwarded htlc. It defines the incoming channel id and
+   * the index in this channel.
+   *
+   * @param [DeleteAliasesRequest]
+   * @returns [DeleteAliasesResponse]
+   *
+   */
+export async function routerXDeleteLocalChanAliases(
+  request: MessageInitShape<typeof routerrpc.DeleteAliasesRequestSchema>
+): Promise<routerrpc.DeleteAliasesResponse> {
+  const message = create(
+    routerrpc.DeleteAliasesRequestSchema,
+    request
+  );
+  const responseBytes = await TurboLnd.routerXDeleteLocalChanAliases(
+    toBinary(routerrpc.DeleteAliasesRequestSchema, message)
+  );
+  const response = fromBinary(
+    routerrpc.DeleteAliasesResponseSchema,
+    responseBytes
   );
   return response;
 }
@@ -3682,14 +3648,12 @@ export async function signerSignOutputRaw(
     signrpc.SignReqSchema,
     request
   );
-  const b64 = await TurboLnd.signerSignOutputRaw(
-    base64Encode(
-      toBinary(signrpc.SignReqSchema, message)
-    )
+  const responseBytes = await TurboLnd.signerSignOutputRaw(
+    toBinary(signrpc.SignReqSchema, message)
   );
   const response = fromBinary(
     signrpc.SignRespSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -3719,14 +3683,12 @@ export async function signerComputeInputScript(
     signrpc.SignReqSchema,
     request
   );
-  const b64 = await TurboLnd.signerComputeInputScript(
-    base64Encode(
-      toBinary(signrpc.SignReqSchema, message)
-    )
+  const responseBytes = await TurboLnd.signerComputeInputScript(
+    toBinary(signrpc.SignReqSchema, message)
   );
   const response = fromBinary(
     signrpc.InputScriptRespSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -3751,14 +3713,12 @@ export async function signerSignMessage(
     signrpc.SignMessageReqSchema,
     request
   );
-  const b64 = await TurboLnd.signerSignMessage(
-    base64Encode(
-      toBinary(signrpc.SignMessageReqSchema, message)
-    )
+  const responseBytes = await TurboLnd.signerSignMessage(
+    toBinary(signrpc.SignMessageReqSchema, message)
   );
   const response = fromBinary(
     signrpc.SignMessageRespSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -3783,14 +3743,12 @@ export async function signerVerifyMessage(
     signrpc.VerifyMessageReqSchema,
     request
   );
-  const b64 = await TurboLnd.signerVerifyMessage(
-    base64Encode(
-      toBinary(signrpc.VerifyMessageReqSchema, message)
-    )
+  const responseBytes = await TurboLnd.signerVerifyMessage(
+    toBinary(signrpc.VerifyMessageReqSchema, message)
   );
   const response = fromBinary(
     signrpc.VerifyMessageRespSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -3818,14 +3776,12 @@ export async function signerDeriveSharedKey(
     signrpc.SharedKeyRequestSchema,
     request
   );
-  const b64 = await TurboLnd.signerDeriveSharedKey(
-    base64Encode(
-      toBinary(signrpc.SharedKeyRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.signerDeriveSharedKey(
+    toBinary(signrpc.SharedKeyRequestSchema, message)
   );
   const response = fromBinary(
     signrpc.SharedKeyResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -3856,14 +3812,12 @@ export async function signerMuSig2CombineKeys(
     signrpc.MuSig2CombineKeysRequestSchema,
     request
   );
-  const b64 = await TurboLnd.signerMuSig2CombineKeys(
-    base64Encode(
-      toBinary(signrpc.MuSig2CombineKeysRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.signerMuSig2CombineKeys(
+    toBinary(signrpc.MuSig2CombineKeysRequestSchema, message)
   );
   const response = fromBinary(
     signrpc.MuSig2CombineKeysResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -3893,14 +3847,12 @@ export async function signerMuSig2CreateSession(
     signrpc.MuSig2SessionRequestSchema,
     request
   );
-  const b64 = await TurboLnd.signerMuSig2CreateSession(
-    base64Encode(
-      toBinary(signrpc.MuSig2SessionRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.signerMuSig2CreateSession(
+    toBinary(signrpc.MuSig2SessionRequestSchema, message)
   );
   const response = fromBinary(
     signrpc.MuSig2SessionResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -3927,14 +3879,12 @@ export async function signerMuSig2RegisterNonces(
     signrpc.MuSig2RegisterNoncesRequestSchema,
     request
   );
-  const b64 = await TurboLnd.signerMuSig2RegisterNonces(
-    base64Encode(
-      toBinary(signrpc.MuSig2RegisterNoncesRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.signerMuSig2RegisterNonces(
+    toBinary(signrpc.MuSig2RegisterNoncesRequestSchema, message)
   );
   const response = fromBinary(
     signrpc.MuSig2RegisterNoncesResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -3964,14 +3914,12 @@ export async function signerMuSig2Sign(
     signrpc.MuSig2SignRequestSchema,
     request
   );
-  const b64 = await TurboLnd.signerMuSig2Sign(
-    base64Encode(
-      toBinary(signrpc.MuSig2SignRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.signerMuSig2Sign(
+    toBinary(signrpc.MuSig2SignRequestSchema, message)
   );
   const response = fromBinary(
     signrpc.MuSig2SignResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -3999,14 +3947,12 @@ export async function signerMuSig2CombineSig(
     signrpc.MuSig2CombineSigRequestSchema,
     request
   );
-  const b64 = await TurboLnd.signerMuSig2CombineSig(
-    base64Encode(
-      toBinary(signrpc.MuSig2CombineSigRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.signerMuSig2CombineSig(
+    toBinary(signrpc.MuSig2CombineSigRequestSchema, message)
   );
   const response = fromBinary(
     signrpc.MuSig2CombineSigResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -4027,14 +3973,12 @@ export async function signerMuSig2Cleanup(
     signrpc.MuSig2CleanupRequestSchema,
     request
   );
-  const b64 = await TurboLnd.signerMuSig2Cleanup(
-    base64Encode(
-      toBinary(signrpc.MuSig2CleanupRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.signerMuSig2Cleanup(
+    toBinary(signrpc.MuSig2CleanupRequestSchema, message)
   );
   const response = fromBinary(
     signrpc.MuSig2CleanupResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -4056,14 +4000,12 @@ export async function versionerGetVersion(
     verrpc.VersionRequestSchema,
     request
   );
-  const b64 = await TurboLnd.versionerGetVersion(
-    base64Encode(
-      toBinary(verrpc.VersionRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.versionerGetVersion(
+    toBinary(verrpc.VersionRequestSchema, message)
   );
   const response = fromBinary(
     verrpc.VersionSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -4087,14 +4029,12 @@ export async function walletKitListUnspent(
     walletrpc.ListUnspentRequestSchema,
     request
   );
-  const b64 = await TurboLnd.walletKitListUnspent(
-    base64Encode(
-      toBinary(walletrpc.ListUnspentRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.walletKitListUnspent(
+    toBinary(walletrpc.ListUnspentRequestSchema, message)
   );
   const response = fromBinary(
     walletrpc.ListUnspentResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -4119,14 +4059,12 @@ export async function walletKitLeaseOutput(
     walletrpc.LeaseOutputRequestSchema,
     request
   );
-  const b64 = await TurboLnd.walletKitLeaseOutput(
-    base64Encode(
-      toBinary(walletrpc.LeaseOutputRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.walletKitLeaseOutput(
+    toBinary(walletrpc.LeaseOutputRequestSchema, message)
   );
   const response = fromBinary(
     walletrpc.LeaseOutputResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -4149,14 +4087,12 @@ export async function walletKitReleaseOutput(
     walletrpc.ReleaseOutputRequestSchema,
     request
   );
-  const b64 = await TurboLnd.walletKitReleaseOutput(
-    base64Encode(
-      toBinary(walletrpc.ReleaseOutputRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.walletKitReleaseOutput(
+    toBinary(walletrpc.ReleaseOutputRequestSchema, message)
   );
   const response = fromBinary(
     walletrpc.ReleaseOutputResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -4177,14 +4113,12 @@ export async function walletKitListLeases(
     walletrpc.ListLeasesRequestSchema,
     request
   );
-  const b64 = await TurboLnd.walletKitListLeases(
-    base64Encode(
-      toBinary(walletrpc.ListLeasesRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.walletKitListLeases(
+    toBinary(walletrpc.ListLeasesRequestSchema, message)
   );
   const response = fromBinary(
     walletrpc.ListLeasesResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -4207,14 +4141,12 @@ export async function walletKitDeriveNextKey(
     walletrpc.KeyReqSchema,
     request
   );
-  const b64 = await TurboLnd.walletKitDeriveNextKey(
-    base64Encode(
-      toBinary(walletrpc.KeyReqSchema, message)
-    )
+  const responseBytes = await TurboLnd.walletKitDeriveNextKey(
+    toBinary(walletrpc.KeyReqSchema, message)
   );
   const response = fromBinary(
     signrpc.KeyDescriptorSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -4236,14 +4168,12 @@ export async function walletKitDeriveKey(
     signrpc.KeyLocatorSchema,
     request
   );
-  const b64 = await TurboLnd.walletKitDeriveKey(
-    base64Encode(
-      toBinary(signrpc.KeyLocatorSchema, message)
-    )
+  const responseBytes = await TurboLnd.walletKitDeriveKey(
+    toBinary(signrpc.KeyLocatorSchema, message)
   );
   const response = fromBinary(
     signrpc.KeyDescriptorSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -4264,14 +4194,38 @@ export async function walletKitNextAddr(
     walletrpc.AddrRequestSchema,
     request
   );
-  const b64 = await TurboLnd.walletKitNextAddr(
-    base64Encode(
-      toBinary(walletrpc.AddrRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.walletKitNextAddr(
+    toBinary(walletrpc.AddrRequestSchema, message)
   );
   const response = fromBinary(
     walletrpc.AddrResponseSchema,
-    base64Decode(b64)
+    responseBytes
+  );
+  return response;
+}
+
+
+/**
+   *
+   * GetTransaction returns details for a transaction found in the wallet.
+   *
+   * @param [GetTransactionRequest]
+   * @returns [Transaction]
+   *
+   */
+export async function walletKitGetTransaction(
+  request: MessageInitShape<typeof walletrpc.GetTransactionRequestSchema>
+): Promise<lnrpc.Transaction> {
+  const message = create(
+    walletrpc.GetTransactionRequestSchema,
+    request
+  );
+  const responseBytes = await TurboLnd.walletKitGetTransaction(
+    toBinary(walletrpc.GetTransactionRequestSchema, message)
+  );
+  const response = fromBinary(
+    lnrpc.TransactionSchema,
+    responseBytes
   );
   return response;
 }
@@ -4294,14 +4248,12 @@ export async function walletKitListAccounts(
     walletrpc.ListAccountsRequestSchema,
     request
   );
-  const b64 = await TurboLnd.walletKitListAccounts(
-    base64Encode(
-      toBinary(walletrpc.ListAccountsRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.walletKitListAccounts(
+    toBinary(walletrpc.ListAccountsRequestSchema, message)
   );
   const response = fromBinary(
     walletrpc.ListAccountsResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -4324,14 +4276,12 @@ export async function walletKitRequiredReserve(
     walletrpc.RequiredReserveRequestSchema,
     request
   );
-  const b64 = await TurboLnd.walletKitRequiredReserve(
-    base64Encode(
-      toBinary(walletrpc.RequiredReserveRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.walletKitRequiredReserve(
+    toBinary(walletrpc.RequiredReserveRequestSchema, message)
   );
   const response = fromBinary(
     walletrpc.RequiredReserveResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -4354,14 +4304,12 @@ export async function walletKitListAddresses(
     walletrpc.ListAddressesRequestSchema,
     request
   );
-  const b64 = await TurboLnd.walletKitListAddresses(
-    base64Encode(
-      toBinary(walletrpc.ListAddressesRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.walletKitListAddresses(
+    toBinary(walletrpc.ListAddressesRequestSchema, message)
   );
   const response = fromBinary(
     walletrpc.ListAddressesResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -4393,14 +4341,12 @@ export async function walletKitSignMessageWithAddr(
     walletrpc.SignMessageWithAddrRequestSchema,
     request
   );
-  const b64 = await TurboLnd.walletKitSignMessageWithAddr(
-    base64Encode(
-      toBinary(walletrpc.SignMessageWithAddrRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.walletKitSignMessageWithAddr(
+    toBinary(walletrpc.SignMessageWithAddrRequestSchema, message)
   );
   const response = fromBinary(
     walletrpc.SignMessageWithAddrResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -4439,14 +4385,12 @@ export async function walletKitVerifyMessageWithAddr(
     walletrpc.VerifyMessageWithAddrRequestSchema,
     request
   );
-  const b64 = await TurboLnd.walletKitVerifyMessageWithAddr(
-    base64Encode(
-      toBinary(walletrpc.VerifyMessageWithAddrRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.walletKitVerifyMessageWithAddr(
+    toBinary(walletrpc.VerifyMessageWithAddrRequestSchema, message)
   );
   const response = fromBinary(
     walletrpc.VerifyMessageWithAddrResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -4489,14 +4433,12 @@ export async function walletKitImportAccount(
     walletrpc.ImportAccountRequestSchema,
     request
   );
-  const b64 = await TurboLnd.walletKitImportAccount(
-    base64Encode(
-      toBinary(walletrpc.ImportAccountRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.walletKitImportAccount(
+    toBinary(walletrpc.ImportAccountRequestSchema, message)
   );
   const response = fromBinary(
     walletrpc.ImportAccountResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -4525,14 +4467,12 @@ export async function walletKitImportPublicKey(
     walletrpc.ImportPublicKeyRequestSchema,
     request
   );
-  const b64 = await TurboLnd.walletKitImportPublicKey(
-    base64Encode(
-      toBinary(walletrpc.ImportPublicKeyRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.walletKitImportPublicKey(
+    toBinary(walletrpc.ImportPublicKeyRequestSchema, message)
   );
   const response = fromBinary(
     walletrpc.ImportPublicKeyResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -4563,14 +4503,12 @@ export async function walletKitImportTapscript(
     walletrpc.ImportTapscriptRequestSchema,
     request
   );
-  const b64 = await TurboLnd.walletKitImportTapscript(
-    base64Encode(
-      toBinary(walletrpc.ImportTapscriptRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.walletKitImportTapscript(
+    toBinary(walletrpc.ImportTapscriptRequestSchema, message)
   );
   const response = fromBinary(
     walletrpc.ImportTapscriptResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -4594,14 +4532,39 @@ export async function walletKitPublishTransaction(
     walletrpc.TransactionSchema,
     request
   );
-  const b64 = await TurboLnd.walletKitPublishTransaction(
-    base64Encode(
-      toBinary(walletrpc.TransactionSchema, message)
-    )
+  const responseBytes = await TurboLnd.walletKitPublishTransaction(
+    toBinary(walletrpc.TransactionSchema, message)
   );
   const response = fromBinary(
     walletrpc.PublishResponseSchema,
-    base64Decode(b64)
+    responseBytes
+  );
+  return response;
+}
+
+
+/**
+   *
+   * RemoveTransaction attempts to remove the provided transaction from the
+   * internal transaction store of the wallet.
+   *
+   * @param [GetTransactionRequest]
+   * @returns [RemoveTransactionResponse]
+   *
+   */
+export async function walletKitRemoveTransaction(
+  request: MessageInitShape<typeof walletrpc.GetTransactionRequestSchema>
+): Promise<walletrpc.RemoveTransactionResponse> {
+  const message = create(
+    walletrpc.GetTransactionRequestSchema,
+    request
+  );
+  const responseBytes = await TurboLnd.walletKitRemoveTransaction(
+    toBinary(walletrpc.GetTransactionRequestSchema, message)
+  );
+  const response = fromBinary(
+    walletrpc.RemoveTransactionResponseSchema,
+    responseBytes
   );
   return response;
 }
@@ -4624,14 +4587,12 @@ export async function walletKitSendOutputs(
     walletrpc.SendOutputsRequestSchema,
     request
   );
-  const b64 = await TurboLnd.walletKitSendOutputs(
-    base64Encode(
-      toBinary(walletrpc.SendOutputsRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.walletKitSendOutputs(
+    toBinary(walletrpc.SendOutputsRequestSchema, message)
   );
   const response = fromBinary(
     walletrpc.SendOutputsResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -4654,14 +4615,12 @@ export async function walletKitEstimateFee(
     walletrpc.EstimateFeeRequestSchema,
     request
   );
-  const b64 = await TurboLnd.walletKitEstimateFee(
-    base64Encode(
-      toBinary(walletrpc.EstimateFeeRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.walletKitEstimateFee(
+    toBinary(walletrpc.EstimateFeeRequestSchema, message)
   );
   const response = fromBinary(
     walletrpc.EstimateFeeResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -4689,14 +4648,12 @@ export async function walletKitPendingSweeps(
     walletrpc.PendingSweepsRequestSchema,
     request
   );
-  const b64 = await TurboLnd.walletKitPendingSweeps(
-    base64Encode(
-      toBinary(walletrpc.PendingSweepsRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.walletKitPendingSweeps(
+    toBinary(walletrpc.PendingSweepsRequestSchema, message)
   );
   const response = fromBinary(
     walletrpc.PendingSweepsResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -4704,31 +4661,34 @@ export async function walletKitPendingSweeps(
 
 /**
    *
-   * BumpFee bumps the fee of an arbitrary input within a transaction. This RPC
-   * takes a different approach than bitcoind's bumpfee command. lnd has a
-   * central batching engine in which inputs with similar fee rates are batched
-   * together to save on transaction fees. Due to this, we cannot rely on
-   * bumping the fee on a specific transaction, since transactions can change at
-   * any point with the addition of new inputs. The list of inputs that
-   * currently exist within lnd's central batching engine can be retrieved
-   * through the PendingSweeps RPC.
+   * BumpFee is an endpoint that allows users to interact with lnd's sweeper
+   * directly. It takes an outpoint from an unconfirmed transaction and sends it
+   * to the sweeper for potential fee bumping. Depending on whether the outpoint
+   * has been registered in the sweeper (an existing input, e.g., an anchor
+   * output) or not (a new input, e.g., an unconfirmed wallet utxo), this will
+   * either be an RBF or CPFP attempt.
    *
-   * When bumping the fee of an input that currently exists within lnd's central
-   * batching engine, a higher fee transaction will be created that replaces the
-   * lower fee transaction through the Replace-By-Fee (RBF) policy. If it
+   * When receiving an input, lnd’s sweeper needs to understand its time
+   * sensitivity to make economical fee bumps - internally a fee function is
+   * created using the deadline and budget to guide the process. When the
+   * deadline is approaching, the fee function will increase the fee rate and
+   * perform an RBF.
+   *
+   * When a force close happens, all the outputs from the force closing
+   * transaction will be registered in the sweeper. The sweeper will then handle
+   * the creation, publish, and fee bumping of the sweeping transactions.
+   * Everytime a new block comes in, unless the sweeping transaction is
+   * confirmed, an RBF is attempted. To interfere with this automatic process,
+   * users can use BumpFee to specify customized fee rate, budget, deadline, and
+   * whether the sweep should happen immediately. It's recommended to call
+   * `ListSweeps` to understand the shape of the existing sweeping transaction
+   * first - depending on the number of inputs in this transaction, the RBF
+   * requirements can be quite different.
    *
    * This RPC also serves useful when wanting to perform a Child-Pays-For-Parent
    * (CPFP), where the child transaction pays for its parent's fee. This can be
    * done by specifying an outpoint within the low fee transaction that is under
    * the control of the wallet.
-   *
-   * The fee preference can be expressed either as a specific fee rate or a delta
-   * of blocks in which the output should be swept on-chain within. If a fee
-   * preference is not explicitly specified, then an error is returned.
-   *
-   * Note that this RPC currently doesn't perform any validation checks on the
-   * fee preference being provided. For now, the responsibility of ensuring that
-   * the new fee preference is sufficient is delegated to the user.
    *
    * @param [BumpFeeRequest]
    * @returns [BumpFeeResponse]
@@ -4741,14 +4701,12 @@ export async function walletKitBumpFee(
     walletrpc.BumpFeeRequestSchema,
     request
   );
-  const b64 = await TurboLnd.walletKitBumpFee(
-    base64Encode(
-      toBinary(walletrpc.BumpFeeRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.walletKitBumpFee(
+    toBinary(walletrpc.BumpFeeRequestSchema, message)
   );
   const response = fromBinary(
     walletrpc.BumpFeeResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -4771,14 +4729,12 @@ export async function walletKitListSweeps(
     walletrpc.ListSweepsRequestSchema,
     request
   );
-  const b64 = await TurboLnd.walletKitListSweeps(
-    base64Encode(
-      toBinary(walletrpc.ListSweepsRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.walletKitListSweeps(
+    toBinary(walletrpc.ListSweepsRequestSchema, message)
   );
   const response = fromBinary(
     walletrpc.ListSweepsResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -4788,7 +4744,7 @@ export async function walletKitListSweeps(
    *
    * LabelTransaction adds a label to a transaction. If the transaction already
    * has a label the call will fail unless the overwrite bool is set. This will
-   * overwrite the exiting transaction label. Labels must not be empty, and
+   * overwrite the existing transaction label. Labels must not be empty, and
    * cannot exceed 500 characters.
    *
    * @param [LabelTransactionRequest]
@@ -4802,14 +4758,12 @@ export async function walletKitLabelTransaction(
     walletrpc.LabelTransactionRequestSchema,
     request
   );
-  const b64 = await TurboLnd.walletKitLabelTransaction(
-    base64Encode(
-      toBinary(walletrpc.LabelTransactionRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.walletKitLabelTransaction(
+    toBinary(walletrpc.LabelTransactionRequestSchema, message)
   );
   const response = fromBinary(
     walletrpc.LabelTransactionResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -4818,15 +4772,25 @@ export async function walletKitLabelTransaction(
 /**
    *
    * FundPsbt creates a fully populated PSBT that contains enough inputs to fund
-   * the outputs specified in the template. There are two ways of specifying a
-   * template: Either by passing in a PSBT with at least one output declared or
-   * by passing in a raw TxTemplate message.
+   * the outputs specified in the template. There are three ways a user can
+   * specify what we call the template (a list of inputs and outputs to use in
+   * the PSBT): Either as a PSBT packet directly with no coin selection (using
+   * the legacy "psbt" field), a PSBT with advanced coin selection support (using
+   * the new "coin_select" field) or as a raw RPC message (using the "raw"
+   * field).
+   * The legacy "psbt" and "raw" modes, the following restrictions apply:
+   * 1. If there are no inputs specified in the template, coin selection is
+   * performed automatically.
+   * 2. If the template does contain any inputs, it is assumed that full
+   * coin selection happened externally and no additional inputs are added. If
+   * the specified inputs aren't enough to fund the outputs with the given fee
+   * rate, an error is returned.
    *
-   * If there are no inputs specified in the template, coin selection is
-   * performed automatically. If the template does contain any inputs, it is
-   * assumed that full coin selection happened externally and no additional
-   * inputs are added. If the specified inputs aren't enough to fund the outputs
-   * with the given fee rate, an error is returned.
+   * The new "coin_select" mode does not have these restrictions and allows the
+   * user to specify a PSBT with inputs and outputs and still perform coin
+   * selection on top of that.
+   * For all modes this RPC requires any inputs that are specified to be locked
+   * by the user (if they belong to this node in the first place).
    *
    * After either selecting or verifying the inputs, all input UTXOs are locked
    * with an internal app ID.
@@ -4847,14 +4811,12 @@ export async function walletKitFundPsbt(
     walletrpc.FundPsbtRequestSchema,
     request
   );
-  const b64 = await TurboLnd.walletKitFundPsbt(
-    base64Encode(
-      toBinary(walletrpc.FundPsbtRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.walletKitFundPsbt(
+    toBinary(walletrpc.FundPsbtRequestSchema, message)
   );
   const response = fromBinary(
     walletrpc.FundPsbtResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -4885,14 +4847,12 @@ export async function walletKitSignPsbt(
     walletrpc.SignPsbtRequestSchema,
     request
   );
-  const b64 = await TurboLnd.walletKitSignPsbt(
-    base64Encode(
-      toBinary(walletrpc.SignPsbtRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.walletKitSignPsbt(
+    toBinary(walletrpc.SignPsbtRequestSchema, message)
   );
   const response = fromBinary(
     walletrpc.SignPsbtResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -4914,14 +4874,12 @@ export async function walletKitFinalizePsbt(
     walletrpc.FinalizePsbtRequestSchema,
     request
   );
-  const b64 = await TurboLnd.walletKitFinalizePsbt(
-    base64Encode(
-      toBinary(walletrpc.FinalizePsbtRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.walletKitFinalizePsbt(
+    toBinary(walletrpc.FinalizePsbtRequestSchema, message)
   );
   const response = fromBinary(
     walletrpc.FinalizePsbtResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -4944,14 +4902,12 @@ export async function watchtowerGetInfo(
     watchtowerrpc.GetInfoRequestSchema,
     request
   );
-  const b64 = await TurboLnd.watchtowerGetInfo(
-    base64Encode(
-      toBinary(watchtowerrpc.GetInfoRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.watchtowerGetInfo(
+    toBinary(watchtowerrpc.GetInfoRequestSchema, message)
   );
   const response = fromBinary(
     watchtowerrpc.GetInfoResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -4975,14 +4931,12 @@ export async function watchtowerClientAddTower(
     wtclientrpc.AddTowerRequestSchema,
     request
   );
-  const b64 = await TurboLnd.watchtowerClientAddTower(
-    base64Encode(
-      toBinary(wtclientrpc.AddTowerRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.watchtowerClientAddTower(
+    toBinary(wtclientrpc.AddTowerRequestSchema, message)
   );
   const response = fromBinary(
     wtclientrpc.AddTowerResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -4990,8 +4944,10 @@ export async function watchtowerClientAddTower(
 
 /**
    *
-   * The fee rate, in satoshis per vbyte, that will be used by watchtowers for
-   * justice transactions in response to channel breaches.
+   * RemoveTower removes a watchtower from being considered for future session
+   * negotiations and from being used for any subsequent backups until it's added
+   * again. If an address is provided, then this RPC only serves as a way of
+   * removing the address from the watchtower instead.
    *
    * @param [RemoveTowerRequest]
    * @returns [RemoveTowerResponse]
@@ -5004,14 +4960,12 @@ export async function watchtowerClientRemoveTower(
     wtclientrpc.RemoveTowerRequestSchema,
     request
   );
-  const b64 = await TurboLnd.watchtowerClientRemoveTower(
-    base64Encode(
-      toBinary(wtclientrpc.RemoveTowerRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.watchtowerClientRemoveTower(
+    toBinary(wtclientrpc.RemoveTowerRequestSchema, message)
   );
   const response = fromBinary(
     wtclientrpc.RemoveTowerResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -5019,9 +4973,66 @@ export async function watchtowerClientRemoveTower(
 
 /**
    *
+   * DeactivateTower sets the given tower's status to inactive so that it
+   * is not considered for session negotiation. Its sessions will also not
+   * be used while the tower is inactive.
+   *
+   * @param [DeactivateTowerRequest]
+   * @returns [DeactivateTowerResponse]
+   *
+   */
+export async function watchtowerClientDeactivateTower(
+  request: MessageInitShape<typeof wtclientrpc.DeactivateTowerRequestSchema>
+): Promise<wtclientrpc.DeactivateTowerResponse> {
+  const message = create(
+    wtclientrpc.DeactivateTowerRequestSchema,
+    request
+  );
+  const responseBytes = await TurboLnd.watchtowerClientDeactivateTower(
+    toBinary(wtclientrpc.DeactivateTowerRequestSchema, message)
+  );
+  const response = fromBinary(
+    wtclientrpc.DeactivateTowerResponseSchema,
+    responseBytes
+  );
+  return response;
+}
+
+
+/**
+   *
+   * Terminate terminates the given session and marks it as terminal so that
+   * it is not used for backups anymore.
+   *
+   * @param [TerminateSessionRequest]
+   * @returns [TerminateSessionResponse]
+   *
+   */
+export async function watchtowerClientTerminateSession(
+  request: MessageInitShape<typeof wtclientrpc.TerminateSessionRequestSchema>
+): Promise<wtclientrpc.TerminateSessionResponse> {
+  const message = create(
+    wtclientrpc.TerminateSessionRequestSchema,
+    request
+  );
+  const responseBytes = await TurboLnd.watchtowerClientTerminateSession(
+    toBinary(wtclientrpc.TerminateSessionRequestSchema, message)
+  );
+  const response = fromBinary(
+    wtclientrpc.TerminateSessionResponseSchema,
+    responseBytes
+  );
+  return response;
+}
+
+
+/**
+   *
+   * ListTowers returns the list of watchtowers registered with the client.
    *
    * @param [ListTowersRequest]
    * @returns [ListTowersResponse]
+   *
    */
 export async function watchtowerClientListTowers(
   request: MessageInitShape<typeof wtclientrpc.ListTowersRequestSchema>
@@ -5030,14 +5041,12 @@ export async function watchtowerClientListTowers(
     wtclientrpc.ListTowersRequestSchema,
     request
   );
-  const b64 = await TurboLnd.watchtowerClientListTowers(
-    base64Encode(
-      toBinary(wtclientrpc.ListTowersRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.watchtowerClientListTowers(
+    toBinary(wtclientrpc.ListTowersRequestSchema, message)
   );
   const response = fromBinary(
     wtclientrpc.ListTowersResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -5045,9 +5054,11 @@ export async function watchtowerClientListTowers(
 
 /**
    *
+   * GetTowerInfo retrieves information for a registered watchtower.
    *
    * @param [GetTowerInfoRequest]
    * @returns [Tower]
+   *
    */
 export async function watchtowerClientGetTowerInfo(
   request: MessageInitShape<typeof wtclientrpc.GetTowerInfoRequestSchema>
@@ -5056,14 +5067,12 @@ export async function watchtowerClientGetTowerInfo(
     wtclientrpc.GetTowerInfoRequestSchema,
     request
   );
-  const b64 = await TurboLnd.watchtowerClientGetTowerInfo(
-    base64Encode(
-      toBinary(wtclientrpc.GetTowerInfoRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.watchtowerClientGetTowerInfo(
+    toBinary(wtclientrpc.GetTowerInfoRequestSchema, message)
   );
   const response = fromBinary(
     wtclientrpc.TowerSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -5071,9 +5080,11 @@ export async function watchtowerClientGetTowerInfo(
 
 /**
    *
+   * Stats returns the in-memory statistics of the client since startup.
    *
    * @param [StatsRequest]
    * @returns [StatsResponse]
+   *
    */
 export async function watchtowerClientStats(
   request: MessageInitShape<typeof wtclientrpc.StatsRequestSchema>
@@ -5082,14 +5093,12 @@ export async function watchtowerClientStats(
     wtclientrpc.StatsRequestSchema,
     request
   );
-  const b64 = await TurboLnd.watchtowerClientStats(
-    base64Encode(
-      toBinary(wtclientrpc.StatsRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.watchtowerClientStats(
+    toBinary(wtclientrpc.StatsRequestSchema, message)
   );
   const response = fromBinary(
     wtclientrpc.StatsResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
@@ -5097,9 +5106,12 @@ export async function watchtowerClientStats(
 
 /**
    *
+   * The fee rate, in satoshis per vbyte, that will be used by watchtowers for
+   * justice transactions in response to channel breaches.
    *
    * @param [PolicyRequest]
    * @returns [PolicyResponse]
+   *
    */
 export async function watchtowerClientPolicy(
   request: MessageInitShape<typeof wtclientrpc.PolicyRequestSchema>
@@ -5108,14 +5120,12 @@ export async function watchtowerClientPolicy(
     wtclientrpc.PolicyRequestSchema,
     request
   );
-  const b64 = await TurboLnd.watchtowerClientPolicy(
-    base64Encode(
-      toBinary(wtclientrpc.PolicyRequestSchema, message)
-    )
+  const responseBytes = await TurboLnd.watchtowerClientPolicy(
+    toBinary(wtclientrpc.PolicyRequestSchema, message)
   );
   const response = fromBinary(
     wtclientrpc.PolicyResponseSchema,
-    base64Decode(b64)
+    responseBytes
   );
   return response;
 }
