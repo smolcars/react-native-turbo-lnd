@@ -26,10 +26,11 @@ import {
   PendingChannelsRequestSchema,
 } from "../proto/lightning_pb";
 import type {
+  Spec,
   OnErrorCallback,
   OnResponseCallback,
-  Spec,
-} from "../core/NativeTurboLnd";
+  WriteableStream,
+} from "../core/NativeTurboLnd.ts";
 import { SubscribeStateResponseSchema } from "../proto/stateservice_pb";
 import {
   mockPeers,
@@ -889,6 +890,41 @@ const TurboLnd: Spec = {
 
   watchtowerClientPolicy: async (_data) => {
     throw new Error("watchtowerClientPolicy Not Implemented");
+  },
+
+  getDebugInfo: async (_data: any) => {
+    throw new Error("getDebugInfo Not Implemented");
+  },
+
+  invoicesHtlcModifier: (
+    _: OnResponseCallback,
+    _2: OnErrorCallback
+  ): WriteableStream => {
+    throw new Error("invoicesHtlcModifier Not Implemented");
+  },
+
+  routerXAddLocalChanAliases: async (_data: any) => {
+    throw new Error("routerXAddLocalChanAliases Not Implemented");
+  },
+
+  routerXDeleteLocalChanAliases: async (_data: any) => {
+    throw new Error("routerXDeleteLocalChanAliases Not Implemented");
+  },
+
+  walletKitGetTransaction: async (_data) => {
+    throw new Error("walletKitGetTransaction Not Implemented");
+  },
+
+  walletKitRemoveTransaction: async (_data) => {
+    throw new Error("walletKitRemoveTransaction Not Implemented");
+  },
+
+  watchtowerClientDeactivateTower: async (_data) => {
+    throw new Error("watchtowerClientDeactivateTower Not Implemented");
+  },
+
+  watchtowerClientTerminateSession: async (_data) => {
+    throw new Error("watchtowerClientTerminateSession Not Implemented");
   },
 };
 

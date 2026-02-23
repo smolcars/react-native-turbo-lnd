@@ -1,15 +1,22 @@
 #!/bin/sh
+set -eu
+
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+cd "$SCRIPT_DIR"
 
 echo "[protoc-generator] Generating C++ and Typescript bindings based on lnd proto files"
 
 # Detect the environment
-if [[ "$(uname)" == "MINGW"* ]] || [[ -n "$MSYSTEM" ]]; then
+if [ "$(uname | cut -c1-5)" = "MINGW" ] || [ -n "${MSYSTEM:-}" ]; then
     # Windows MINGW or MSYS2 environment
-    PROTOC_PLUGIN=".\\windows-wrapper.bat"
+    PROTOC_PLUGIN="$SCRIPT_DIR/windows-wrapper.bat"
 else
     # Unix-like environment
-    PROTOC_PLUGIN="./protoc-gen-cpp-functions.ts"
+    PROTOC_PLUGIN="$SCRIPT_DIR/protoc-gen-cpp-functions.ts"
 fi
+
+rm -rf ./build
+mkdir -p ./build
 
 protoc --plugin=protoc-gen-custom="$PROTOC_PLUGIN" \
 --custom_out=./build \

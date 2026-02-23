@@ -63,6 +63,8 @@ class TurboLndModule : public NativeTurboLndCxxSpec<TurboLndModule> {
 
   facebook::react::AsyncPromise<std::string> getInfo(jsi::Runtime &rt, jsi::String data);
 
+  facebook::react::AsyncPromise<std::string> getDebugInfo(jsi::Runtime &rt, jsi::String data);
+
   facebook::react::AsyncPromise<std::string> getRecoveryInfo(jsi::Runtime &rt, jsi::String data);
 
   facebook::react::AsyncPromise<std::string> pendingChannels(jsi::Runtime &rt, jsi::String data);
@@ -201,6 +203,8 @@ class TurboLndModule : public NativeTurboLndCxxSpec<TurboLndModule> {
 
   facebook::react::AsyncPromise<std::string> invoicesLookupInvoiceV2(jsi::Runtime &rt, jsi::String data);
 
+  jsi::Object invoicesHtlcModifier(jsi::Runtime &rt, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError);
+
   facebook::react::AsyncPromise<std::string> neutrinoKitStatus(jsi::Runtime &rt, jsi::String data);
 
   facebook::react::AsyncPromise<std::string> neutrinoKitAddPeer(jsi::Runtime &rt, jsi::String data);
@@ -255,6 +259,10 @@ class TurboLndModule : public NativeTurboLndCxxSpec<TurboLndModule> {
 
   facebook::react::AsyncPromise<std::string> routerUpdateChanStatus(jsi::Runtime &rt, jsi::String data);
 
+  facebook::react::AsyncPromise<std::string> routerXAddLocalChanAliases(jsi::Runtime &rt, jsi::String data);
+
+  facebook::react::AsyncPromise<std::string> routerXDeleteLocalChanAliases(jsi::Runtime &rt, jsi::String data);
+
   facebook::react::AsyncPromise<std::string> signerSignOutputRaw(jsi::Runtime &rt, jsi::String data);
 
   facebook::react::AsyncPromise<std::string> signerComputeInputScript(jsi::Runtime &rt, jsi::String data);
@@ -293,6 +301,8 @@ class TurboLndModule : public NativeTurboLndCxxSpec<TurboLndModule> {
 
   facebook::react::AsyncPromise<std::string> walletKitNextAddr(jsi::Runtime &rt, jsi::String data);
 
+  facebook::react::AsyncPromise<std::string> walletKitGetTransaction(jsi::Runtime &rt, jsi::String data);
+
   facebook::react::AsyncPromise<std::string> walletKitListAccounts(jsi::Runtime &rt, jsi::String data);
 
   facebook::react::AsyncPromise<std::string> walletKitRequiredReserve(jsi::Runtime &rt, jsi::String data);
@@ -310,6 +320,8 @@ class TurboLndModule : public NativeTurboLndCxxSpec<TurboLndModule> {
   facebook::react::AsyncPromise<std::string> walletKitImportTapscript(jsi::Runtime &rt, jsi::String data);
 
   facebook::react::AsyncPromise<std::string> walletKitPublishTransaction(jsi::Runtime &rt, jsi::String data);
+
+  facebook::react::AsyncPromise<std::string> walletKitRemoveTransaction(jsi::Runtime &rt, jsi::String data);
 
   facebook::react::AsyncPromise<std::string> walletKitSendOutputs(jsi::Runtime &rt, jsi::String data);
 
@@ -334,6 +346,10 @@ class TurboLndModule : public NativeTurboLndCxxSpec<TurboLndModule> {
   facebook::react::AsyncPromise<std::string> watchtowerClientAddTower(jsi::Runtime &rt, jsi::String data);
 
   facebook::react::AsyncPromise<std::string> watchtowerClientRemoveTower(jsi::Runtime &rt, jsi::String data);
+
+  facebook::react::AsyncPromise<std::string> watchtowerClientDeactivateTower(jsi::Runtime &rt, jsi::String data);
+
+  facebook::react::AsyncPromise<std::string> watchtowerClientTerminateSession(jsi::Runtime &rt, jsi::String data);
 
   facebook::react::AsyncPromise<std::string> watchtowerClientListTowers(jsi::Runtime &rt, jsi::String data);
 

@@ -573,7 +573,17 @@ async function main() {
     });
 
     const responseBuffer = PluginResponse.encode(response).finish();
-    await writeStdout(responseBuffer);
+    // Field 2: supported_features = FEATURE_PROTO3_OPTIONAL (1)
+    // We append this manually because protoc-generator/protos/plugin.proto is old
+    // and doesn't include the field definition.
+    const supportedFeaturesField = Uint8Array.from([0x10, 0x01]);
+    const responseWithFeatures = new Uint8Array(
+      responseBuffer.length + supportedFeaturesField.length
+    );
+    responseWithFeatures.set(responseBuffer);
+    responseWithFeatures.set(supportedFeaturesField, responseBuffer.length);
+
+    await writeStdout(responseWithFeatures);
   } catch (error) {
     if (error instanceof Error) {
       console.error("Error in plugin:", error.stack || error.message);

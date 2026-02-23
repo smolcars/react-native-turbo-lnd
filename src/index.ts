@@ -540,6 +540,36 @@ export async function getInfo(
 
 /**
    *
+   * GetDebugInfo returns debug information concerning the state of the daemon
+   * and its subsystems. This includes the full configuration and the latest log
+   * entries from the log file.
+   *
+   * @param [GetDebugInfoRequest]
+   * @returns [GetDebugInfoResponse]
+   *
+   */
+export async function getDebugInfo(
+  request: MessageInitShape<typeof lnrpc.GetDebugInfoRequestSchema>
+): Promise<lnrpc.GetDebugInfoResponse> {
+  const message = create(
+    lnrpc.GetDebugInfoRequestSchema,
+    request
+  );
+  const b64 = await TurboLnd.getDebugInfo(
+    base64Encode(
+      toBinary(lnrpc.GetDebugInfoRequestSchema, message)
+    )
+  );
+  const response = fromBinary(
+    lnrpc.GetDebugInfoResponseSchema,
+    base64Decode(b64)
+  );
+  return response;
+}
+
+
+/**
+   *
    * GetRecoveryInfo returns information concerning the recovery mode including
    * whether it's in a recovery mode, whether the recovery is finished, and the
    * progress made so far.
@@ -1194,7 +1224,7 @@ export async function lookupInvoice(
    * optionally specify the add_index and/or the settle_index. If the add_index
    * is specified, then we'll first start by sending add invoice events for all
    * invoices with an add_index greater than the specified value. If the
-   * settle_index is specified, the next, we'll send out all settle events for
+   * settle_index is specified, then next, we'll send out all settle events for
    * invoices with a settle_index greater than the specified value. One or both
    * of these fields can be set. If no fields are set, then we'll only send out
    * the latest add/settle events.
@@ -2786,10 +2816,8 @@ export async function invoicesSettleInvoice(
 
 /**
    *
-   * Indicates that when a look up is done using a payment_addr, then no HTLCs
-   * related to the payment_addr should be returned. This is useful when one
-   * wants to be able to obtain the set of associated setIDs with a given
-   * invoice, then look up the sub-invoices "projected" by that set ID.
+   * LookupInvoiceV2 attempts to look up at invoice. An invoice can be referenced
+   * using either its payment hash, payment address, or set ID.
    *
    * @param [LookupInvoiceMsg]
    * @returns [Invoice]
@@ -2814,6 +2842,48 @@ export async function invoicesLookupInvoiceV2(
   return response;
 }
 
+
+/**
+   *
+   * Indicates that when a look up is done using a payment_addr, then no HTLCs
+   * related to the payment_addr should be returned. This is useful when one
+   * wants to be able to obtain the set of associated setIDs with a given
+   * invoice, then look up the sub-invoices "projected" by that set ID.
+   *
+   * @param [HtlcModifyResponse]
+   * @returns [HtlcModifyRequest]
+   *
+   */
+export function invoicesHtlcModifier(
+  onResponse: (response: invoicesrpc.HtlcModifyRequest) => void,
+  onError: (error: string) => void
+) {
+  const onResponseWrapper: OnResponseCallback = (responseB64) => {
+    onResponse(fromBinary(
+      invoicesrpc.HtlcModifyRequestSchema,
+      base64Decode(responseB64)
+    ));
+  }
+  const onErrorWrapper: OnErrorCallback = (error: string) => onError(error);
+
+  const writeableStream = TurboLnd.invoicesHtlcModifier(onResponseWrapper, onErrorWrapper);
+
+  return {
+    send: (response: MessageInitShape<typeof invoicesrpc.HtlcModifyResponseSchema>) => {
+      const message = create(
+        invoicesrpc.HtlcModifyResponseSchema,
+        response
+      );
+      const responseB64 = base64Encode(
+        toBinary(invoicesrpc.HtlcModifyResponseSchema, message)
+      );
+      writeableStream.send(responseB64);
+    },
+    close: () => {
+      writeableStream.stop();
+    }
+  }
+}
 
 /**
    *
@@ -3077,7 +3147,10 @@ export async function peersUpdateNodeAnnouncement(
    *
    * SendPaymentV2 attempts to route a payment described by the passed
    * PaymentRequest to the final destination. The call returns a stream of
-   * payment updates.
+   * payment updates. When using this RPC, make sure to set a fee limit, as the
+   * default routing fee limit is 0 sats. Without a non-zero fee limit only
+   * routes without fees will be attempted which often fails with
+   * FAILURE_REASON_NO_ROUTE.
    *
    * @param [SendPaymentRequest]
    * @returns [Payment]
@@ -3457,6 +3530,10 @@ export async function routerQueryProbability(
    * BuildRoute builds a fully specified route based on a list of hop public
    * keys. It retrieves the relevant channel policies from the graph in order to
    * calculate the correct fees and time locks.
+   * Note that LND will use its default final_cltv_delta if no value is supplied.
+   * Make sure to add the correct final_cltv_delta depending on the invoice
+   * restriction. Moreover the caller has to make sure to provide the
+   * payment_addr if the route is paying an invoice which signaled it.
    *
    * @param [BuildRouteRequest]
    * @returns [BuildRouteResponse]
@@ -3633,8 +3710,10 @@ export function routerHtlcInterceptor(
 
 /**
    *
-   * The key of this forwarded htlc. It defines the incoming channel id and
-   * the index in this channel.
+   * UpdateChanStatus attempts to manually set the state of a channel
+   * (enabled, disabled, or auto). A manual "disable" request will cause the
+   * channel to stay disabled until a subsequent manual request of either
+   * "enable" or "auto".
    *
    * @param [UpdateChanStatusRequest]
    * @returns [UpdateChanStatusResponse]
@@ -3654,6 +3733,68 @@ export async function routerUpdateChanStatus(
   );
   const response = fromBinary(
     routerrpc.UpdateChanStatusResponseSchema,
+    base64Decode(b64)
+  );
+  return response;
+}
+
+
+/**
+   *
+   * XAddLocalChanAliases is an experimental API that creates a set of new
+   * channel SCID alias mappings. The final total set of aliases in the manager
+   * after the add operation is returned. This is only a locally stored alias,
+   * and will not be communicated to the channel peer via any message. Therefore,
+   * routing over such an alias will only work if the peer also calls this same
+   * RPC on their end. If an alias already exists, an error is returned
+   *
+   * @param [AddAliasesRequest]
+   * @returns [AddAliasesResponse]
+   *
+   */
+export async function routerXAddLocalChanAliases(
+  request: MessageInitShape<typeof routerrpc.AddAliasesRequestSchema>
+): Promise<routerrpc.AddAliasesResponse> {
+  const message = create(
+    routerrpc.AddAliasesRequestSchema,
+    request
+  );
+  const b64 = await TurboLnd.routerXAddLocalChanAliases(
+    base64Encode(
+      toBinary(routerrpc.AddAliasesRequestSchema, message)
+    )
+  );
+  const response = fromBinary(
+    routerrpc.AddAliasesResponseSchema,
+    base64Decode(b64)
+  );
+  return response;
+}
+
+
+/**
+   *
+   * The key of this forwarded htlc. It defines the incoming channel id and
+   * the index in this channel.
+   *
+   * @param [DeleteAliasesRequest]
+   * @returns [DeleteAliasesResponse]
+   *
+   */
+export async function routerXDeleteLocalChanAliases(
+  request: MessageInitShape<typeof routerrpc.DeleteAliasesRequestSchema>
+): Promise<routerrpc.DeleteAliasesResponse> {
+  const message = create(
+    routerrpc.DeleteAliasesRequestSchema,
+    request
+  );
+  const b64 = await TurboLnd.routerXDeleteLocalChanAliases(
+    base64Encode(
+      toBinary(routerrpc.DeleteAliasesRequestSchema, message)
+    )
+  );
+  const response = fromBinary(
+    routerrpc.DeleteAliasesResponseSchema,
     base64Decode(b64)
   );
   return response;
@@ -4279,6 +4420,34 @@ export async function walletKitNextAddr(
 
 /**
    *
+   * GetTransaction returns details for a transaction found in the wallet.
+   *
+   * @param [GetTransactionRequest]
+   * @returns [Transaction]
+   *
+   */
+export async function walletKitGetTransaction(
+  request: MessageInitShape<typeof walletrpc.GetTransactionRequestSchema>
+): Promise<lnrpc.Transaction> {
+  const message = create(
+    walletrpc.GetTransactionRequestSchema,
+    request
+  );
+  const b64 = await TurboLnd.walletKitGetTransaction(
+    base64Encode(
+      toBinary(walletrpc.GetTransactionRequestSchema, message)
+    )
+  );
+  const response = fromBinary(
+    lnrpc.TransactionSchema,
+    base64Decode(b64)
+  );
+  return response;
+}
+
+
+/**
+   *
    * ListAccounts retrieves all accounts belonging to the wallet by default. A
    * name and key scope filter can be provided to filter through all of the
    * wallet accounts and return only those matching.
@@ -4609,6 +4778,35 @@ export async function walletKitPublishTransaction(
 
 /**
    *
+   * RemoveTransaction attempts to remove the provided transaction from the
+   * internal transaction store of the wallet.
+   *
+   * @param [GetTransactionRequest]
+   * @returns [RemoveTransactionResponse]
+   *
+   */
+export async function walletKitRemoveTransaction(
+  request: MessageInitShape<typeof walletrpc.GetTransactionRequestSchema>
+): Promise<walletrpc.RemoveTransactionResponse> {
+  const message = create(
+    walletrpc.GetTransactionRequestSchema,
+    request
+  );
+  const b64 = await TurboLnd.walletKitRemoveTransaction(
+    base64Encode(
+      toBinary(walletrpc.GetTransactionRequestSchema, message)
+    )
+  );
+  const response = fromBinary(
+    walletrpc.RemoveTransactionResponseSchema,
+    base64Decode(b64)
+  );
+  return response;
+}
+
+
+/**
+   *
    * SendOutputs is similar to the existing sendmany call in Bitcoind, and
    * allows the caller to create a transaction that sends to several outputs at
    * once. This is ideal when wanting to batch create a set of transactions.
@@ -4704,31 +4902,34 @@ export async function walletKitPendingSweeps(
 
 /**
    *
-   * BumpFee bumps the fee of an arbitrary input within a transaction. This RPC
-   * takes a different approach than bitcoind's bumpfee command. lnd has a
-   * central batching engine in which inputs with similar fee rates are batched
-   * together to save on transaction fees. Due to this, we cannot rely on
-   * bumping the fee on a specific transaction, since transactions can change at
-   * any point with the addition of new inputs. The list of inputs that
-   * currently exist within lnd's central batching engine can be retrieved
-   * through the PendingSweeps RPC.
+   * BumpFee is an endpoint that allows users to interact with lnd's sweeper
+   * directly. It takes an outpoint from an unconfirmed transaction and sends it
+   * to the sweeper for potential fee bumping. Depending on whether the outpoint
+   * has been registered in the sweeper (an existing input, e.g., an anchor
+   * output) or not (a new input, e.g., an unconfirmed wallet utxo), this will
+   * either be an RBF or CPFP attempt.
    *
-   * When bumping the fee of an input that currently exists within lnd's central
-   * batching engine, a higher fee transaction will be created that replaces the
-   * lower fee transaction through the Replace-By-Fee (RBF) policy. If it
+   * When receiving an input, lnd’s sweeper needs to understand its time
+   * sensitivity to make economical fee bumps - internally a fee function is
+   * created using the deadline and budget to guide the process. When the
+   * deadline is approaching, the fee function will increase the fee rate and
+   * perform an RBF.
+   *
+   * When a force close happens, all the outputs from the force closing
+   * transaction will be registered in the sweeper. The sweeper will then handle
+   * the creation, publish, and fee bumping of the sweeping transactions.
+   * Everytime a new block comes in, unless the sweeping transaction is
+   * confirmed, an RBF is attempted. To interfere with this automatic process,
+   * users can use BumpFee to specify customized fee rate, budget, deadline, and
+   * whether the sweep should happen immediately. It's recommended to call
+   * `ListSweeps` to understand the shape of the existing sweeping transaction
+   * first - depending on the number of inputs in this transaction, the RBF
+   * requirements can be quite different.
    *
    * This RPC also serves useful when wanting to perform a Child-Pays-For-Parent
    * (CPFP), where the child transaction pays for its parent's fee. This can be
    * done by specifying an outpoint within the low fee transaction that is under
    * the control of the wallet.
-   *
-   * The fee preference can be expressed either as a specific fee rate or a delta
-   * of blocks in which the output should be swept on-chain within. If a fee
-   * preference is not explicitly specified, then an error is returned.
-   *
-   * Note that this RPC currently doesn't perform any validation checks on the
-   * fee preference being provided. For now, the responsibility of ensuring that
-   * the new fee preference is sufficient is delegated to the user.
    *
    * @param [BumpFeeRequest]
    * @returns [BumpFeeResponse]
@@ -4788,7 +4989,7 @@ export async function walletKitListSweeps(
    *
    * LabelTransaction adds a label to a transaction. If the transaction already
    * has a label the call will fail unless the overwrite bool is set. This will
-   * overwrite the exiting transaction label. Labels must not be empty, and
+   * overwrite the existing transaction label. Labels must not be empty, and
    * cannot exceed 500 characters.
    *
    * @param [LabelTransactionRequest]
@@ -4818,15 +5019,25 @@ export async function walletKitLabelTransaction(
 /**
    *
    * FundPsbt creates a fully populated PSBT that contains enough inputs to fund
-   * the outputs specified in the template. There are two ways of specifying a
-   * template: Either by passing in a PSBT with at least one output declared or
-   * by passing in a raw TxTemplate message.
+   * the outputs specified in the template. There are three ways a user can
+   * specify what we call the template (a list of inputs and outputs to use in
+   * the PSBT): Either as a PSBT packet directly with no coin selection (using
+   * the legacy "psbt" field), a PSBT with advanced coin selection support (using
+   * the new "coin_select" field) or as a raw RPC message (using the "raw"
+   * field).
+   * The legacy "psbt" and "raw" modes, the following restrictions apply:
+   * 1. If there are no inputs specified in the template, coin selection is
+   * performed automatically.
+   * 2. If the template does contain any inputs, it is assumed that full
+   * coin selection happened externally and no additional inputs are added. If
+   * the specified inputs aren't enough to fund the outputs with the given fee
+   * rate, an error is returned.
    *
-   * If there are no inputs specified in the template, coin selection is
-   * performed automatically. If the template does contain any inputs, it is
-   * assumed that full coin selection happened externally and no additional
-   * inputs are added. If the specified inputs aren't enough to fund the outputs
-   * with the given fee rate, an error is returned.
+   * The new "coin_select" mode does not have these restrictions and allows the
+   * user to specify a PSBT with inputs and outputs and still perform coin
+   * selection on top of that.
+   * For all modes this RPC requires any inputs that are specified to be locked
+   * by the user (if they belong to this node in the first place).
    *
    * After either selecting or verifying the inputs, all input UTXOs are locked
    * with an internal app ID.
@@ -4990,8 +5201,10 @@ export async function watchtowerClientAddTower(
 
 /**
    *
-   * The fee rate, in satoshis per vbyte, that will be used by watchtowers for
-   * justice transactions in response to channel breaches.
+   * RemoveTower removes a watchtower from being considered for future session
+   * negotiations and from being used for any subsequent backups until it's added
+   * again. If an address is provided, then this RPC only serves as a way of
+   * removing the address from the watchtower instead.
    *
    * @param [RemoveTowerRequest]
    * @returns [RemoveTowerResponse]
@@ -5019,9 +5232,70 @@ export async function watchtowerClientRemoveTower(
 
 /**
    *
+   * DeactivateTower sets the given tower's status to inactive so that it
+   * is not considered for session negotiation. Its sessions will also not
+   * be used while the tower is inactive.
+   *
+   * @param [DeactivateTowerRequest]
+   * @returns [DeactivateTowerResponse]
+   *
+   */
+export async function watchtowerClientDeactivateTower(
+  request: MessageInitShape<typeof wtclientrpc.DeactivateTowerRequestSchema>
+): Promise<wtclientrpc.DeactivateTowerResponse> {
+  const message = create(
+    wtclientrpc.DeactivateTowerRequestSchema,
+    request
+  );
+  const b64 = await TurboLnd.watchtowerClientDeactivateTower(
+    base64Encode(
+      toBinary(wtclientrpc.DeactivateTowerRequestSchema, message)
+    )
+  );
+  const response = fromBinary(
+    wtclientrpc.DeactivateTowerResponseSchema,
+    base64Decode(b64)
+  );
+  return response;
+}
+
+
+/**
+   *
+   * Terminate terminates the given session and marks it as terminal so that
+   * it is not used for backups anymore.
+   *
+   * @param [TerminateSessionRequest]
+   * @returns [TerminateSessionResponse]
+   *
+   */
+export async function watchtowerClientTerminateSession(
+  request: MessageInitShape<typeof wtclientrpc.TerminateSessionRequestSchema>
+): Promise<wtclientrpc.TerminateSessionResponse> {
+  const message = create(
+    wtclientrpc.TerminateSessionRequestSchema,
+    request
+  );
+  const b64 = await TurboLnd.watchtowerClientTerminateSession(
+    base64Encode(
+      toBinary(wtclientrpc.TerminateSessionRequestSchema, message)
+    )
+  );
+  const response = fromBinary(
+    wtclientrpc.TerminateSessionResponseSchema,
+    base64Decode(b64)
+  );
+  return response;
+}
+
+
+/**
+   *
+   * ListTowers returns the list of watchtowers registered with the client.
    *
    * @param [ListTowersRequest]
    * @returns [ListTowersResponse]
+   *
    */
 export async function watchtowerClientListTowers(
   request: MessageInitShape<typeof wtclientrpc.ListTowersRequestSchema>
@@ -5045,9 +5319,11 @@ export async function watchtowerClientListTowers(
 
 /**
    *
+   * GetTowerInfo retrieves information for a registered watchtower.
    *
    * @param [GetTowerInfoRequest]
    * @returns [Tower]
+   *
    */
 export async function watchtowerClientGetTowerInfo(
   request: MessageInitShape<typeof wtclientrpc.GetTowerInfoRequestSchema>
@@ -5071,9 +5347,11 @@ export async function watchtowerClientGetTowerInfo(
 
 /**
    *
+   * Stats returns the in-memory statistics of the client since startup.
    *
    * @param [StatsRequest]
    * @returns [StatsResponse]
+   *
    */
 export async function watchtowerClientStats(
   request: MessageInitShape<typeof wtclientrpc.StatsRequestSchema>
@@ -5097,9 +5375,12 @@ export async function watchtowerClientStats(
 
 /**
    *
+   * The fee rate, in satoshis per vbyte, that will be used by watchtowers for
+   * justice transactions in response to channel breaches.
    *
    * @param [PolicyRequest]
    * @returns [PolicyResponse]
+   *
    */
 export async function watchtowerClientPolicy(
   request: MessageInitShape<typeof wtclientrpc.PolicyRequestSchema>
