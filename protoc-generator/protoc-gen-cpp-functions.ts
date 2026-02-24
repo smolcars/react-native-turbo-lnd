@@ -177,8 +177,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::${methodName}(jsi::Ru
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -221,8 +221,8 @@ facebook::jsi::Function TurboLndModule::${methodName}(jsi::Runtime &rt, jsi::Str
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
         .onError = &callbackOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(callbackId),
-        .errorContext = reinterpret_cast<void*>(callbackId),
+        .responseContext = static_cast<uintptr_t>(callbackId),
+        .errorContext = static_cast<uintptr_t>(callbackId),
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -280,8 +280,8 @@ jsi::Object TurboLndModule::${methodName}(jsi::Runtime &rt, AsyncCallback<std::s
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
         .onError = &callbackOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(callbackId),
-        .errorContext = reinterpret_cast<void*>(callbackId),
+        .responseContext = static_cast<uintptr_t>(callbackId),
+        .errorContext = static_cast<uintptr_t>(callbackId),
     };
 
     uintptr_t streamPtr = ::${methodName}(recvStream);
@@ -404,30 +404,68 @@ TurboLndModule::TurboLndModule(std::shared_ptr<CallInvoker> jsInvoker)
     : NativeTurboLndCxxSpec(std::move(jsInvoker)) {}
 
 void TurboLndModule::promiseOnResponseStatic(void* context, const char* data, int length) {
-    uint64_t id = reinterpret_cast<uint64_t>(context);
-    std::string encoded = base64::to_base64(std::string_view(data, length));
-    ::lndFree(const_cast<char*>(data));
+    uint64_t id = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(context));
+
+    if (length < 0 || (length > 0 && data == nullptr)) {
+        PromiseKeeper::getInstance().rejectPromise(id, "invalid callback payload");
+        return;
+    }
+
+    std::string encoded = base64::to_base64(
+        std::string_view(data ? data : "", static_cast<size_t>(length))
+    );
+
+    if (data) {
+        ::lndFree(const_cast<char*>(data));
+    }
+
     PromiseKeeper::getInstance().resolvePromise(id, std::move(encoded));
 }
 
 void TurboLndModule::promiseOnErrorStatic(void* context, const char* error) {
-    uint64_t id = reinterpret_cast<uint64_t>(context);
-    PromiseKeeper::getInstance().rejectPromise(id, std::string(error));
-    ::lndFree(const_cast<char*>(error));
+    uint64_t id = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(context));
+
+    std::string msg = error ? std::string(error) : "unknown error";
+
+    if (error) {
+        ::lndFree(const_cast<char*>(error));
+    }
+
+    PromiseKeeper::getInstance().rejectPromise(id, std::move(msg));
 }
 
 void TurboLndModule::callbackOnResponseStatic(void* context, const char* data, int length) {
-    uint64_t id = reinterpret_cast<uint64_t>(context);
-    std::string encoded = base64::to_base64(std::string_view(data, length));
-    ::lndFree(const_cast<char*>(data));
+    uint64_t id = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(context));
+
+    if (length < 0 || (length > 0 && data == nullptr)) {
+        CallbackKeeper::getInstance().invokeErrorCallback(id, "invalid callback payload");
+        return;
+    }
+
+    std::string encoded = base64::to_base64(
+        std::string_view(data ? data : "", static_cast<size_t>(length))
+    );
+
+    if (data) {
+        ::lndFree(const_cast<char*>(data));
+    }
+
     CallbackKeeper::getInstance().invokeResponseCallback(id, std::move(encoded));
 }
 
 void TurboLndModule::callbackOnErrorStatic(void* context, const char* error) {
-    uint64_t id = reinterpret_cast<uint64_t>(context);
-    CallbackKeeper::getInstance().invokeErrorCallback(id, std::string(error));
-    ::lndFree(const_cast<char*>(error));
+    uint64_t id = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(context));
+
+    std::string msg = error ? std::string(error) : "unknown error";
+
+    if (error) {
+        ::lndFree(const_cast<char*>(error));
+    }
+
+    CallbackKeeper::getInstance().invokeErrorCallback(id, std::move(msg));
 }
+
+
 
 facebook::react::AsyncPromise<std::string> TurboLndModule::start(jsi::Runtime &rt, jsi::String args) {
     auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
@@ -435,16 +473,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::start(jsi::Runtime &r
 
     CCallback callback = {
         .onResponse = [](void* context, const char* data, int length) {
-            uint64_t id = reinterpret_cast<uint64_t>(context);
+            uint64_t id = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(context));
             std::string encoded = base64::to_base64(std::string_view(data, length));
             PromiseKeeper::getInstance().resolvePromise(id, std::move(encoded));
         },
         .onError = [](void* context, const char* error) {
-            uint64_t id = reinterpret_cast<uint64_t>(context);
+            uint64_t id = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(context));
             PromiseKeeper::getInstance().rejectPromise(id, std::string(error));
         },
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string argsStr = args.utf8(rt);

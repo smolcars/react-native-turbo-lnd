@@ -18,30 +18,68 @@ TurboLndModule::TurboLndModule(std::shared_ptr<CallInvoker> jsInvoker)
     : NativeTurboLndCxxSpec(std::move(jsInvoker)) {}
 
 void TurboLndModule::promiseOnResponseStatic(void* context, const char* data, int length) {
-    uint64_t id = reinterpret_cast<uint64_t>(context);
-    std::string encoded = base64::to_base64(std::string_view(data, length));
-    ::lndFree(const_cast<char*>(data));
+    uint64_t id = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(context));
+
+    if (length < 0 || (length > 0 && data == nullptr)) {
+        PromiseKeeper::getInstance().rejectPromise(id, "invalid callback payload");
+        return;
+    }
+
+    std::string encoded = base64::to_base64(
+        std::string_view(data ? data : "", static_cast<size_t>(length))
+    );
+
+    if (data) {
+        ::lndFree(const_cast<char*>(data));
+    }
+
     PromiseKeeper::getInstance().resolvePromise(id, std::move(encoded));
 }
 
 void TurboLndModule::promiseOnErrorStatic(void* context, const char* error) {
-    uint64_t id = reinterpret_cast<uint64_t>(context);
-    PromiseKeeper::getInstance().rejectPromise(id, std::string(error));
-    ::lndFree(const_cast<char*>(error));
+    uint64_t id = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(context));
+
+    std::string msg = error ? std::string(error) : "unknown error";
+
+    if (error) {
+        ::lndFree(const_cast<char*>(error));
+    }
+
+    PromiseKeeper::getInstance().rejectPromise(id, std::move(msg));
 }
 
 void TurboLndModule::callbackOnResponseStatic(void* context, const char* data, int length) {
-    uint64_t id = reinterpret_cast<uint64_t>(context);
-    std::string encoded = base64::to_base64(std::string_view(data, length));
-    ::lndFree(const_cast<char*>(data));
+    uint64_t id = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(context));
+
+    if (length < 0 || (length > 0 && data == nullptr)) {
+        CallbackKeeper::getInstance().invokeErrorCallback(id, "invalid callback payload");
+        return;
+    }
+
+    std::string encoded = base64::to_base64(
+        std::string_view(data ? data : "", static_cast<size_t>(length))
+    );
+
+    if (data) {
+        ::lndFree(const_cast<char*>(data));
+    }
+
     CallbackKeeper::getInstance().invokeResponseCallback(id, std::move(encoded));
 }
 
 void TurboLndModule::callbackOnErrorStatic(void* context, const char* error) {
-    uint64_t id = reinterpret_cast<uint64_t>(context);
-    CallbackKeeper::getInstance().invokeErrorCallback(id, std::string(error));
-    ::lndFree(const_cast<char*>(error));
+    uint64_t id = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(context));
+
+    std::string msg = error ? std::string(error) : "unknown error";
+
+    if (error) {
+        ::lndFree(const_cast<char*>(error));
+    }
+
+    CallbackKeeper::getInstance().invokeErrorCallback(id, std::move(msg));
 }
+
+
 
 facebook::react::AsyncPromise<std::string> TurboLndModule::start(jsi::Runtime &rt, jsi::String args) {
     auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
@@ -49,16 +87,16 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::start(jsi::Runtime &r
 
     CCallback callback = {
         .onResponse = [](void* context, const char* data, int length) {
-            uint64_t id = reinterpret_cast<uint64_t>(context);
+            uint64_t id = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(context));
             std::string encoded = base64::to_base64(std::string_view(data, length));
             PromiseKeeper::getInstance().resolvePromise(id, std::move(encoded));
         },
         .onError = [](void* context, const char* error) {
-            uint64_t id = reinterpret_cast<uint64_t>(context);
+            uint64_t id = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(context));
             PromiseKeeper::getInstance().rejectPromise(id, std::string(error));
         },
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string argsStr = args.utf8(rt);
@@ -78,8 +116,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletBalance(jsi::Ru
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -96,8 +134,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::channelBalance(jsi::R
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -114,8 +152,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::getTransactions(jsi::
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -132,8 +170,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::estimateFee(jsi::Runt
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -150,8 +188,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::sendCoins(jsi::Runtim
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -168,8 +206,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::listUnspent(jsi::Runt
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -187,8 +225,8 @@ facebook::jsi::Function TurboLndModule::subscribeTransactions(jsi::Runtime &rt, 
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
         .onError = &callbackOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(callbackId),
-        .errorContext = reinterpret_cast<void*>(callbackId),
+        .responseContext = static_cast<uintptr_t>(callbackId),
+        .errorContext = static_cast<uintptr_t>(callbackId),
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -215,8 +253,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::sendMany(jsi::Runtime
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -233,8 +271,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::newAddress(jsi::Runti
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -251,8 +289,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::signMessage(jsi::Runt
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -269,8 +307,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::verifyMessage(jsi::Ru
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -287,8 +325,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::connectPeer(jsi::Runt
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -305,8 +343,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::disconnectPeer(jsi::R
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -323,8 +361,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::listPeers(jsi::Runtim
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -342,8 +380,8 @@ facebook::jsi::Function TurboLndModule::subscribePeerEvents(jsi::Runtime &rt, js
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
         .onError = &callbackOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(callbackId),
-        .errorContext = reinterpret_cast<void*>(callbackId),
+        .responseContext = static_cast<uintptr_t>(callbackId),
+        .errorContext = static_cast<uintptr_t>(callbackId),
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -370,8 +408,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::getInfo(jsi::Runtime 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -388,8 +426,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::getDebugInfo(jsi::Run
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -406,8 +444,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::getRecoveryInfo(jsi::
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -424,8 +462,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::pendingChannels(jsi::
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -442,8 +480,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::listChannels(jsi::Run
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -461,8 +499,8 @@ facebook::jsi::Function TurboLndModule::subscribeChannelEvents(jsi::Runtime &rt,
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
         .onError = &callbackOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(callbackId),
-        .errorContext = reinterpret_cast<void*>(callbackId),
+        .responseContext = static_cast<uintptr_t>(callbackId),
+        .errorContext = static_cast<uintptr_t>(callbackId),
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -489,8 +527,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::closedChannels(jsi::R
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -507,8 +545,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::openChannelSync(jsi::
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -526,8 +564,8 @@ facebook::jsi::Function TurboLndModule::openChannel(jsi::Runtime &rt, jsi::Strin
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
         .onError = &callbackOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(callbackId),
-        .errorContext = reinterpret_cast<void*>(callbackId),
+        .responseContext = static_cast<uintptr_t>(callbackId),
+        .errorContext = static_cast<uintptr_t>(callbackId),
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -554,8 +592,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::batchOpenChannel(jsi:
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -572,8 +610,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::fundingStateStep(jsi:
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -591,8 +629,8 @@ jsi::Object TurboLndModule::channelAcceptor(jsi::Runtime &rt, AsyncCallback<std:
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
         .onError = &callbackOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(callbackId),
-        .errorContext = reinterpret_cast<void*>(callbackId),
+        .responseContext = static_cast<uintptr_t>(callbackId),
+        .errorContext = static_cast<uintptr_t>(callbackId),
     };
 
     uintptr_t streamPtr = ::channelAcceptor(recvStream);
@@ -614,8 +652,8 @@ facebook::jsi::Function TurboLndModule::closeChannel(jsi::Runtime &rt, jsi::Stri
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
         .onError = &callbackOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(callbackId),
-        .errorContext = reinterpret_cast<void*>(callbackId),
+        .responseContext = static_cast<uintptr_t>(callbackId),
+        .errorContext = static_cast<uintptr_t>(callbackId),
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -642,8 +680,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::abandonChannel(jsi::R
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -661,8 +699,8 @@ jsi::Object TurboLndModule::sendPayment(jsi::Runtime &rt, AsyncCallback<std::str
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
         .onError = &callbackOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(callbackId),
-        .errorContext = reinterpret_cast<void*>(callbackId),
+        .responseContext = static_cast<uintptr_t>(callbackId),
+        .errorContext = static_cast<uintptr_t>(callbackId),
     };
 
     uintptr_t streamPtr = ::sendPayment(recvStream);
@@ -683,8 +721,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::sendPaymentSync(jsi::
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -702,8 +740,8 @@ jsi::Object TurboLndModule::sendToRoute(jsi::Runtime &rt, AsyncCallback<std::str
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
         .onError = &callbackOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(callbackId),
-        .errorContext = reinterpret_cast<void*>(callbackId),
+        .responseContext = static_cast<uintptr_t>(callbackId),
+        .errorContext = static_cast<uintptr_t>(callbackId),
     };
 
     uintptr_t streamPtr = ::sendToRoute(recvStream);
@@ -724,8 +762,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::sendToRouteSync(jsi::
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -742,8 +780,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::addInvoice(jsi::Runti
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -760,8 +798,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::listInvoices(jsi::Run
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -778,8 +816,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::lookupInvoice(jsi::Ru
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -797,8 +835,8 @@ facebook::jsi::Function TurboLndModule::subscribeInvoices(jsi::Runtime &rt, jsi:
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
         .onError = &callbackOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(callbackId),
-        .errorContext = reinterpret_cast<void*>(callbackId),
+        .responseContext = static_cast<uintptr_t>(callbackId),
+        .errorContext = static_cast<uintptr_t>(callbackId),
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -825,8 +863,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::decodePayReq(jsi::Run
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -843,8 +881,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::listPayments(jsi::Run
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -861,8 +899,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::deletePayment(jsi::Ru
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -879,8 +917,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::deleteAllPayments(jsi
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -897,8 +935,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::describeGraph(jsi::Ru
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -915,8 +953,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::getNodeMetrics(jsi::R
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -933,8 +971,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::getChanInfo(jsi::Runt
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -951,8 +989,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::getNodeInfo(jsi::Runt
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -969,8 +1007,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::queryRoutes(jsi::Runt
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -987,8 +1025,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::getNetworkInfo(jsi::R
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1005,8 +1043,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::stopDaemon(jsi::Runti
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1024,8 +1062,8 @@ facebook::jsi::Function TurboLndModule::subscribeChannelGraph(jsi::Runtime &rt, 
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
         .onError = &callbackOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(callbackId),
-        .errorContext = reinterpret_cast<void*>(callbackId),
+        .responseContext = static_cast<uintptr_t>(callbackId),
+        .errorContext = static_cast<uintptr_t>(callbackId),
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1052,8 +1090,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::debugLevel(jsi::Runti
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1070,8 +1108,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::feeReport(jsi::Runtim
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1088,8 +1126,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::updateChannelPolicy(j
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1106,8 +1144,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::forwardingHistory(jsi
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1124,8 +1162,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::exportChannelBackup(j
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1142,8 +1180,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::exportAllChannelBacku
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1160,8 +1198,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::verifyChanBackup(jsi:
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1178,8 +1216,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::restoreChannelBackups
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1197,8 +1235,8 @@ facebook::jsi::Function TurboLndModule::subscribeChannelBackups(jsi::Runtime &rt
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
         .onError = &callbackOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(callbackId),
-        .errorContext = reinterpret_cast<void*>(callbackId),
+        .responseContext = static_cast<uintptr_t>(callbackId),
+        .errorContext = static_cast<uintptr_t>(callbackId),
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1225,8 +1263,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::bakeMacaroon(jsi::Run
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1243,8 +1281,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::listMacaroonIDs(jsi::
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1261,8 +1299,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::deleteMacaroonID(jsi:
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1279,8 +1317,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::listPermissions(jsi::
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1297,8 +1335,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::checkMacaroonPermissi
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1316,8 +1354,8 @@ jsi::Object TurboLndModule::registerRPCMiddleware(jsi::Runtime &rt, AsyncCallbac
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
         .onError = &callbackOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(callbackId),
-        .errorContext = reinterpret_cast<void*>(callbackId),
+        .responseContext = static_cast<uintptr_t>(callbackId),
+        .errorContext = static_cast<uintptr_t>(callbackId),
     };
 
     uintptr_t streamPtr = ::registerRPCMiddleware(recvStream);
@@ -1338,8 +1376,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::sendCustomMessage(jsi
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1357,8 +1395,8 @@ facebook::jsi::Function TurboLndModule::subscribeCustomMessages(jsi::Runtime &rt
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
         .onError = &callbackOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(callbackId),
-        .errorContext = reinterpret_cast<void*>(callbackId),
+        .responseContext = static_cast<uintptr_t>(callbackId),
+        .errorContext = static_cast<uintptr_t>(callbackId),
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1385,8 +1423,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::listAliases(jsi::Runt
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1403,8 +1441,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::lookupHtlcResolution(
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1421,8 +1459,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::genSeed(jsi::Runtime 
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1439,8 +1477,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::initWallet(jsi::Runti
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1457,8 +1495,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::unlockWallet(jsi::Run
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1475,8 +1513,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::changePassword(jsi::R
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1494,8 +1532,8 @@ facebook::jsi::Function TurboLndModule::subscribeState(jsi::Runtime &rt, jsi::St
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
         .onError = &callbackOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(callbackId),
-        .errorContext = reinterpret_cast<void*>(callbackId),
+        .responseContext = static_cast<uintptr_t>(callbackId),
+        .errorContext = static_cast<uintptr_t>(callbackId),
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1522,8 +1560,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::getState(jsi::Runtime
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1540,8 +1578,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::autopilotStatus(jsi::
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1558,8 +1596,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::autopilotModifyStatus
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1576,8 +1614,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::autopilotQueryScores(
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1594,8 +1632,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::autopilotSetScores(js
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1613,8 +1651,8 @@ facebook::jsi::Function TurboLndModule::chainNotifierRegisterConfirmationsNtfn(j
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
         .onError = &callbackOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(callbackId),
-        .errorContext = reinterpret_cast<void*>(callbackId),
+        .responseContext = static_cast<uintptr_t>(callbackId),
+        .errorContext = static_cast<uintptr_t>(callbackId),
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1642,8 +1680,8 @@ facebook::jsi::Function TurboLndModule::chainNotifierRegisterSpendNtfn(jsi::Runt
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
         .onError = &callbackOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(callbackId),
-        .errorContext = reinterpret_cast<void*>(callbackId),
+        .responseContext = static_cast<uintptr_t>(callbackId),
+        .errorContext = static_cast<uintptr_t>(callbackId),
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1671,8 +1709,8 @@ facebook::jsi::Function TurboLndModule::chainNotifierRegisterBlockEpochNtfn(jsi:
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
         .onError = &callbackOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(callbackId),
-        .errorContext = reinterpret_cast<void*>(callbackId),
+        .responseContext = static_cast<uintptr_t>(callbackId),
+        .errorContext = static_cast<uintptr_t>(callbackId),
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1700,8 +1738,8 @@ facebook::jsi::Function TurboLndModule::invoicesSubscribeSingleInvoice(jsi::Runt
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
         .onError = &callbackOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(callbackId),
-        .errorContext = reinterpret_cast<void*>(callbackId),
+        .responseContext = static_cast<uintptr_t>(callbackId),
+        .errorContext = static_cast<uintptr_t>(callbackId),
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1728,8 +1766,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::invoicesCancelInvoice
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1746,8 +1784,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::invoicesAddHoldInvoic
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1764,8 +1802,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::invoicesSettleInvoice
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1782,8 +1820,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::invoicesLookupInvoice
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1801,8 +1839,8 @@ jsi::Object TurboLndModule::invoicesHtlcModifier(jsi::Runtime &rt, AsyncCallback
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
         .onError = &callbackOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(callbackId),
-        .errorContext = reinterpret_cast<void*>(callbackId),
+        .responseContext = static_cast<uintptr_t>(callbackId),
+        .errorContext = static_cast<uintptr_t>(callbackId),
     };
 
     uintptr_t streamPtr = ::invoicesHtlcModifier(recvStream);
@@ -1823,8 +1861,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::neutrinoKitStatus(jsi
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1841,8 +1879,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::neutrinoKitAddPeer(js
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1859,8 +1897,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::neutrinoKitDisconnect
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1877,8 +1915,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::neutrinoKitIsBanned(j
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1895,8 +1933,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::neutrinoKitGetBlockHe
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1913,8 +1951,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::neutrinoKitGetBlock(j
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1931,8 +1969,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::neutrinoKitGetCFilter
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1949,8 +1987,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::neutrinoKitGetBlockHa
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1967,8 +2005,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::peersUpdateNodeAnnoun
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -1986,8 +2024,8 @@ facebook::jsi::Function TurboLndModule::routerSendPaymentV2(jsi::Runtime &rt, js
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
         .onError = &callbackOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(callbackId),
-        .errorContext = reinterpret_cast<void*>(callbackId),
+        .responseContext = static_cast<uintptr_t>(callbackId),
+        .errorContext = static_cast<uintptr_t>(callbackId),
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2015,8 +2053,8 @@ facebook::jsi::Function TurboLndModule::routerTrackPaymentV2(jsi::Runtime &rt, j
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
         .onError = &callbackOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(callbackId),
-        .errorContext = reinterpret_cast<void*>(callbackId),
+        .responseContext = static_cast<uintptr_t>(callbackId),
+        .errorContext = static_cast<uintptr_t>(callbackId),
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2044,8 +2082,8 @@ facebook::jsi::Function TurboLndModule::routerTrackPayments(jsi::Runtime &rt, js
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
         .onError = &callbackOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(callbackId),
-        .errorContext = reinterpret_cast<void*>(callbackId),
+        .responseContext = static_cast<uintptr_t>(callbackId),
+        .errorContext = static_cast<uintptr_t>(callbackId),
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2072,8 +2110,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::routerEstimateRouteFe
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2090,8 +2128,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::routerSendToRoute(jsi
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2108,8 +2146,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::routerSendToRouteV2(j
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2126,8 +2164,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::routerResetMissionCon
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2144,8 +2182,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::routerQueryMissionCon
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2162,8 +2200,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::routerXImportMissionC
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2180,8 +2218,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::routerGetMissionContr
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2198,8 +2236,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::routerSetMissionContr
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2216,8 +2254,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::routerQueryProbabilit
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2234,8 +2272,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::routerBuildRoute(jsi:
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2253,8 +2291,8 @@ facebook::jsi::Function TurboLndModule::routerSubscribeHtlcEvents(jsi::Runtime &
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
         .onError = &callbackOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(callbackId),
-        .errorContext = reinterpret_cast<void*>(callbackId),
+        .responseContext = static_cast<uintptr_t>(callbackId),
+        .errorContext = static_cast<uintptr_t>(callbackId),
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2282,8 +2320,8 @@ facebook::jsi::Function TurboLndModule::routerSendPayment(jsi::Runtime &rt, jsi:
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
         .onError = &callbackOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(callbackId),
-        .errorContext = reinterpret_cast<void*>(callbackId),
+        .responseContext = static_cast<uintptr_t>(callbackId),
+        .errorContext = static_cast<uintptr_t>(callbackId),
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2311,8 +2349,8 @@ facebook::jsi::Function TurboLndModule::routerTrackPayment(jsi::Runtime &rt, jsi
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
         .onError = &callbackOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(callbackId),
-        .errorContext = reinterpret_cast<void*>(callbackId),
+        .responseContext = static_cast<uintptr_t>(callbackId),
+        .errorContext = static_cast<uintptr_t>(callbackId),
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2340,8 +2378,8 @@ jsi::Object TurboLndModule::routerHtlcInterceptor(jsi::Runtime &rt, AsyncCallbac
     CRecvStream recvStream = {
         .onResponse = &callbackOnResponseStatic,
         .onError = &callbackOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(callbackId),
-        .errorContext = reinterpret_cast<void*>(callbackId),
+        .responseContext = static_cast<uintptr_t>(callbackId),
+        .errorContext = static_cast<uintptr_t>(callbackId),
     };
 
     uintptr_t streamPtr = ::routerHtlcInterceptor(recvStream);
@@ -2362,8 +2400,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::routerUpdateChanStatu
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2380,8 +2418,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::routerXAddLocalChanAl
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2398,8 +2436,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::routerXDeleteLocalCha
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2416,8 +2454,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::signerSignOutputRaw(j
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2434,8 +2472,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::signerComputeInputScr
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2452,8 +2490,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::signerSignMessage(jsi
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2470,8 +2508,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::signerVerifyMessage(j
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2488,8 +2526,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::signerDeriveSharedKey
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2506,8 +2544,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::signerMuSig2CombineKe
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2524,8 +2562,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::signerMuSig2CreateSes
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2542,8 +2580,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::signerMuSig2RegisterN
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2560,8 +2598,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::signerMuSig2Sign(jsi:
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2578,8 +2616,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::signerMuSig2CombineSi
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2596,8 +2634,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::signerMuSig2Cleanup(j
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2614,8 +2652,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::versionerGetVersion(j
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2632,8 +2670,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitListUnspent(
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2650,8 +2688,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitLeaseOutput(
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2668,8 +2706,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitReleaseOutpu
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2686,8 +2724,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitListLeases(j
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2704,8 +2742,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitDeriveNextKe
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2722,8 +2760,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitDeriveKey(js
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2740,8 +2778,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitNextAddr(jsi
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2758,8 +2796,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitGetTransacti
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2776,8 +2814,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitListAccounts
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2794,8 +2832,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitRequiredRese
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2812,8 +2850,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitListAddresse
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2830,8 +2868,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitSignMessageW
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2848,8 +2886,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitVerifyMessag
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2866,8 +2904,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitImportAccoun
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2884,8 +2922,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitImportPublic
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2902,8 +2940,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitImportTapscr
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2920,8 +2958,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitPublishTrans
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2938,8 +2976,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitRemoveTransa
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2956,8 +2994,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitSendOutputs(
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2974,8 +3012,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitEstimateFee(
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -2992,8 +3030,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitPendingSweep
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -3010,8 +3048,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitBumpFee(jsi:
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -3028,8 +3066,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitListSweeps(j
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -3046,8 +3084,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitLabelTransac
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -3064,8 +3102,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitFundPsbt(jsi
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -3082,8 +3120,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitSignPsbt(jsi
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -3100,8 +3138,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitFinalizePsbt
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -3118,8 +3156,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::watchtowerGetInfo(jsi
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -3136,8 +3174,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::watchtowerClientAddTo
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -3154,8 +3192,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::watchtowerClientRemov
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -3172,8 +3210,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::watchtowerClientDeact
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -3190,8 +3228,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::watchtowerClientTermi
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -3208,8 +3246,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::watchtowerClientListT
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -3226,8 +3264,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::watchtowerClientGetTo
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -3244,8 +3282,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::watchtowerClientStats
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
@@ -3262,8 +3300,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::watchtowerClientPolic
     CCallback callback = {
         .onResponse = &promiseOnResponseStatic,
         .onError = &promiseOnErrorStatic,
-        .responseContext = reinterpret_cast<void*>(promiseId),
-        .errorContext = reinterpret_cast<void*>(promiseId)
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));

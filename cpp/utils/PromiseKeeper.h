@@ -37,11 +37,8 @@ public:
     }
 
 private:
-    // NOTE: Start from 2^32 in order circumvent go runtime checks for bad
-    // pointers. Setting it to an inaccessible range will cause a crash when we
-    // move it over to Go as a `void*` in `CCallback`:
-    // `runtime: bad pointer in frame main.getInfo at 0x14000879dd8: 0x2`
-    PromiseKeeper() : nextId_(1ULL << 32) {} // Start from 2^32
+
+    PromiseKeeper() : nextId_(1) {}
     std::mutex mutex_;
     std::map<uint64_t, std::shared_ptr<facebook::react::AsyncPromise<std::string>>> promises_;
     uint64_t nextId_;

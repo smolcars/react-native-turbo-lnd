@@ -27,6 +27,7 @@ extern const char *_GoStringPtr(_GoString_ s);
 #define CALLBACK_DEFS_H
 
 #include <stdlib.h>
+#include <stdint.h>
 
 typedef void (*ResponseFunc)(void* context, const char* data, int length);
 typedef void (*ErrorFunc)(void* context, const char* error);
@@ -34,15 +35,15 @@ typedef void (*ErrorFunc)(void* context, const char* error);
 typedef struct CCallback {
     ResponseFunc onResponse;
     ErrorFunc onError;
-    void* responseContext;
-    void* errorContext;
+    uintptr_t responseContext;
+    uintptr_t errorContext;
 } CCallback;
 
 typedef struct CRecvStream {
     ResponseFunc onResponse;
     ErrorFunc onError;
-    void* responseContext;
-    void* errorContext;
+    uintptr_t responseContext;
+    uintptr_t errorContext;
 } CRecvStream;
 
 #endif // CALLBACK_DEFS_H
@@ -55,32 +56,33 @@ typedef struct CRecvStream {
 #define CALLBACK_DEFS_H
 
 #include <stdlib.h>
+#include <stdint.h>
 
 typedef void (*ResponseFunc)(void* context, const char* data, int length);
 typedef void (*ErrorFunc)(void* context, const char* error);
 
-static inline void bridgeResponseFunc(ResponseFunc f, void* context, const char* data, int length) {
-    if (f) f(context, data, length);
+static inline void bridgeResponseFunc(ResponseFunc f, uintptr_t context, const char* data, int length) {
+    if (f) f((void*)context, data, length);
 }
 
-static inline void bridgeErrorFunc(ErrorFunc f, void* context, const char* error) {
-    if (f) f(context, error);
+static inline void bridgeErrorFunc(ErrorFunc f, uintptr_t context, const char* error) {
+    if (f) f((void*)context, error);
 }
 
 // Callback
 typedef struct CCallback {
     ResponseFunc onResponse;
     ErrorFunc onError;
-    void* responseContext;
-    void* errorContext;
+    uintptr_t responseContext;
+    uintptr_t errorContext;
 } CCallback;
 
 // RecvStream
 typedef struct CRecvStream {
     ResponseFunc onResponse;
     ErrorFunc onError;
-    void* responseContext;
-    void* errorContext;
+    uintptr_t responseContext;
+    uintptr_t errorContext;
 } CRecvStream;
 
 // SendStream
@@ -113,6 +115,7 @@ static inline void freeCSendStream(CSendStream* stream) {
 #define CALLBACK_DEFS_H
 
 #include <stdlib.h>
+#include <stdint.h>
 
 typedef void (*ResponseFunc)(void* context, const char* data, int length);
 typedef void (*ErrorFunc)(void* context, const char* error);
@@ -120,15 +123,15 @@ typedef void (*ErrorFunc)(void* context, const char* error);
 typedef struct CCallback {
     ResponseFunc onResponse;
     ErrorFunc onError;
-    void* responseContext;
-    void* errorContext;
+    uintptr_t responseContext;
+    uintptr_t errorContext;
 } CCallback;
 
 typedef struct CRecvStream {
     ResponseFunc onResponse;
     ErrorFunc onError;
-    void* responseContext;
-    void* errorContext;
+    uintptr_t responseContext;
+    uintptr_t errorContext;
 } CRecvStream;
 
 #endif // CALLBACK_DEFS_H
@@ -141,6 +144,7 @@ typedef struct CRecvStream {
 #define CALLBACK_DEFS_H
 
 #include <stdlib.h>
+#include <stdint.h>
 
 typedef void (*ResponseFunc)(void* context, const char* data, int length);
 typedef void (*ErrorFunc)(void* context, const char* error);
@@ -148,15 +152,15 @@ typedef void (*ErrorFunc)(void* context, const char* error);
 typedef struct CCallback {
     ResponseFunc onResponse;
     ErrorFunc onError;
-    void* responseContext;
-    void* errorContext;
+    uintptr_t responseContext;
+    uintptr_t errorContext;
 } CCallback;
 
 typedef struct CRecvStream {
     ResponseFunc onResponse;
     ErrorFunc onError;
-    void* responseContext;
-    void* errorContext;
+    uintptr_t responseContext;
+    uintptr_t errorContext;
 } CRecvStream;
 
 #endif // CALLBACK_DEFS_H
@@ -169,6 +173,7 @@ typedef struct CRecvStream {
 #define CALLBACK_DEFS_H
 
 #include <stdlib.h>
+#include <stdint.h>
 
 typedef void (*ResponseFunc)(void* context, const char* data, int length);
 typedef void (*ErrorFunc)(void* context, const char* error);
@@ -176,8 +181,8 @@ typedef void (*ErrorFunc)(void* context, const char* error);
 typedef struct CCallback {
     ResponseFunc onResponse;
     ErrorFunc onError;
-    void* responseContext;
-    void* errorContext;
+    uintptr_t responseContext;
+    uintptr_t errorContext;
 } CCallback;
 
 #endif // CALLBACK_DEFS_H
@@ -190,6 +195,7 @@ typedef struct CCallback {
 #define CALLBACK_DEFS_H
 
 #include <stdlib.h>
+#include <stdint.h>
 
 typedef void (*ResponseFunc)(void* context, const char* data, int length);
 typedef void (*ErrorFunc)(void* context, const char* error);
@@ -197,15 +203,15 @@ typedef void (*ErrorFunc)(void* context, const char* error);
 typedef struct CCallback {
     ResponseFunc onResponse;
     ErrorFunc onError;
-    void* responseContext;
-    void* errorContext;
+    uintptr_t responseContext;
+    uintptr_t errorContext;
 } CCallback;
 
 typedef struct CRecvStream {
     ResponseFunc onResponse;
     ErrorFunc onError;
-    void* responseContext;
-    void* errorContext;
+    uintptr_t responseContext;
+    uintptr_t errorContext;
 } CRecvStream;
 
 #endif // CALLBACK_DEFS_H
@@ -218,6 +224,7 @@ typedef struct CRecvStream {
 #define CALLBACK_DEFS_H
 
 #include <stdlib.h>
+#include <stdint.h>
 
 typedef void (*ResponseFunc)(void* context, const char* data, int length);
 typedef void (*ErrorFunc)(void* context, const char* error);
@@ -225,15 +232,15 @@ typedef void (*ErrorFunc)(void* context, const char* error);
 typedef struct CCallback {
     ResponseFunc onResponse;
     ErrorFunc onError;
-    void* responseContext;
-    void* errorContext;
+    uintptr_t responseContext;
+    uintptr_t errorContext;
 } CCallback;
 
 typedef struct CRecvStream {
     ResponseFunc onResponse;
     ErrorFunc onError;
-    void* responseContext;
-    void* errorContext;
+    uintptr_t responseContext;
+    uintptr_t errorContext;
 } CRecvStream;
 
 #endif // CALLBACK_DEFS_H
@@ -246,6 +253,7 @@ typedef struct CRecvStream {
 #define CALLBACK_DEFS_H
 
 #include <stdlib.h>
+#include <stdint.h>
 
 typedef void (*ResponseFunc)(void* context, const char* data, int length);
 typedef void (*ErrorFunc)(void* context, const char* error);
@@ -253,15 +261,15 @@ typedef void (*ErrorFunc)(void* context, const char* error);
 typedef struct CCallback {
     ResponseFunc onResponse;
     ErrorFunc onError;
-    void* responseContext;
-    void* errorContext;
+    uintptr_t responseContext;
+    uintptr_t errorContext;
 } CCallback;
 
 typedef struct CRecvStream {
     ResponseFunc onResponse;
     ErrorFunc onError;
-    void* responseContext;
-    void* errorContext;
+    uintptr_t responseContext;
+    uintptr_t errorContext;
 } CRecvStream;
 
 #endif // CALLBACK_DEFS_H
@@ -274,6 +282,7 @@ typedef struct CRecvStream {
 #define CALLBACK_DEFS_H
 
 #include <stdlib.h>
+#include <stdint.h>
 
 typedef void (*ResponseFunc)(void* context, const char* data, int length);
 typedef void (*ErrorFunc)(void* context, const char* error);
@@ -281,15 +290,15 @@ typedef void (*ErrorFunc)(void* context, const char* error);
 typedef struct CCallback {
     ResponseFunc onResponse;
     ErrorFunc onError;
-    void* responseContext;
-    void* errorContext;
+    uintptr_t responseContext;
+    uintptr_t errorContext;
 } CCallback;
 
 typedef struct CRecvStream {
     ResponseFunc onResponse;
     ErrorFunc onError;
-    void* responseContext;
-    void* errorContext;
+    uintptr_t responseContext;
+    uintptr_t errorContext;
 } CRecvStream;
 
 #endif // CALLBACK_DEFS_H
@@ -302,6 +311,7 @@ typedef struct CRecvStream {
 #define CALLBACK_DEFS_H
 
 #include <stdlib.h>
+#include <stdint.h>
 
 typedef void (*ResponseFunc)(void* context, const char* data, int length);
 typedef void (*ErrorFunc)(void* context, const char* error);
@@ -309,15 +319,15 @@ typedef void (*ErrorFunc)(void* context, const char* error);
 typedef struct CCallback {
     ResponseFunc onResponse;
     ErrorFunc onError;
-    void* responseContext;
-    void* errorContext;
+    uintptr_t responseContext;
+    uintptr_t errorContext;
 } CCallback;
 
 typedef struct CRecvStream {
     ResponseFunc onResponse;
     ErrorFunc onError;
-    void* responseContext;
-    void* errorContext;
+    uintptr_t responseContext;
+    uintptr_t errorContext;
 } CRecvStream;
 
 #endif // CALLBACK_DEFS_H
@@ -330,6 +340,7 @@ typedef struct CRecvStream {
 #define CALLBACK_DEFS_H
 
 #include <stdlib.h>
+#include <stdint.h>
 
 typedef void (*ResponseFunc)(void* context, const char* data, int length);
 typedef void (*ErrorFunc)(void* context, const char* error);
@@ -337,15 +348,15 @@ typedef void (*ErrorFunc)(void* context, const char* error);
 typedef struct CCallback {
     ResponseFunc onResponse;
     ErrorFunc onError;
-    void* responseContext;
-    void* errorContext;
+    uintptr_t responseContext;
+    uintptr_t errorContext;
 } CCallback;
 
 typedef struct CRecvStream {
     ResponseFunc onResponse;
     ErrorFunc onError;
-    void* responseContext;
-    void* errorContext;
+    uintptr_t responseContext;
+    uintptr_t errorContext;
 } CRecvStream;
 
 #endif // CALLBACK_DEFS_H
@@ -358,6 +369,7 @@ typedef struct CRecvStream {
 #define CALLBACK_DEFS_H
 
 #include <stdlib.h>
+#include <stdint.h>
 
 typedef void (*ResponseFunc)(void* context, const char* data, int length);
 typedef void (*ErrorFunc)(void* context, const char* error);
@@ -365,8 +377,8 @@ typedef void (*ErrorFunc)(void* context, const char* error);
 typedef struct CCallback {
     ResponseFunc onResponse;
     ErrorFunc onError;
-    void* responseContext;
-    void* errorContext;
+    uintptr_t responseContext;
+    uintptr_t errorContext;
 } CCallback;
 
 #endif // CALLBACK_DEFS_H
@@ -379,6 +391,7 @@ typedef struct CCallback {
 #define CALLBACK_DEFS_H
 
 #include <stdlib.h>
+#include <stdint.h>
 
 typedef void (*ResponseFunc)(void* context, const char* data, int length);
 typedef void (*ErrorFunc)(void* context, const char* error);
@@ -386,15 +399,15 @@ typedef void (*ErrorFunc)(void* context, const char* error);
 typedef struct CCallback {
     ResponseFunc onResponse;
     ErrorFunc onError;
-    void* responseContext;
-    void* errorContext;
+    uintptr_t responseContext;
+    uintptr_t errorContext;
 } CCallback;
 
 typedef struct CRecvStream {
     ResponseFunc onResponse;
     ErrorFunc onError;
-    void* responseContext;
-    void* errorContext;
+    uintptr_t responseContext;
+    uintptr_t errorContext;
 } CRecvStream;
 
 #endif // CALLBACK_DEFS_H
@@ -407,6 +420,7 @@ typedef struct CRecvStream {
 #define CALLBACK_DEFS_H
 
 #include <stdlib.h>
+#include <stdint.h>
 
 typedef void (*ResponseFunc)(void* context, const char* data, int length);
 typedef void (*ErrorFunc)(void* context, const char* error);
@@ -414,15 +428,15 @@ typedef void (*ErrorFunc)(void* context, const char* error);
 typedef struct CCallback {
     ResponseFunc onResponse;
     ErrorFunc onError;
-    void* responseContext;
-    void* errorContext;
+    uintptr_t responseContext;
+    uintptr_t errorContext;
 } CCallback;
 
 typedef struct CRecvStream {
     ResponseFunc onResponse;
     ErrorFunc onError;
-    void* responseContext;
-    void* errorContext;
+    uintptr_t responseContext;
+    uintptr_t errorContext;
 } CRecvStream;
 
 #endif // CALLBACK_DEFS_H
@@ -435,6 +449,7 @@ typedef struct CRecvStream {
 #define CALLBACK_DEFS_H
 
 #include <stdlib.h>
+#include <stdint.h>
 
 typedef void (*ResponseFunc)(void* context, const char* data, int length);
 typedef void (*ErrorFunc)(void* context, const char* error);
@@ -442,15 +457,15 @@ typedef void (*ErrorFunc)(void* context, const char* error);
 typedef struct CCallback {
     ResponseFunc onResponse;
     ErrorFunc onError;
-    void* responseContext;
-    void* errorContext;
+    uintptr_t responseContext;
+    uintptr_t errorContext;
 } CCallback;
 
 typedef struct CRecvStream {
     ResponseFunc onResponse;
     ErrorFunc onError;
-    void* responseContext;
-    void* errorContext;
+    uintptr_t responseContext;
+    uintptr_t errorContext;
 } CRecvStream;
 
 #endif // CALLBACK_DEFS_H
@@ -463,6 +478,7 @@ typedef struct CRecvStream {
 #define CALLBACK_DEFS_H
 
 #include <stdlib.h>
+#include <stdint.h>
 
 typedef void (*ResponseFunc)(void* context, const char* data, int length);
 typedef void (*ErrorFunc)(void* context, const char* error);
@@ -470,15 +486,15 @@ typedef void (*ErrorFunc)(void* context, const char* error);
 typedef struct CCallback {
     ResponseFunc onResponse;
     ErrorFunc onError;
-    void* responseContext;
-    void* errorContext;
+    uintptr_t responseContext;
+    uintptr_t errorContext;
 } CCallback;
 
 typedef struct CRecvStream {
     ResponseFunc onResponse;
     ErrorFunc onError;
-    void* responseContext;
-    void* errorContext;
+    uintptr_t responseContext;
+    uintptr_t errorContext;
 } CRecvStream;
 
 #endif // CALLBACK_DEFS_H
@@ -491,6 +507,7 @@ typedef struct CRecvStream {
 #define CALLBACK_DEFS_H
 
 #include <stdlib.h>
+#include <stdint.h>
 
 typedef void (*ResponseFunc)(void* context, const char* data, int length);
 typedef void (*ErrorFunc)(void* context, const char* error);
@@ -498,15 +515,15 @@ typedef void (*ErrorFunc)(void* context, const char* error);
 typedef struct CCallback {
     ResponseFunc onResponse;
     ErrorFunc onError;
-    void* responseContext;
-    void* errorContext;
+    uintptr_t responseContext;
+    uintptr_t errorContext;
 } CCallback;
 
 typedef struct CRecvStream {
     ResponseFunc onResponse;
     ErrorFunc onError;
-    void* responseContext;
-    void* errorContext;
+    uintptr_t responseContext;
+    uintptr_t errorContext;
 } CRecvStream;
 
 #endif // CALLBACK_DEFS_H
@@ -519,6 +536,7 @@ typedef struct CRecvStream {
 #define CALLBACK_DEFS_H
 
 #include <stdlib.h>
+#include <stdint.h>
 
 typedef void (*ResponseFunc)(void* context, const char* data, int length);
 typedef void (*ErrorFunc)(void* context, const char* error);
@@ -526,15 +544,15 @@ typedef void (*ErrorFunc)(void* context, const char* error);
 typedef struct CCallback {
     ResponseFunc onResponse;
     ErrorFunc onError;
-    void* responseContext;
-    void* errorContext;
+    uintptr_t responseContext;
+    uintptr_t errorContext;
 } CCallback;
 
 typedef struct CRecvStream {
     ResponseFunc onResponse;
     ErrorFunc onError;
-    void* responseContext;
-    void* errorContext;
+    uintptr_t responseContext;
+    uintptr_t errorContext;
 } CRecvStream;
 
 #endif // CALLBACK_DEFS_H
