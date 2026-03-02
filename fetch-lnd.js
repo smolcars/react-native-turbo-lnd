@@ -7,8 +7,8 @@ const util = require("util");
 
 const execPromise = util.promisify(exec);
 
-const lndDownloadUrl =
-  "https://github.com/hsjoberg/react-native-turbo-lnd/releases/download/0.0.0";
+const { version: packageVersion } = require("./package.json");
+const lndDownloadUrl = `https://github.com/hsjoberg/react-native-turbo-lnd/releases/download/${packageVersion}`;
 
 async function downloadFile(url, outputPath) {
   return new Promise((resolve, reject) => {

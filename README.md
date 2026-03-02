@@ -44,9 +44,13 @@ bindings is also available if you want to use another protobuf library.
 This API let's you send and receive protobufs as base64-encoded strings,
 which you can then encode/decode yourself.
 
-
 > [!NOTE]
-> The opinionated API is still in development and may change in the future.
+> We currently use an out-of-tree fork of lnd for building the binaries, which can be found
+> [here](https://github.com/hsjoberg/lnd/tree/cgo/mobile).
+> This is because the official lnd repository does not yet support using falafel bindings with cgo.
+> Once/if the official lnd repository supports building with cgo, we will switch to  using the
+> official lnd repository. This fork also has a few minor patches that is being used in
+> [Blixt Wallet](https://github.com/BlixtWallet/blixt-wallet).
 
 ## Installation
 
@@ -57,15 +61,23 @@ plans to support it.
 
 1. Install the package:
 
-```sh
-yarn add react-native-turbo-lnd
+| npm                                  | yarn                                 |
+|--------------------------------------|--------------------------------------|
+| `npm install react-native-turbo-lnd` | `yarn add react-native-turbo-lnd`    |
 
-## If you wish to use the protobuf-es bindings:
-yarn add @bufbuild/protobuf
+If you wish to use the protobuf-es bindings:
+
+| npm                                   | yarn                               |
+|---------------------------------------|------------------------------------|
+| `npm install @bufbuild/protobuf`      | `yarn add @bufbuild/protobuf`      |
+
+2. Download the lnd binaries automatically using a convenience script from the root of your project:
+
+```sh
+node node_modules/react-native-turbo-lnd/fetch-lnd.js
 ```
 
-2. Lnd binaries needs to be side-loaded manually for your app.
-Follow the instructions here for each platform:
+If you wish to download the binaries manually, follow the instructions below.
 
 ### Android:
 Download the latest `lnd-cgo-android.zip` from [hsjoberg/react-native-turbo-lnd/releases](https://github.com/hsjoberg/react-native-turbo-lnd/releases)
@@ -115,18 +127,6 @@ target in Xcode, then select the General tab. Find the "Frameworks, Libraries,
 and Embedded Content" section and click on the "+" button. Search for the
 `libresolv.tbd` file and add it.
 
-> [!NOTE]
-> If you wish to compile your own lnd binaries, you can follow the instructions
-> [here](https://github.com/hsjoberg/lnd/tree/cshared/mobile#cgo-build).
-
-> [!NOTE]
-> Instead of manually downloading the binaries, you can also use a convenience script.  From the
-> root of your project, run:
->
-> ```
-> node node_modules/react-native-turbo-lnd/src/fetch-lnd.js
-> ```
-
 3. Done!
 
 ## Usage
@@ -156,6 +156,12 @@ export default function App() {
 }
 
 ```
+
+## Building your own lnd binaries
+
+> [!NOTE]
+> If you wish to compile your own lnd binaries, you can follow the instructions
+> [here](https://github.com/hsjoberg/lnd/tree/cgo/mobile#cgo-build).
 
 ## Contributing
 
