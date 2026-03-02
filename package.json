@@ -24,7 +24,8 @@
     "!**/__fixtures__",
     "!**/__mocks__",
     "!**/.*",
-    "react-native.config.js"
+    "react-native.config.js",
+    "fetch-lnd.js"
   ],
   "exports": {
     ".": {
