@@ -8,9 +8,10 @@ const util = require("util");
 const execPromise = util.promisify(exec);
 
 const { version: packageVersion } = require("./package.json");
-const lndDownloadUrl = `https://github.com/hsjoberg/react-native-turbo-lnd/releases/download/${packageVersion}`;
+const lndDownloadUrl = `https://github.com/hsjoberg/react-native-turbo-lnd/releases/download/v${packageVersion}`;
 
 async function downloadFile(url, outputPath) {
+  console.log(`Downloading file from ${url} to ${outputPath}`);
   return new Promise((resolve, reject) => {
     https
       .get(url, (response) => {
@@ -134,8 +135,10 @@ async function main() {
     await setupAndroidBinaries();
     await setupIOSBinaries();
     console.log("LND binaries setup completed successfully.");
+    process.exit(0);
   } catch (error) {
     console.error("Error setting up LND binaries:", error);
+    process.exit(1);
   }
 }
 
