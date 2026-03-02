@@ -46,7 +46,7 @@ which you can then encode/decode yourself.
 
 > [!NOTE]
 > We currently use an out-of-tree fork of lnd for building the binaries, which can be found
-> [here](https://github.com/hsjoberg/lnd/tree/cgo/mobile).
+> [here](https://github.com/hsjoberg/lnd/tree/cgo).
 > This is because the official lnd repository does not yet support using falafel bindings with cgo.
 > Once/if the official lnd repository supports building with cgo, we will switch to  using the
 > official lnd repository. This fork also has a few minor patches that is being used in
