@@ -4,7 +4,6 @@
 // Any changes to this file should be made there instead.
 /* eslint-disable */
 import "./setup-text-encoding";
-
 import TurboLnd from "./mocks/index";
 import { type OnResponseCallback, type OnErrorCallback, type UnsubscribeFromStream } from "./core/NativeTurboLnd";
 
