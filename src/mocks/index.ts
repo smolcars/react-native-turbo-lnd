@@ -23,6 +23,9 @@ import {
   ChannelCloseUpdateSchema,
   PendingChannelsResponseSchema,
   PendingChannelsRequestSchema,
+  GetTransactionsRequestSchema,
+  TransactionDetailsSchema,
+  ChannelEventSubscriptionSchema,
   GetRecoveryInfoRequestSchema,
   GetRecoveryInfoResponseSchema,
   GenSeedRequestSchema,
@@ -329,7 +332,16 @@ const TurboLnd: Spec = {
 
   // Add placeholders for the remaining functions
   getTransactions: async (_data) => {
-    throw new Error("getTransactions Not Implemented");
+    fromBinary(GetTransactionsRequestSchema, base64Decode(_data));
+
+    return base64Encode(
+      toBinary(
+        TransactionDetailsSchema,
+        create(TransactionDetailsSchema, {
+          transactions: [],
+        })
+      )
+    );
   },
 
   listUnspent: async (_data) => {
@@ -341,7 +353,10 @@ const TurboLnd: Spec = {
   },
 
   subscribeTransactions: (_data, _onResponse, _onError) => {
-    throw new Error("subscribeTransactions Not Implemented");
+    // Accept the request shape but intentionally emit no transactions.
+    fromBinary(GetTransactionsRequestSchema, base64Decode(_data));
+
+    return () => {};
   },
 
   sendMany: async (_data) => {
@@ -384,7 +399,9 @@ const TurboLnd: Spec = {
   },
 
   subscribeChannelEvents: (_data, _onResponse, _onError) => {
-    throw new Error("subscribeChannelEvents Not Implemented");
+    fromBinary(ChannelEventSubscriptionSchema, base64Decode(_data));
+
+    return () => {};
   },
 
   closedChannels: async (_data) => {
