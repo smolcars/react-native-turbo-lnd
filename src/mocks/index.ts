@@ -26,6 +26,9 @@ import {
   GetTransactionsRequestSchema,
   TransactionDetailsSchema,
   ChannelEventSubscriptionSchema,
+  SubscribeCustomMessagesRequestSchema,
+  NodeInfoRequestSchema,
+  NodeInfoSchema,
   GetRecoveryInfoRequestSchema,
   GetRecoveryInfoResponseSchema,
   GenSeedRequestSchema,
@@ -118,6 +121,7 @@ const TurboLnd: Spec = {
   initWallet: async (_) => {
     // This mock has no persistent wallet state, so we model a fresh app boot
     // as LOCKED and allow one init/unlock transition from that state only.
+    // CAUTION: In real lnd it would be state NON_EXISTING if no wallet exists.
     if (currentState !== WalletState.LOCKED) {
       throw new Error(`initWallet invalid state: ${currentState}`);
     }
@@ -421,7 +425,17 @@ const TurboLnd: Spec = {
   },
 
   channelAcceptor: (_onResponse, _onError) => {
-    throw new Error("channelAcceptor Not Implemented");
+    let isActive = true;
+
+    return {
+      // Demo web mock: no inbound channel requests are emitted.
+      send: (_data) => isActive,
+      stop: () => {
+        const wasActive = isActive;
+        isActive = false;
+        return wasActive;
+      },
+    };
   },
 
   abandonChannel: async (_data) => {
@@ -489,7 +503,26 @@ const TurboLnd: Spec = {
   },
 
   getNodeInfo: async (_data) => {
-    throw new Error("getNodeInfo Not Implemented");
+    const request = fromBinary(NodeInfoRequestSchema, base64Decode(_data));
+
+    return base64Encode(
+      toBinary(
+        NodeInfoSchema,
+        create(NodeInfoSchema, {
+          node: {
+            addresses: [],
+            alias: "Node alias",
+            color: "#ff0000",
+            features: {},
+            pubKey: request.pubKey || "abcdef",
+            lastUpdate: 0,
+          },
+          numChannels: 0,
+          totalCapacity: BigInt(0),
+          channels: [],
+        })
+      )
+    );
   },
 
   queryRoutes: async (_data) => {
@@ -573,7 +606,9 @@ const TurboLnd: Spec = {
   },
 
   subscribeCustomMessages: (_data, _onResponse, _onError) => {
-    throw new Error("subscribeCustomMessages Not Implemented");
+    fromBinary(SubscribeCustomMessagesRequestSchema, base64Decode(_data));
+
+    return () => {};
   },
 
   listAliases: async (_data) => {
