@@ -12,6 +12,8 @@ import {
   WalletBalanceResponseSchema,
   SendCoinsResponseSchema,
   SendCoinsRequestSchema,
+  ConnectPeerRequestSchema,
+  ConnectPeerResponseSchema,
   NewAddressRequestSchema,
   NewAddressResponseSchema,
   ChannelBalanceResponseSchema,
@@ -26,6 +28,7 @@ import {
   GetTransactionsRequestSchema,
   TransactionDetailsSchema,
   ChannelEventSubscriptionSchema,
+  InvoiceSubscriptionSchema,
   SubscribeCustomMessagesRequestSchema,
   NodeInfoRequestSchema,
   NodeInfoSchema,
@@ -376,7 +379,15 @@ const TurboLnd: Spec = {
   },
 
   connectPeer: async (_data) => {
-    throw new Error("connectPeer Not Implemented");
+    const request = fromBinary(ConnectPeerRequestSchema, base64Decode(_data));
+
+    if (!request.addr?.pubkey || !request.addr?.host) {
+      throw new Error("Invalid peer address");
+    }
+
+    return base64Encode(
+      toBinary(ConnectPeerResponseSchema, create(ConnectPeerResponseSchema, {}))
+    );
   },
 
   disconnectPeer: async (_data) => {
@@ -471,7 +482,9 @@ const TurboLnd: Spec = {
   },
 
   subscribeInvoices: (_data, _onResponse, _onError) => {
-    throw new Error("subscribeInvoices Not Implemented");
+    fromBinary(InvoiceSubscriptionSchema, base64Decode(_data));
+
+    return () => {};
   },
 
   decodePayReq: async (_data) => {
