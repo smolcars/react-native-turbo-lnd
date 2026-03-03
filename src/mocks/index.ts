@@ -23,6 +23,8 @@ import {
   ChannelCloseUpdateSchema,
   PendingChannelsResponseSchema,
   PendingChannelsRequestSchema,
+  GetRecoveryInfoRequestSchema,
+  GetRecoveryInfoResponseSchema,
   GenSeedRequestSchema,
   GenSeedResponseSchema,
 } from "../proto/lightning_pb";
@@ -367,7 +369,18 @@ const TurboLnd: Spec = {
   },
 
   getRecoveryInfo: async (_data) => {
-    throw new Error("getRecoveryInfo Not Implemented");
+    fromBinary(GetRecoveryInfoRequestSchema, base64Decode(_data));
+
+    return base64Encode(
+      toBinary(
+        GetRecoveryInfoResponseSchema,
+        create(GetRecoveryInfoResponseSchema, {
+          recoveryMode: false,
+          recoveryFinished: false,
+          progress: 0,
+        })
+      )
+    );
   },
 
   subscribeChannelEvents: (_data, _onResponse, _onError) => {
