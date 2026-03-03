@@ -5,7 +5,7 @@
 /* eslint-disable */
 import "./setup-text-encoding";
 
-const TurboLnd = require('./core/NativeTurboLnd').default;
+import TurboLnd from "./core/NativeTurboLnd";
 import { type OnResponseCallback, type OnErrorCallback, type UnsubscribeFromStream } from "./core/NativeTurboLnd";
 
 import { create, toBinary, fromBinary, type MessageInitShape } from "@bufbuild/protobuf";
