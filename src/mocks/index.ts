@@ -23,6 +23,8 @@ import {
   ChannelCloseUpdateSchema,
   PendingChannelsResponseSchema,
   PendingChannelsRequestSchema,
+  GenSeedRequestSchema,
+  GenSeedResponseSchema,
 } from "../proto/lightning_pb";
 import type {
   Spec,
@@ -109,14 +111,10 @@ const TurboLnd: Spec = {
   },
 
   initWallet: async (_) => {
-    // TODO(hsjoberg)
-    if (currentState === WalletState.LOCKED) {
-      return base64Encode(
-        toBinary(
-          UnlockWalletResponseSchema,
-          create(UnlockWalletResponseSchema, {})
-        )
-      );
+    // This mock has no persistent wallet state, so we model a fresh app boot
+    // as LOCKED and allow one init/unlock transition from that state only.
+    if (currentState !== WalletState.LOCKED) {
+      throw new Error(`initWallet invalid state: ${currentState}`);
     }
 
     currentState = WalletState.UNLOCKED;
@@ -134,14 +132,9 @@ const TurboLnd: Spec = {
   },
 
   unlockWallet: async (_) => {
-    if (currentState === WalletState.LOCKED) {
-      // TODO(hsjoberg)
-      return base64Encode(
-        toBinary(
-          UnlockWalletResponseSchema,
-          create(UnlockWalletResponseSchema, {})
-        )
-      );
+    // Prevent repeated unlock calls once the mock has transitioned.
+    if (currentState !== WalletState.LOCKED) {
+      throw new Error(`unlockWallet invalid state: ${currentState}`);
     }
 
     currentState = WalletState.UNLOCKED;
@@ -562,7 +555,46 @@ const TurboLnd: Spec = {
   },
 
   genSeed: async (_data) => {
-    throw new Error("genSeed Not Implemented");
+    fromBinary(GenSeedRequestSchema, base64Decode(_data));
+
+    return base64Encode(
+      toBinary(
+        GenSeedResponseSchema,
+        create(GenSeedResponseSchema, {
+          cipherSeedMnemonic: [
+            "ability",
+            "quote",
+            "laugh",
+            "pony",
+            "fancy",
+            "disease",
+            "zoo",
+            "angle",
+            "autumn",
+            "december",
+            "absorb",
+            "giraffe",
+            "mandate",
+            "inner",
+            "alone",
+            "flat",
+            "dose",
+            "acoustic",
+            "slice",
+            "major",
+            "sample",
+            "crane",
+            "opinion",
+            "jewel",
+          ],
+          encipheredSeed: new Uint8Array([
+            0, 54, 1, 246, 83, 245, 46, 126, 63, 248, 70, 15, 167, 20, 3, 49,
+            24, 112, 232, 193, 186, 196, 65, 128, 67, 45, 195, 59, 240, 100,
+            166, 219, 191,
+          ]),
+        })
+      )
+    );
   },
 
   changePassword: async (_data) => {
