@@ -31,7 +31,7 @@
     ".": {
       "require": {
         "types": "./lib/typescript/commonjs/src/index.d.ts",
-        "defaultx": "./lib/commonjs/index.js"
+        "default": "./lib/commonjs/index.js"
       },
       "import": {
         "types": "./lib/typescript/module/src/index.d.ts",
