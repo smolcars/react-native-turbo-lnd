@@ -100,7 +100,7 @@ The `package.json` file contains various scripts for common tasks:
 - `bun run typecheck`: type-check files with TypeScript.
 - `bun run lint`: lint files with ESLint.
 - `bun run test`: run unit tests with Jest.
-- `bun run generate-bindings`: Generate C++ and Typescript TurboModule bindings for the cpp folder and src/core/NativeTurboLnd.ts.
+- `bun run generate-bindings`: Generate C++ and TypeScript bindings for `cpp/`, `src/index.ts`, `src/mock.ts`, `src/core/NativeTurboLnd.ts`, and `src/proto/**`.
 - `bun run generate-codegen-specs`: Generate TurboModule codegen specs
 - `bun run bob`: build the library using `react-native-builder-bob`.
 - `bun run build`: generate lnd bindings & C++ TurboModule codegen and build the library using `react-native-builder-bob`.

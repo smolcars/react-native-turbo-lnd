@@ -46,6 +46,8 @@ cp \
 cp \
   ./build/index.ts ../src/index.ts && \
 cp \
+  ./build/mock.ts ../src/mock.ts && \
+cp \
   ./build/core/NativeTurboLnd.ts ../src/core/NativeTurboLnd.ts && \
 cp -r \
   ./build/proto ../src/
