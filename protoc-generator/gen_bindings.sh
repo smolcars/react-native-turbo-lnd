@@ -38,6 +38,7 @@ echo "[protoc-generator] Merged"
 echo "[protoc-generator] Copying files to cpp and src folders"
 
 mkdir -p ../src/core
+mkdir -p ../src/electrobun
 
 cp \
   ./build/TurboLndModule.h ../cpp/TurboLndModule.h && \
@@ -47,6 +48,14 @@ cp \
   ./build/index.ts ../src/index.ts && \
 cp \
   ./build/mock.ts ../src/mock.ts && \
+cp \
+  ./build/electrobun/view.ts ../src/electrobun/view.ts && \
+cp \
+  ./build/electrobun/view-core.ts ../src/electrobun/view-core.ts && \
+cp \
+  ./build/electrobun/bun.ts ../src/electrobun/bun.ts && \
+cp \
+  ./build/electrobun/rpc-schema.ts ../src/electrobun/rpc-schema.ts && \
 cp \
   ./build/core/NativeTurboLnd.ts ../src/core/NativeTurboLnd.ts && \
 cp -r \

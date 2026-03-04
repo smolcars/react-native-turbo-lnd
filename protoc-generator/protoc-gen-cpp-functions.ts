@@ -3,6 +3,10 @@
 import { readFileSync } from "node:fs";
 import * as path from "node:path";
 import protobuf from "protobufjs";
+import { buildProtobufEsWrapper } from "./protobuf-es-wrapper-template.ts";
+import { buildElectrobunViewCore } from "./electrobun-view-core-template.ts";
+import { buildElectrobunBun } from "./electrobun-bun-template.ts";
+import { buildElectrobunRpcSchema } from "./electrobun-rpc-schema-template.ts";
 
 interface ProtoFile {
   name: string;
@@ -120,11 +124,18 @@ function generateCode(request: any): {
   turboSpec: string;
   protobufEsWrapper: string;
   protobufEsWrapperMock: string;
+  protobufEsWrapperElectrobun: string;
+  electrobunViewCore: string;
+  electrobunBun: string;
+  electrobunRpcSchema: string;
 } {
   const cppHeaderResult: string[] = [];
   const cppResult: string[] = [];
   const turboSpecResult: string[] = [];
   const protobufEsWrapperResult: string[] = [];
+  const electrobunUnaryMethods: string[] = [];
+  const electrobunServerStreamingMethods: string[] = [];
+  const electrobunBidiStreamingMethods: string[] = [];
 
   const comments: Record<string, string> = {};
   request.proto_file.forEach((protoFile: ProtoFile) => {
@@ -154,6 +165,14 @@ function generateCode(request: any): {
             const [_2, outputTypeService, outputType] = method.output_type.split(".");
             const isServerStreaming = method.server_streaming;
             const isClientStreaming = method.client_streaming;
+
+            if (!isServerStreaming && !isClientStreaming) {
+              electrobunUnaryMethods.push(methodName);
+            } else if (isServerStreaming && !isClientStreaming) {
+              electrobunServerStreamingMethods.push(methodName);
+            } else if (isClientStreaming && isServerStreaming) {
+              electrobunBidiStreamingMethods.push(methodName);
+            }
 
             // Get comment from extracted comments
             const comment = comments[method.name]
@@ -539,50 +558,62 @@ ${turboSpecResult.join("\n\n")}
 export default TurboModuleRegistry.getEnforcing<Spec>("TurboLndModuleCxx");
 `;
 
-  const buildProtobufEsWrapper = (backendModulePath: string): string =>
-`${contributorNotice}
-/* eslint-disable */
-import "./setup-text-encoding";
-import TurboLnd from "${backendModulePath}";
-import { type OnResponseCallback, type OnErrorCallback, type UnsubscribeFromStream } from "./core/NativeTurboLnd";
+  const uniqueUnaryMethods = Array.from(new Set(electrobunUnaryMethods));
+  const uniqueServerStreamingMethods = Array.from(
+    new Set(electrobunServerStreamingMethods)
+  );
+  const uniqueBidiStreamingMethods = Array.from(
+    new Set(electrobunBidiStreamingMethods)
+  );
+  const methodsSource = protobufEsWrapperResult.join("\n\n");
+  const protobufEsWrapper = buildProtobufEsWrapper({
+    contributorNotice,
+    backendModulePath: "./core/NativeTurboLnd",
+    rootPrefix: ".",
+    methodsSource,
+  });
+  const protobufEsWrapperMock = buildProtobufEsWrapper({
+    contributorNotice,
+    backendModulePath: "./mocks/index",
+    rootPrefix: ".",
+    methodsSource,
+  });
+  const protobufEsWrapperElectrobun = buildProtobufEsWrapper({
+    contributorNotice,
+    backendModulePath: "./view-core",
+    rootPrefix: "..",
+    methodsSource,
+  });
+  const electrobunViewCore = buildElectrobunViewCore({
+    contributorNotice,
+    unaryMethods: uniqueUnaryMethods,
+    serverStreamingMethods: uniqueServerStreamingMethods,
+    bidiStreamingMethods: uniqueBidiStreamingMethods,
+  });
+  const electrobunBun = buildElectrobunBun({
+    contributorNotice,
+    unaryMethods: uniqueUnaryMethods,
+    serverStreamingMethods: uniqueServerStreamingMethods,
+    bidiStreamingMethods: uniqueBidiStreamingMethods,
+  });
+  const electrobunRpcSchema = buildElectrobunRpcSchema({
+    contributorNotice,
+    unaryMethods: uniqueUnaryMethods,
+    serverStreamingMethods: uniqueServerStreamingMethods,
+    bidiStreamingMethods: uniqueBidiStreamingMethods,
+  });
 
-import { create, toBinary, fromBinary, type MessageInitShape } from "@bufbuild/protobuf";
-import { base64Encode, base64Decode } from "@bufbuild/protobuf/wire";
-
-import * as lnrpc from "./proto/lightning_pb";
-// import * as walletunlocker from "./proto/walletunlocker_pb";
-// import * as state from "./proto/stateservice_pb";
-import * as autopilotrpc from "./proto/autopilotrpc/autopilot_pb";
-// import * as chainrpc from "./proto/chainrpc/chainkit_pb";
-import * as chainrpc from "./proto/chainrpc/chainnotifier_pb";
-// import * as dev from "./proto/devrpc/dev_pb";
-import * as invoicesrpc from "./proto/invoicesrpc/invoices_pb";
-// import * as versionresponse from "./proto/lnclipb/lncli_pb";
-import * as neutrinorpc from "./proto/neutrinorpc/neutrino_pb";
-import * as peersrpc from "./proto/peersrpc/peers_pb";
-import * as routerrpc from "./proto/routerrpc/router_pb";
-import * as signrpc from "./proto/signrpc/signer_pb";
-import * as verrpc from "./proto/verrpc/verrpc_pb";
-import * as walletrpc from "./proto/walletrpc/walletkit_pb";
-import * as watchtowerrpc from "./proto/watchtowerrpc/watchtower_pb";
-import * as wtclientrpc from "./proto/wtclientrpc/wtclient_pb";
-
-/**
- *
- * Starts up lnd.
- * You need to provide path to the app's local dir to lnd via \`--lnddir\` arg.
- * Use \`subscribeState\` to know when lnd is ready for wallet unlock/creation.
- *
- */
-export const start = TurboLnd.start;
-
-${protobufEsWrapperResult.join("\n\n")}
-`;
-
-  const protobufEsWrapper = buildProtobufEsWrapper("./core/NativeTurboLnd");
-  const protobufEsWrapperMock = buildProtobufEsWrapper("./mocks/index");
-
-  return { cppContent, cppHeaderContent, turboSpec, protobufEsWrapper, protobufEsWrapperMock };
+  return {
+    cppContent,
+    cppHeaderContent,
+    turboSpec,
+    protobufEsWrapper,
+    protobufEsWrapperMock,
+    protobufEsWrapperElectrobun,
+    electrobunViewCore,
+    electrobunBun,
+    electrobunRpcSchema,
+  };
 }
 
 async function main() {
@@ -594,7 +625,17 @@ async function main() {
     const inputBuffer = await readStdin();
     const uint8Array = new Uint8Array(inputBuffer);
     const request = PluginRequest.decode(uint8Array);
-    const { cppContent, cppHeaderContent, turboSpec, protobufEsWrapper, protobufEsWrapperMock } = generateCode(request);
+    const {
+      cppContent,
+      cppHeaderContent,
+      turboSpec,
+      protobufEsWrapper,
+      protobufEsWrapperMock,
+      protobufEsWrapperElectrobun,
+      electrobunViewCore,
+      electrobunBun,
+      electrobunRpcSchema,
+    } = generateCode(request);
 
     const response = PluginResponse.create({
       file: [
@@ -617,6 +658,22 @@ async function main() {
         {
           name: "mock.ts",
           content: protobufEsWrapperMock,
+        },
+        {
+          name: "electrobun/view.ts",
+          content: protobufEsWrapperElectrobun,
+        },
+        {
+          name: "electrobun/view-core.ts",
+          content: electrobunViewCore,
+        },
+        {
+          name: "electrobun/bun.ts",
+          content: electrobunBun,
+        },
+        {
+          name: "electrobun/rpc-schema.ts",
+          content: electrobunRpcSchema,
         },
       ],
     });

@@ -1,6 +1,6 @@
 {
   "name": "react-native-turbo-lnd",
-  "version": "0.0.8",
+  "version": "0.0.9-alpha.0",
   "description": "C++ TurboModule for lnd! ⚡️",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
@@ -70,6 +70,56 @@
       "import": {
         "types": "./lib/typescript/module/src/proto/*.d.ts",
         "default": "./lib/module/proto/*.js"
+      }
+    },
+    "./electrobun/bun": {
+      "require": {
+        "types": "./lib/typescript/commonjs/src/electrobun/bun.d.ts",
+        "default": "./lib/commonjs/electrobun/bun.js"
+      },
+      "import": {
+        "types": "./lib/typescript/module/src/electrobun/bun.d.ts",
+        "default": "./lib/module/electrobun/bun.js"
+      }
+    },
+    "./electrobun/bun-rpc": {
+      "require": {
+        "types": "./lib/typescript/commonjs/src/electrobun/bun-rpc.d.ts",
+        "default": "./lib/commonjs/electrobun/bun-rpc.js"
+      },
+      "import": {
+        "types": "./lib/typescript/module/src/electrobun/bun-rpc.d.ts",
+        "default": "./lib/module/electrobun/bun-rpc.js"
+      }
+    },
+    "./electrobun/bun-rpc-factory": {
+      "require": {
+        "types": "./lib/typescript/commonjs/src/electrobun/bun-rpc-factory.d.ts",
+        "default": "./lib/commonjs/electrobun/bun-rpc-factory.js"
+      },
+      "import": {
+        "types": "./lib/typescript/module/src/electrobun/bun-rpc-factory.d.ts",
+        "default": "./lib/module/electrobun/bun-rpc-factory.js"
+      }
+    },
+    "./electrobun/view": {
+      "require": {
+        "types": "./lib/typescript/commonjs/src/electrobun/view.d.ts",
+        "default": "./lib/commonjs/electrobun/view.js"
+      },
+      "import": {
+        "types": "./lib/typescript/module/src/electrobun/view.d.ts",
+        "default": "./lib/module/electrobun/view.js"
+      }
+    },
+    "./electrobun/rpc-schema": {
+      "require": {
+        "types": "./lib/typescript/commonjs/src/electrobun/rpc-schema.d.ts",
+        "default": "./lib/commonjs/electrobun/rpc-schema.js"
+      },
+      "import": {
+        "types": "./lib/typescript/module/src/electrobun/rpc-schema.d.ts",
+        "default": "./lib/module/electrobun/rpc-schema.js"
       }
     }
   },

@@ -90,3 +90,6 @@ liblnd.a
 /example/src/proto
 /src/proto
 /src/core
+
+# example-electrobun
+example-electrobun/dist/
