@@ -1,4 +1,7 @@
-import { Electroview } from "electrobun/view";
+import {
+  invokeElectrobunRequest,
+  sendElectrobunMessage,
+} from "../../../src/electrobun/view";
 
 type ExampleLogPayload =
   | Record<string, unknown>
@@ -31,36 +34,12 @@ type ExampleRpcSchema = {
   };
 };
 
-type ExampleRpc = ReturnType<typeof Electroview.defineRPC<ExampleRpcSchema>>;
-
-let rpcInstance: ExampleRpc | null = null;
-let electroviewInitialized = false;
-
-function ensureRpc(): ExampleRpc {
-  if (rpcInstance === null) {
-    rpcInstance = Electroview.defineRPC<ExampleRpcSchema>({
-      handlers: {
-        requests: {},
-        messages: {},
-      },
-    });
-  }
-
-  if (!electroviewInitialized) {
-    // eslint-disable-next-line no-new
-    new Electroview({ rpc: rpcInstance });
-    electroviewInitialized = true;
-  }
-
-  return rpcInstance;
-}
-
 export async function examplePing() {
-  const rpc = ensureRpc();
-  return rpc.request.__ExamplePing();
+  return invokeElectrobunRequest<
+    ExampleRpcSchema["bun"]["requests"]["__ExamplePing"]["response"]
+  >("__ExamplePing");
 }
 
 export function sendExampleLog(payload: ExampleLogPayload) {
-  const rpc = ensureRpc();
-  rpc.send.__ExampleLog(payload);
+  sendElectrobunMessage("__ExampleLog", payload);
 }

@@ -46,6 +46,7 @@ const bidiSubscriptions = new Map<number, StreamSubscription>();
 function ensureRpc(): ElectrobunRpc {
   if (rpcInstance === null) {
     rpcInstance = Electroview.defineRPC<TurboLndElectrobunRpcSchema>({
+      maxRequestTime: 60 * 1000,
       handlers: {
         requests: {},
         messages: {},
@@ -60,6 +61,46 @@ function ensureRpc(): ElectrobunRpc {
   }
 
   return rpcInstance;
+}
+
+type DynamicRpcRequestMethods = Record<
+  string,
+  (params?: unknown) => Promise<unknown>
+>;
+type DynamicRpcMessageMethods = Record<string, (payload?: unknown) => void>;
+
+export async function invokeElectrobunRequest<Response = unknown>(
+  requestName: string,
+  params?: unknown
+): Promise<Response> {
+  const rpc = ensureRpc();
+  const requestMethod = (rpc.request as unknown as DynamicRpcRequestMethods)[
+    requestName
+  ];
+  if (typeof requestMethod !== "function") {
+    throw new Error(
+      `Electrobun request "${requestName}" is not available on the active RPC instance.`
+    );
+  }
+
+  return (await requestMethod(params)) as Response;
+}
+
+export function sendElectrobunMessage(
+  messageName: string,
+  payload?: unknown
+): void {
+  const rpc = ensureRpc();
+  const messageMethod = (rpc.send as unknown as DynamicRpcMessageMethods)[
+    messageName
+  ];
+  if (typeof messageMethod !== "function") {
+    throw new Error(
+      `Electrobun message "${messageName}" is not available on the active RPC instance.`
+    );
+  }
+
+  messageMethod(payload);
 }
 
 function hasSubscriptions(): boolean {

@@ -6,6 +6,7 @@ export function defineTurboLndElectrobunRPCForExample() {
     defineElectrobunRPC,
     // You can still create your own requests and messages here:
     {
+      maxRequestTime: 10 * 1000000,
       requests: {
         __ExamplePing: async () => {
           return {

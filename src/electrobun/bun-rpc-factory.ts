@@ -1,3 +1,4 @@
+import type { ElectrobunRPCSchema } from "electrobun/bun";
 import TurboLndElectrobunBackend from "./bun";
 import type {
   OnErrorCallback,
@@ -9,33 +10,50 @@ import type { TurboLndElectrobunRpcSchema } from "./rpc-schema";
 type StreamEvent =
   TurboLndElectrobunRpcSchema["webview"]["messages"]["__TurboLndStreamEvent"];
 
-type RpcWithSend = {
-  send: unknown;
-};
-
-type RpcWithStreamSender = {
-  send: {
-    __TurboLndStreamEvent: (payload: StreamEvent) => void;
+type TurboLndElectrobunSchema = ElectrobunRPCSchema & {
+  bun: {
+    requests: TurboLndElectrobunRpcSchema["bun"]["requests"] &
+      Record<string, { params: unknown; response: unknown }>;
+    messages: TurboLndElectrobunRpcSchema["bun"]["messages"] &
+      Record<string, unknown>;
+  };
+  webview: {
+    requests: TurboLndElectrobunRpcSchema["webview"]["requests"] &
+      Record<string, { params: unknown; response: unknown }>;
+    messages: TurboLndElectrobunRpcSchema["webview"]["messages"] &
+      Record<string, unknown>;
   };
 };
 
-type RequestHandlers = Record<string, (...args: any[]) => any>;
-type MessageHandlers = Record<string, (...args: any[]) => any>;
+type BunRpcConfig<Schema extends ElectrobunRPCSchema> = Parameters<
+  typeof import("electrobun/bun").defineElectrobunRPC<Schema, "bun">
+>[1];
 
-export type AdditionalElectrobunHandlers = {
-  requests?: RequestHandlers;
-  messages?: MessageHandlers;
+type BunRpc<Schema extends ElectrobunRPCSchema> = ReturnType<
+  typeof import("electrobun/bun").defineElectrobunRPC<Schema, "bun">
+>;
+
+type DefineElectrobunRPCForBun = <Schema extends ElectrobunRPCSchema>(
+  side: "bun",
+  config: BunRpcConfig<Schema>
+) => BunRpc<Schema>;
+
+type RequestHandlers<Schema extends ElectrobunRPCSchema> = Exclude<
+  NonNullable<BunRpcConfig<Schema>["handlers"]["requests"]>,
+  (...args: any[]) => any
+>;
+
+type MessageHandlers<Schema extends ElectrobunRPCSchema> = NonNullable<
+  BunRpcConfig<Schema>["handlers"]["messages"]
+>;
+
+export type AdditionalElectrobunHandlers<
+  Schema extends TurboLndElectrobunSchema = TurboLndElectrobunRpcSchema,
+> = {
+  maxRequestTime?: BunRpcConfig<Schema>["maxRequestTime"];
+  requests?: RequestHandlers<Schema>;
+  messages?: MessageHandlers<Schema>;
 };
-
-type DefineElectrobunRPCLike<Rpc> = (
-  side: "bun" | "webview",
-  config: {
-    handlers: {
-      requests: RequestHandlers;
-      messages: MessageHandlers;
-    };
-  }
-) => Rpc;
 
 type UnaryMethod = (data: string) => Promise<string>;
 type ServerStreamMethod = (
@@ -98,8 +116,11 @@ function resolveBidiStreamMethod(method: string): BidiStreamMethod {
   return candidate as BidiStreamMethod;
 }
 
-function emitStreamEvent(rpc: RpcWithSend, payload: StreamEvent): void {
-  (rpc as unknown as RpcWithStreamSender).send.__TurboLndStreamEvent(payload);
+function emitStreamEvent<Schema extends TurboLndElectrobunSchema>(
+  rpc: BunRpc<Schema>,
+  payload: StreamEvent
+): void {
+  rpc.send.__TurboLndStreamEvent(payload);
 }
 
 function assertNoHandlerCollisions(
@@ -118,15 +139,17 @@ function assertNoHandlerCollisions(
   }
 }
 
-export function defineTurboLndElectrobunRPCWithFactory<Rpc extends RpcWithSend>(
-  defineElectrobunRPC: DefineElectrobunRPCLike<Rpc>,
-  additionalHandlers: AdditionalElectrobunHandlers = {}
-): Rpc {
+export function defineTurboLndElectrobunRPCWithFactory<
+  Schema extends TurboLndElectrobunSchema = TurboLndElectrobunRpcSchema,
+>(
+  defineElectrobunRPC: DefineElectrobunRPCForBun,
+  additionalHandlers: AdditionalElectrobunHandlers<Schema> = {}
+): BunRpc<Schema> {
   const serverStreams = new Map<string, () => void>();
   const bidiStreams = new Map<string, WriteableStream>();
   let nextId = 1;
 
-  const turboRequests: RequestHandlers = {
+  const turboRequests = {
     __TurboLndStart: async (args: string) => {
       const startMethod = resolveBackendMethod("start");
       if (typeof startMethod !== "function") {
@@ -269,15 +292,27 @@ export function defineTurboLndElectrobunRPCWithFactory<Rpc extends RpcWithSend>(
         throw new Error(toErrorMessage(error));
       }
     },
-  };
-  const turboMessages: MessageHandlers = {};
+  } as RequestHandlers<Schema>;
 
-  const extraRequests = additionalHandlers.requests ?? {};
-  const extraMessages = additionalHandlers.messages ?? {};
-  assertNoHandlerCollisions(turboRequests, extraRequests, "request");
-  assertNoHandlerCollisions(turboMessages, extraMessages, "message");
+  const turboMessages = {} as MessageHandlers<Schema>;
+
+  const extraRequests =
+    additionalHandlers.requests ?? ({} as RequestHandlers<Schema>);
+  const extraMessages =
+    additionalHandlers.messages ?? ({} as MessageHandlers<Schema>);
+  assertNoHandlerCollisions(
+    turboRequests as Record<string, unknown>,
+    extraRequests as Record<string, unknown>,
+    "request"
+  );
+  assertNoHandlerCollisions(
+    turboMessages as Record<string, unknown>,
+    extraMessages as Record<string, unknown>,
+    "message"
+  );
 
   const rpc = defineElectrobunRPC("bun", {
+    maxRequestTime: additionalHandlers.maxRequestTime ?? 10 * 1000,
     handlers: {
       requests: {
         ...turboRequests,

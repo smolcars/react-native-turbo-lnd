@@ -23,6 +23,7 @@ export function buildProtobufEsWrapper({
   return `${contributorNotice}
 /* eslint-disable */
 import "${fromRoot("setup-text-encoding")}";
+import * as TurboLndBackendModule from "${backendModulePath}";
 import TurboLnd from "${backendModulePath}";
 import { type OnResponseCallback, type OnErrorCallback, type UnsubscribeFromStream } from "${fromRoot("core/NativeTurboLnd")}";
 
@@ -55,6 +56,41 @@ import * as wtclientrpc from "${fromRoot("proto/wtclientrpc/wtclient_pb")}";
  *
  */
 export const start = TurboLnd.start;
+export async function invokeElectrobunRequest<Response = unknown>(
+  requestName: string,
+  params?: unknown
+): Promise<Response> {
+  const invoke = (
+    TurboLndBackendModule as Record<string, unknown>
+  ).invokeElectrobunRequest;
+  if (typeof invoke !== "function") {
+    throw new Error(
+      "invokeElectrobunRequest is only available with the Electrobun view backend."
+    );
+  }
+
+  return (
+    invoke as (requestName: string, params?: unknown) => Promise<Response>
+  )(requestName, params);
+}
+
+export function sendElectrobunMessage(
+  messageName: string,
+  payload?: unknown
+): void {
+  const send = (TurboLndBackendModule as Record<string, unknown>)
+    .sendElectrobunMessage;
+  if (typeof send !== "function") {
+    throw new Error(
+      "sendElectrobunMessage is only available with the Electrobun view backend."
+    );
+  }
+
+  (send as (messageName: string, payload?: unknown) => void)(
+    messageName,
+    payload
+  );
+}
 
 ${methodsSource}
 `;

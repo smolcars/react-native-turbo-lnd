@@ -42,9 +42,16 @@ type RpcRequestCallers<Requests extends RequestsMap> = {
   [K in keyof Requests]: RequestCaller<Requests[K]>;
 };
 
-type RpcRequestHandlers<Requests extends RequestsMap> = {
+type RpcRequestHandlersObject<Requests extends RequestsMap> = {
   [K in keyof Requests]?: RequestHandler<Requests[K]>;
 };
+
+type RpcRequestHandlers<Requests extends RequestsMap> =
+  | RpcRequestHandlersObject<Requests>
+  | (<K extends keyof Requests>(
+      method: K,
+      params: Requests[K]["params"]
+    ) => Requests[K]["response"] | Promise<Requests[K]["response"]>);
 
 type RpcMessageSenders<Messages extends MessagesMap> = {
   [K in keyof Messages]: (payload: Messages[K]) => void;
@@ -52,6 +59,11 @@ type RpcMessageSenders<Messages extends MessagesMap> = {
 
 type RpcMessageHandlers<Messages extends MessagesMap> = {
   [K in keyof Messages]?: (payload: Messages[K]) => void;
+} & {
+  "*"?: (
+    messageName: keyof Messages,
+    payload: Messages[keyof Messages]
+  ) => void;
 };
 
 type RpcConnection<Local extends SideSchema, Remote extends SideSchema> = {
@@ -68,20 +80,24 @@ type RpcConnection<Local extends SideSchema, Remote extends SideSchema> = {
 };
 
 type RpcHandlers<Local extends SideSchema> = {
-  requests: RpcRequestHandlers<Local["requests"]>;
-  messages: RpcMessageHandlers<Local["messages"]>;
+  requests?: RpcRequestHandlers<Local["requests"]>;
+  messages?: RpcMessageHandlers<Local["messages"]>;
 };
 
 declare module "electrobun/bun" {
+  export type ElectrobunRPCSchema = RpcSchemaLike;
+
   export function defineElectrobunRPC<
     Schema extends RpcSchemaLike,
     Side extends ElectrobunSide,
   >(
     side: Side,
     config: {
+      maxRequestTime?: number;
       handlers: RpcHandlers<SideOf<Schema, Side>>;
+      extraRequestHandlers?: Record<string, Function>;
     }
-  ): any;
+  ): RpcConnection<SideOf<Schema, Side>, OppositeSideOf<Schema, Side>>;
 }
 
 declare module "electrobun/view" {
@@ -90,6 +106,7 @@ declare module "electrobun/view" {
     constructor(config: { rpc: unknown });
 
     static defineRPC<Schema extends RpcSchemaLike>(config: {
+      maxRequestTime?: number;
       handlers: RpcHandlers<Schema["webview"]>;
     }): RpcConnection<Schema["webview"], Schema["bun"]>;
   }
