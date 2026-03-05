@@ -1,7 +1,7 @@
 import {
   invokeElectrobunRequest,
   sendElectrobunMessage,
-} from "../../../src/electrobun/view";
+} from "../../../src/electrobun/custom-rpc";
 
 type ExampleLogPayload =
   | Record<string, unknown>

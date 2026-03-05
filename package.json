@@ -121,6 +121,16 @@
         "types": "./lib/typescript/module/src/electrobun/rpc-schema.d.ts",
         "default": "./lib/module/electrobun/rpc-schema.js"
       }
+    },
+    "./electrobun/custom-rpc": {
+      "require": {
+        "types": "./lib/typescript/commonjs/src/electrobun/custom-rpc.d.ts",
+        "default": "./lib/commonjs/electrobun/custom-rpc.js"
+      },
+      "import": {
+        "types": "./lib/typescript/module/src/electrobun/custom-rpc.d.ts",
+        "default": "./lib/module/electrobun/custom-rpc.js"
+      }
     }
   },
   "scripts": {
@@ -171,12 +181,14 @@
     "@react-native/eslint-config": "0.84.1",
     "@react-native/eslint-plugin": "0.84.1",
     "@release-it/conventional-changelog": "^10.0.5",
-    "@types/node": "^25.3.3",
+    "@types/bun": "1.3.10",
+    "@types/node": "20.17.0",
     "@types/react": "^19.2.0",
     "@typescript-eslint/eslint-plugin": "^8.56.1",
     "@typescript-eslint/parser": "^8.56.1",
     "commitlint": "^20.4.2",
     "del-cli": "^7.0.0",
+    "electrobun": "1.14.4",
     "eslint": "^10.0.2",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-eslint-comments": "^3.2.0",
@@ -196,11 +208,15 @@
   },
   "peerDependencies": {
     "@bufbuild/protobuf": "*",
+    "electrobun": "*",
     "react": "*",
     "react-native": "*"
   },
   "peerDependenciesMeta": {
     "@bufbuild/protobuf": {
+      "optional": true
+    },
+    "electrobun": {
       "optional": true
     }
   },

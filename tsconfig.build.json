@@ -1,5 +1,13 @@
 {
   "extends": "./tsconfig",
+  "compilerOptions": {
+    "lib": ["esnext", "dom"],
+    "noImplicitReturns": false,
+    "noEmit": true,
+    "outDir": "lib/typescript",
+    "declaration": false,
+    "emitDeclarationOnly": false
+  },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": [
     "example",

@@ -1,6 +1,7 @@
 {
-  "name": "electrobun-react-tailwind-vite",
+  "name": "react-native-turbo-lnd-example-electrobun",
   "version": "1.0.0",
+  "private": true,
   "description": "Electrobun app with React, Tailwind CSS, and Vite HMR",
   "scripts": {
     "start": "vite build && electrobun dev",

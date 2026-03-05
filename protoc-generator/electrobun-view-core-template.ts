@@ -108,6 +108,10 @@ type DynamicRpcRequestMethods = Record<
 >;
 type DynamicRpcMessageMethods = Record<string, (payload?: unknown) => void>;
 
+/**
+ * Invoke a custom Electrobun RPC request on the active shared RPC instance.
+ * This is intended for app-defined Electrobun request handlers.
+ */
 export async function invokeElectrobunRequest<Response = unknown>(
   requestName: string,
   params?: unknown
@@ -125,6 +129,10 @@ export async function invokeElectrobunRequest<Response = unknown>(
   return (await requestMethod(params)) as Response;
 }
 
+/**
+ * Send a custom Electrobun one-way message on the active shared RPC instance.
+ * This is intended for app-defined Electrobun message handlers.
+ */
 export function sendElectrobunMessage(
   messageName: string,
   payload?: unknown

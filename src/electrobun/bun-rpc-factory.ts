@@ -120,7 +120,17 @@ function emitStreamEvent<Schema extends TurboLndElectrobunSchema>(
   rpc: BunRpc<Schema>,
   payload: StreamEvent
 ): void {
-  rpc.send.__TurboLndStreamEvent(payload);
+  const sendStreamEvent = (
+    rpc.send as unknown as {
+      __TurboLndStreamEvent?: (value: StreamEvent) => void;
+    }
+  ).__TurboLndStreamEvent;
+  if (!sendStreamEvent) {
+    throw new Error(
+      'Electrobun message sender "__TurboLndStreamEvent" is unavailable.'
+    );
+  }
+  sendStreamEvent(payload);
 }
 
 function assertNoHandlerCollisions(
@@ -292,7 +302,7 @@ export function defineTurboLndElectrobunRPCWithFactory<
         throw new Error(toErrorMessage(error));
       }
     },
-  } as RequestHandlers<Schema>;
+  } as unknown as RequestHandlers<Schema>;
 
   const turboMessages = {} as MessageHandlers<Schema>;
 
