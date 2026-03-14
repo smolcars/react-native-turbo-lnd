@@ -42,7 +42,6 @@ export function buildElectrobunViewCore({
 
   return `${contributorNotice}
 /* eslint-disable */
-import { Electroview } from "electrobun/view";
 import type {
   OnErrorCallback,
   OnResponseCallback,
@@ -52,6 +51,7 @@ import type {
   WriteableStream,
 } from "../core/NativeTurboLnd";
 import type { TurboLndElectrobunRpcSchema } from "./rpc-schema";
+import { ensureElectrobunRpc } from "./rpc-runtime";
 
 type StreamEvent =
   TurboLndElectrobunRpcSchema["webview"]["messages"]["__TurboLndStreamEvent"];
@@ -69,86 +69,12 @@ type StreamSubscription = {
   onError: OnErrorCallback;
 };
 
-type ElectrobunRpc = ReturnType<
-  typeof Electroview.defineRPC<TurboLndElectrobunRpcSchema>
->;
-
-let rpcInstance: ElectrobunRpc | null = null;
-let electroviewInitialized = false;
 let streamListenerAttached = false;
 let nextServerLocalId = 1;
 let nextBidiLocalId = 1;
 
 const serverSubscriptions = new Map<number, StreamSubscription>();
 const bidiSubscriptions = new Map<number, StreamSubscription>();
-
-function ensureRpc(): ElectrobunRpc {
-  if (rpcInstance === null) {
-    rpcInstance = Electroview.defineRPC<TurboLndElectrobunRpcSchema>({
-      maxRequestTime: 60 * 1000,
-      handlers: {
-        requests: {},
-        messages: {},
-      },
-    });
-  }
-
-  if (!electroviewInitialized) {
-    // eslint-disable-next-line no-new
-    new Electroview({ rpc: rpcInstance });
-    electroviewInitialized = true;
-  }
-
-  return rpcInstance;
-}
-
-type DynamicRpcRequestMethods = Record<
-  string,
-  (params?: unknown) => Promise<unknown>
->;
-type DynamicRpcMessageMethods = Record<string, (payload?: unknown) => void>;
-
-/**
- * Invoke a custom Electrobun RPC request on the active shared RPC instance.
- * This is intended for app-defined Electrobun request handlers.
- */
-export async function invokeElectrobunRequest<Response = unknown>(
-  requestName: string,
-  params?: unknown
-): Promise<Response> {
-  const rpc = ensureRpc();
-  const requestMethod = (rpc.request as unknown as DynamicRpcRequestMethods)[
-    requestName
-  ];
-  if (typeof requestMethod !== "function") {
-    throw new Error(
-      \`Electrobun request "\${requestName}" is not available on the active RPC instance.\`
-    );
-  }
-
-  return (await requestMethod(params)) as Response;
-}
-
-/**
- * Send a custom Electrobun one-way message on the active shared RPC instance.
- * This is intended for app-defined Electrobun message handlers.
- */
-export function sendElectrobunMessage(
-  messageName: string,
-  payload?: unknown
-): void {
-  const rpc = ensureRpc();
-  const messageMethod = (rpc.send as unknown as DynamicRpcMessageMethods)[
-    messageName
-  ];
-  if (typeof messageMethod !== "function") {
-    throw new Error(
-      \`Electrobun message "\${messageName}" is not available on the active RPC instance.\`
-    );
-  }
-
-  messageMethod(payload);
-}
 
 function hasSubscriptions(): boolean {
   return serverSubscriptions.size > 0 || bidiSubscriptions.size > 0;
@@ -159,7 +85,7 @@ function ensureStreamListener() {
     return;
   }
 
-  const rpc = ensureRpc();
+  const rpc = ensureElectrobunRpc();
   rpc.addMessageListener("__TurboLndStreamEvent", onStreamEvent);
   streamListenerAttached = true;
 }
@@ -169,7 +95,7 @@ function maybeDetachStreamListener() {
     return;
   }
 
-  const rpc = ensureRpc();
+  const rpc = ensureElectrobunRpc();
   rpc.removeMessageListener("__TurboLndStreamEvent", onStreamEvent);
   streamListenerAttached = false;
 }
@@ -205,7 +131,7 @@ function onStreamEvent(event: StreamEvent) {
 }
 
 async function invokeUnary(method: UnaryMethod, data: ProtobufBase64) {
-  const rpc = ensureRpc();
+  const rpc = ensureElectrobunRpc();
   const response = await rpc.request.__TurboLndUnary({ method, data });
   return response.data;
 }
@@ -216,7 +142,7 @@ function openServerStream(
   onResponse: OnResponseCallback,
   onError: OnErrorCallback
 ): UnsubscribeFromStream {
-  const rpc = ensureRpc();
+  const rpc = ensureElectrobunRpc();
   const localId = nextServerLocalId++;
 
   serverSubscriptions.set(localId, {
@@ -278,7 +204,7 @@ function openBidiStream(
   onResponse: OnResponseCallback,
   onError: OnErrorCallback
 ): WriteableStream {
-  const rpc = ensureRpc();
+  const rpc = ensureElectrobunRpc();
   const localId = nextBidiLocalId++;
 
   bidiSubscriptions.set(localId, {
@@ -362,7 +288,7 @@ function openBidiStream(
 
 const TurboLndElectrobunView = {
   async start(args: string) {
-    const rpc = ensureRpc();
+    const rpc = ensureElectrobunRpc();
     return rpc.request.__TurboLndStart(args);
   },
 ${unaryMethodLines}${serverStreamingMethodLines}${bidiStreamingMethodLines}} satisfies Spec;

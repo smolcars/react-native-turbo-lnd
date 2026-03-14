@@ -1,61 +1,24 @@
-# React + Tailwind + Vite Electrobun Template
+# TurboLnd Electrobun Example
 
-A fast Electrobun desktop app template with React, Tailwind CSS, and Vite for hot module replacement (HMR).
+This app is part of the root Bun workspace. Install dependencies from the repository root so it resolves the local `react-native-turbo-lnd` package through the workspace instead of relative source imports.
 
 ## Getting Started
 
+Run these commands from the repository root:
+
 ```bash
-# Install dependencies
 bun install
-
-# Development without HMR (uses bundled assets)
-bun run dev
-
-# Development with HMR (recommended)
-bun run dev:hmr
-
-# Build for production
-bun run build
-
-# Build for production release
-bun run build:prod
+bun run --cwd example-electrobun dev
 ```
 
-## How HMR Works
+For HMR:
 
-When you run `bun run dev:hmr`:
-
-1. **Vite dev server** starts on `http://localhost:5173` with HMR enabled
-2. **Electrobun** starts and detects the running Vite server
-3. The app loads from the Vite dev server instead of bundled assets
-4. Changes to React components update instantly without full page reload
-
-When you run `bun run dev` (without HMR):
-
-1. Electrobun starts and loads from `views://mainview/index.html`
-2. You need to rebuild (`bun run build`) to see changes
-
-## Project Structure
-
-```
-├── src/
-│   ├── bun/
-│   │   └── index.ts        # Main process (Electrobun/Bun)
-│   └── mainview/
-│       ├── App.tsx         # React app component
-│       ├── main.tsx        # React entry point
-│       ├── index.html      # HTML template
-│       └── index.css       # Tailwind CSS
-├── electrobun.config.ts    # Electrobun configuration
-├── vite.config.ts          # Vite configuration
-├── tailwind.config.js      # Tailwind configuration
-└── package.json
+```bash
+bun run --cwd example-electrobun dev:hmr
 ```
 
-## Customizing
+For a release build:
 
-- **React components**: Edit files in `src/mainview/`
-- **Tailwind theme**: Edit `tailwind.config.js`
-- **Vite settings**: Edit `vite.config.ts`
-- **Window settings**: Edit `src/bun/index.ts`
-- **App metadata**: Edit `electrobun.config.ts`
+```bash
+bun run --cwd example-electrobun build:canary
+```

@@ -608,22 +608,6 @@ type ServerStreamState = {
 };
 
 const serverStreamStates = new Set<ServerStreamState>();
-type ServerStreamListener = {
-  onResponse: OnResponseCallback;
-  onError: OnErrorCallback;
-};
-type MultiplexedServerStream = {
-  listeners: Map<number, ServerStreamListener>;
-};
-const multiplexedServerStreams = new Map<string, MultiplexedServerStream>();
-let nextServerStreamListenerId = 1;
-
-function getServerStreamKey(
-  method: ElectrobunServerStreamMethod,
-  data: ProtobufBase64
-): string {
-  return `${method}\u0000${data}`;
-}
 
 function openNativeServerStream(
   method: ElectrobunServerStreamMethod,
@@ -715,55 +699,7 @@ function openServerStream(
   onResponse: OnResponseCallback,
   onError: OnErrorCallback
 ): UnsubscribeFromStream {
-  const streamKey = getServerStreamKey(method, data);
-  let multiplexedStream = multiplexedServerStreams.get(streamKey);
-
-  if (!multiplexedStream) {
-    const listeners = new Map<number, ServerStreamListener>();
-    openNativeServerStream(
-      method,
-      data,
-      (payload) => {
-        for (const listener of listeners.values()) {
-          try {
-            listener.onResponse(payload);
-          } catch (error) {
-            console.error("TurboLnd Electrobun server stream listener failure", error);
-          }
-        }
-      },
-      (error) => {
-        for (const listener of listeners.values()) {
-          try {
-            listener.onError(error);
-          } catch (listenerError) {
-            console.error(
-              "TurboLnd Electrobun server stream listener error handler failure",
-              listenerError
-            );
-          }
-        }
-
-        listeners.clear();
-        multiplexedServerStreams.delete(streamKey);
-      }
-    );
-
-    multiplexedStream = { listeners };
-    multiplexedServerStreams.set(streamKey, multiplexedStream);
-  }
-
-  const listenerId = nextServerStreamListenerId++;
-  multiplexedStream.listeners.set(listenerId, { onResponse, onError });
-
-  return () => {
-    const activeMultiplexedStream = multiplexedServerStreams.get(streamKey);
-    if (!activeMultiplexedStream) {
-      return;
-    }
-
-    activeMultiplexedStream.listeners.delete(listenerId);
-  };
+  return openNativeServerStream(method, data, onResponse, onError);
 }
 
 function openBidiStream(

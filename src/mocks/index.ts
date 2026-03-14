@@ -680,7 +680,14 @@ const TurboLnd: Spec = {
   },
 
   getState: async (_data) => {
-    throw new Error("getState Not Implemented");
+    return base64Encode(
+      toBinary(
+        GetStateResponseSchema,
+        create(GetStateResponseSchema, {
+          state: currentState,
+        })
+      )
+    );
   },
 
   autopilotStatus: async (_data) => {

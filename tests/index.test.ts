@@ -7,6 +7,14 @@ describe("TurboLnd mock", () => {
     (globalThis as { fakelnd?: boolean }).fakelnd = true;
   });
 
+  test("getState should return LOCKED state", async () => {
+    const { getState } = await import("../src/mock");
+
+    const state = await getState({});
+
+    expect(state.state).toBe(WalletState.LOCKED);
+  });
+
   test("subscribeState should initially return LOCKED state", async () => {
     const { subscribeState } = await import("../src/mock");
 

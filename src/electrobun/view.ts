@@ -37,7 +37,6 @@ import * as wtclientrpc from "../proto/wtclientrpc/wtclient_pb";
  */
 export const start = TurboLnd.start;
 
-
 /**
    *
    * WalletBalance returns total unspent outputs(confirmed and unconfirmed), all
@@ -5395,3 +5394,4 @@ export async function watchtowerClientPolicy(
   );
   return response;
 }
+

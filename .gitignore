@@ -93,3 +93,4 @@ liblnd.a
 
 # example-electrobun
 example-electrobun/dist/
+example-electrobun/artifacts/

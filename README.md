@@ -7,21 +7,21 @@ app with a convenient API. This lib uses lnd's
 [falafel](https://github.com/lightninglabs/falafel) bindings in order to run
 lnd embedded inside an app.
 
-* ⚡️ Runs [lnd](https://github.com/lightningnetwork/lnd) embedded inside your
-app
+- ⚡️ Runs [lnd](https://github.com/lightningnetwork/lnd) embedded inside your
+  app
 
-* 🕺 Epic [C++ TurboModule](https://github.com/reactwg/react-native-new-architecture/blob/main/docs/turbo-modules-xplat.md)
-bindings for interacting with lnd, sharing the same source-code for all
-platforms
+- 🕺 Epic [C++ TurboModule](https://github.com/reactwg/react-native-new-architecture/blob/main/docs/turbo-modules-xplat.md)
+  bindings for interacting with lnd, sharing the same source-code for all
+  platforms
 
-* 🤯 Convenient and simple API for all lnd gRPC methods and server/bidi streams
+- 🤯 Convenient and simple API for all lnd gRPC methods and server/bidi streams
 
-* 🤓 Type-safety and auto-complete for all protobufs, using
-[protobuf-es](https://github.com/bufbuild/protobuf-es)
+- 🤓 Type-safety and auto-complete for all protobufs, using
+  [protobuf-es](https://github.com/bufbuild/protobuf-es)
 
-* 📦 Unopinionated core bindings for other protobuf libraries. Zero dependencies
+- 📦 Unopinionated core bindings for other protobuf libraries. Zero dependencies
 
-* 👷‍♂️ Provide your own lnd binaries, or use our prebuilt ones
+- 👷‍♂️ Provide your own lnd binaries, or use our prebuilt ones
 
 ### Platform support:
 
@@ -29,7 +29,7 @@ platforms
 ✅ Android
 ✅ iOS
 ✅ macOS
-🤨 Linux via react-native-web and NodeJS C++ Addon (WIP)
+🤨 Electrobun (Windows, Linux, macOS) [WIP]
 🚫 Windows (planned)
 🚫 Web
 ✅ Jest mocks (all gRPC methods not yet mocked)
@@ -48,7 +48,7 @@ which you can then encode/decode yourself.
 > We currently use an out-of-tree fork of lnd for building the binaries, which can be found
 > [here](https://github.com/hsjoberg/lnd/tree/cgo).
 > This is because the official lnd repository does not yet support using falafel bindings with cgo.
-> Once/if the official lnd repository supports building with cgo, we will switch to  using the
+> Once/if the official lnd repository supports building with cgo, we will switch to using the
 > official lnd repository. This fork also has a few minor patches that is being used in
 > [Blixt Wallet](https://github.com/BlixtWallet/blixt-wallet).
 
@@ -61,15 +61,27 @@ plans to support it.
 
 1. Install the package:
 
-| npm                                  | yarn                                 |
-|--------------------------------------|--------------------------------------|
-| `npm install react-native-turbo-lnd` | `yarn add react-native-turbo-lnd`    |
+| npm                                  | yarn                              |
+| ------------------------------------ | --------------------------------- |
+| `npm install react-native-turbo-lnd` | `yarn add react-native-turbo-lnd` |
 
 If you wish to use the protobuf-es bindings:
 
-| npm                                   | yarn                               |
-|---------------------------------------|------------------------------------|
-| `npm install @bufbuild/protobuf`      | `yarn add @bufbuild/protobuf`      |
+| npm                              | yarn                          |
+| -------------------------------- | ----------------------------- |
+| `npm install @bufbuild/protobuf` | `yarn add @bufbuild/protobuf` |
+
+If you wish to use the Electrobun entrypoints (`react-native-turbo-lnd/electrobun/*`):
+
+| npm                     | yarn                 |
+| ----------------------- | -------------------- |
+| `npm install electrobun` | `yarn add electrobun` |
+
+For custom app-level Electrobun RPC methods/messages, use:
+
+- `react-native-turbo-lnd/electrobun/view` for typed LND RPC methods.
+- `react-native-turbo-lnd/electrobun/custom-rpc` for transport helpers
+  (`invokeElectrobunRequest`, `sendElectrobunMessage`).
 
 2. Download the lnd binaries automatically using a convenience script from the root of your project:
 
@@ -80,10 +92,12 @@ node node_modules/react-native-turbo-lnd/fetch-lnd.js
 If you wish to download the binaries manually, follow the instructions below.
 
 ### Android:
+
 Download the latest `lnd-cgo-android.zip` from [hsjoberg/react-native-turbo-lnd/releases](https://github.com/hsjoberg/react-native-turbo-lnd/releases)
 containing lnd `.so` binaries and unzip the files to
 `<project root>/android/app/src/main/jniLibs`.
 The structure should look like this:
+
 ```
 android/app/src/main/jniLibs
 ├── arm64-v8a
@@ -102,6 +116,7 @@ Note: CMake will by default look for the files in
 
 If you have another structure or wish to customize it, you can pass in
 `-DLND_JNILIBS_PATH` to CMake. For example from your app/build.gradle:
+
 ```
 defaultConfig {
   // Other configs
@@ -115,6 +130,7 @@ defaultConfig {
 ```
 
 ### iOS/macOS:
+
 Download the latest `liblnd-{ios|mac}.zip` file from
 [hsjoberg/react-native-turbo-lnd/releases](https://github.com/hsjoberg/react-native-turbo-lnd/releases)
 and unzip it. Then rename `liblnd-fat.a` to `liblnd.a` and place it in

@@ -1,7 +1,7 @@
 import {
   invokeElectrobunRequest,
   sendElectrobunMessage,
-} from "../../../src/electrobun/custom-rpc";
+} from "react-native-turbo-lnd/electrobun/custom-rpc";
 
 type ExampleLogPayload =
   | Record<string, unknown>
