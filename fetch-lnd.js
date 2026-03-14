@@ -82,7 +82,7 @@ async function setupAndroidBinaries() {
     try {
       await fsp.access(soPath);
       await removeFile(hPath);
-    } catch (error) {
+    } catch {
       missingArchitectures.push(arch);
     }
   }
@@ -120,7 +120,7 @@ async function setupIOSBinaries() {
     // Remove liblnd.h if it exists
     const hPath = path.join(tempDir, "liblnd.h");
     await removeFile(hPath);
-  } catch (error) {
+  } catch {
     console.warn(`Warning: Expected file ${sourcePath} not found`);
   }
 

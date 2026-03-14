@@ -15,7 +15,7 @@ configureTextEncoding({
     try {
       encodeURIComponent(text);
       return true;
-    } catch (e) {
+    } catch {
       return false;
     }
   },
