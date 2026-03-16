@@ -1,0 +1,13 @@
+{
+  "name": "electrobun-napi-addon",
+  "private": true,
+  "version": "0.0.0",
+  "gypfile": true,
+  "scripts": {
+    "build": "bunx node-gyp configure build",
+    "clean": "bunx node-gyp clean"
+  },
+  "devDependencies": {
+    "node-gyp": "^11.4.2"
+  }
+}

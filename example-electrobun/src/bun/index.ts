@@ -30,8 +30,8 @@ new BrowserWindow({
   url,
   rpc: appRpc,
   frame: {
-    width: 1080,
-    height: 760,
+    width: 1100,
+    height: 1000,
     x: 200,
     y: 200,
   },

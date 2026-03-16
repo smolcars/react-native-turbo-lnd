@@ -10,6 +10,7 @@
   "files": [
     "src",
     "lib",
+    "native/electrobun-napi",
     "android",
     "ios",
     "cpp",
@@ -156,7 +157,11 @@
     "release": "release-it",
     "generate-codegen-specs": "node ./scripts/generate-codegen-specs.cjs",
     "generate-bindings": "bun run --cwd protoc-generator generate",
-    "example-electrobun": "bun run --cwd example-electrobun"
+    "example-electrobun": "bun run --cwd example-electrobun",
+    "electrobun-napi-addon": "bun run --cwd electrobun-napi-addon",
+    "build-napi-addon": "bun run --cwd electrobun-napi-addon build",
+    "sync-napi-prebuild": "node ./scripts/sync-electrobun-napi-prebuild.cjs",
+    "build-napi-prebuild": "bun run build-napi-addon && bun run sync-napi-prebuild"
   },
   "keywords": [
     "react-native",
@@ -234,7 +239,8 @@
   "workspaces": [
     "example",
     "protoc-generator",
-    "example-electrobun"
+    "example-electrobun",
+    "electrobun-napi-addon"
   ],
   "packageManager": "bun@1.3.8",
   "jest": {

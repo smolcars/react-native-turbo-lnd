@@ -30,33 +30,19 @@ export function buildElectrobunBun({
 }: BuildElectrobunBunParams): string {
   return `${contributorNotice}
 /* eslint-disable */
+import type { Spec } from "../core/NativeTurboLnd";
+import { createElectrobunBackend } from "./backend/create-backend";
+import { createBunffiDriver } from "./backend/bunffi-driver";
+import { createNapiDriver } from "./backend/napi-driver";
 import {
-  CString,
-  JSCallback,
-  dlopen,
-  ptr,
-  toArrayBuffer,
-  type Pointer,
-} from "bun:ffi";
-import { existsSync } from "node:fs";
-import path from "node:path";
+  logSelectedElectrobunBackend,
+  resolveConfiguredElectrobunBackend,
+} from "./backend/select-driver";
 import type {
-  OnErrorCallback,
-  OnResponseCallback,
-  ProtobufBase64,
-  Spec,
-  UnsubscribeFromStream,
-  WriteableStream,
-} from "../core/NativeTurboLnd";
-
-const LND_DLL_FILENAME = "liblnd.dll";
-const CALLBACK_STRUCT_SIZE_BYTES = 32;
-const CALLBACK_CLOSE_GRACE_MS = 5000;
-const DEFAULT_PARENT_SEARCH_DEPTH = 8;
-const CALLBACK_CONTEXT_START = 0x100000000n;
-const textEncoder = new TextEncoder();
-let nextCallbackContext = CALLBACK_CONTEXT_START;
-
+  ElectrobunBackendDriver,
+  ElectrobunBackendName,
+  ElectrobunMethodLists,
+} from "./backend/types";
 
 ${buildMethodArray("ELECTROBUN_UNARY_METHODS", unaryMethods, true)}
 ${buildMethodArray(
@@ -70,705 +56,59 @@ type ElectrobunUnaryMethod = (typeof ELECTROBUN_UNARY_METHODS)[number];
 type ElectrobunServerStreamMethod =
   (typeof ELECTROBUN_SERVER_STREAM_METHODS)[number];
 type ElectrobunBidiStreamMethod = (typeof ELECTROBUN_BIDI_STREAM_METHODS)[number];
-type ElectrobunUnaryOrServerMethod =
-  | ElectrobunUnaryMethod
-  | ElectrobunServerStreamMethod;
 
-type UnaryOrServerSignature = {
-  args: readonly ["ptr", "i32", "ptr"];
-  returns: "void";
-};
+type TurboLndElectrobunDriver = ElectrobunBackendDriver<
+  ElectrobunUnaryMethod,
+  ElectrobunServerStreamMethod,
+  ElectrobunBidiStreamMethod
+>;
 
-type BidiSignature = {
-  args: readonly ["ptr"];
-  returns: "usize";
-};
+const electrobunMethods = {
+  unaryMethods: ELECTROBUN_UNARY_METHODS,
+  serverStreamMethods: ELECTROBUN_SERVER_STREAM_METHODS,
+  bidiStreamMethods: ELECTROBUN_BIDI_STREAM_METHODS,
+} satisfies ElectrobunMethodLists<
+  ElectrobunUnaryMethod,
+  ElectrobunServerStreamMethod,
+  ElectrobunBidiStreamMethod
+>;
 
-type FfiSymbols = {
-  start: {
-    args: readonly ["ptr", "ptr"];
-    returns: "void";
-  };
-  lndFree: {
-    args: readonly ["ptr"];
-    returns: "void";
-  };
-  SendStreamC: {
-    args: readonly ["usize", "ptr", "i32"];
-    returns: "i32";
-  };
-  StopStreamC: {
-    args: readonly ["usize"];
-    returns: "i32";
-  };
-} & {
-  [K in ElectrobunUnaryOrServerMethod]: UnaryOrServerSignature;
-} & {
-  [K in ElectrobunBidiStreamMethod]: BidiSignature;
-};
+function selectElectrobunBackend(): {
+  name: ElectrobunBackendName;
+  driver: TurboLndElectrobunDriver;
+  resolvedDllPath: string;
+} {
+  const backendName = resolveConfiguredElectrobunBackend();
 
-type LndLibrary = ReturnType<typeof dlopen<FfiSymbols>>;
-type DllResolution = {
-  path: string | null;
-  checked: string[];
-};
-
-const FFI_SIGNATURE_UNARY_OR_SERVER: UnaryOrServerSignature = {
-  args: ["ptr", "i32", "ptr"],
-  returns: "void",
-};
-const FFI_SIGNATURE_BIDI: BidiSignature = {
-  args: ["ptr"],
-  returns: "usize",
-};
-
-const FFI_SIGNATURES = {
-  start: { args: ["ptr", "ptr"], returns: "void" },
-  lndFree: { args: ["ptr"], returns: "void" },
-  SendStreamC: { args: ["usize", "ptr", "i32"], returns: "i32" },
-  StopStreamC: { args: ["usize"], returns: "i32" },
-  ...Object.fromEntries(
-    [...ELECTROBUN_UNARY_METHODS, ...ELECTROBUN_SERVER_STREAM_METHODS].map(
-      (method) => [method, FFI_SIGNATURE_UNARY_OR_SERVER]
-    )
-  ),
-  ...Object.fromEntries(
-    ELECTROBUN_BIDI_STREAM_METHODS.map((method) => [method, FFI_SIGNATURE_BIDI])
-  ),
-};
-
-function pointerToBigInt(value: Pointer | null): bigint {
-  if (value === null) {
-    return 0n;
-  }
-
-  return BigInt(value);
-}
-
-function allocateCallbackContexts() {
-  const responseContext = nextCallbackContext;
-  const errorContext = nextCallbackContext + 1n;
-  nextCallbackContext += 2n;
-  return { responseContext, errorContext };
-}
-
-function createCallbackStruct(
-  onResponsePtr: Pointer | null,
-  onErrorPtr: Pointer | null
-): ArrayBuffer {
-  const { responseContext, errorContext } = allocateCallbackContexts();
-  const callbackStruct = new ArrayBuffer(CALLBACK_STRUCT_SIZE_BYTES);
-  const view = new DataView(callbackStruct);
-  view.setBigUint64(0, pointerToBigInt(onResponsePtr), true);
-  view.setBigUint64(8, pointerToBigInt(onErrorPtr), true);
-  view.setBigUint64(16, responseContext, true);
-  view.setBigUint64(24, errorContext, true);
-  return callbackStruct;
-}
-
-function decodeBase64(payload: ProtobufBase64): Uint8Array {
-  if (payload === "") {
-    return new Uint8Array(0);
-  }
-
-  return new Uint8Array(Buffer.from(payload, "base64"));
-}
-
-function encodeBase64(payload: Uint8Array): ProtobufBase64 {
-  return Buffer.from(payload).toString("base64");
-}
-
-function copyNativePayload(
-  responsePtr: Pointer,
-  length: number
-): Uint8Array<ArrayBuffer> {
-  if (length <= 0) {
-    return new Uint8Array(0);
-  }
-
-  const nativeView = new Uint8Array(toArrayBuffer(responsePtr, 0, length));
-  const copy = new Uint8Array(new ArrayBuffer(nativeView.length));
-  copy.set(nativeView);
-  return copy;
-}
-
-function toRequestBuffer(payload: Uint8Array): Uint8Array {
-  return payload.length === 0 ? new Uint8Array(1) : payload;
-}
-
-function isEofError(message: string): boolean {
-  const normalized = message.trim();
-  if (normalized === "EOF") {
-    return true;
-  }
-
-  return normalized.includes("EOF");
-}
-
-function resolveLndDllPath(): DllResolution {
-  const checked: string[] = [];
-  const seen = new Set<string>();
-  const checkCandidate = (candidatePath: string): string | null => {
-    const absolutePath = path.resolve(candidatePath);
-    if (seen.has(absolutePath)) {
-      return null;
+  switch (backendName) {
+    case "bunffi": {
+      const bunffiBackend = createBunffiDriver(electrobunMethods);
+      return {
+        name: backendName,
+        driver: bunffiBackend.driver,
+        resolvedDllPath: bunffiBackend.resolvedDllPath,
+      };
     }
-
-    seen.add(absolutePath);
-    checked.push(absolutePath);
-    return existsSync(absolutePath) ? absolutePath : null;
-  };
-
-  const execDir = path.dirname(process.execPath);
-  const candidatePaths = [
-    path.join(process.cwd(), LND_DLL_FILENAME),
-    path.join(execDir, LND_DLL_FILENAME),
-    path.join(execDir, "..", "Resources", "app", LND_DLL_FILENAME),
-    path.join(execDir, "..", "Resources", LND_DLL_FILENAME),
-  ];
-
-  for (const candidatePath of candidatePaths) {
-    const foundPath = checkCandidate(candidatePath);
-    if (foundPath !== null) {
-      return { path: foundPath, checked };
+    case "napi": {
+      const napiBackend = createNapiDriver(electrobunMethods);
+      return {
+        name: backendName,
+        driver: napiBackend.driver,
+        resolvedDllPath: napiBackend.resolvedDllPath,
+      };
     }
   }
-
-  let currentDir = process.cwd();
-  for (let level = 0; level < DEFAULT_PARENT_SEARCH_DEPTH; level += 1) {
-    const foundPath = checkCandidate(path.join(currentDir, LND_DLL_FILENAME));
-    if (foundPath !== null) {
-      return { path: foundPath, checked };
-    }
-
-    const parentDir = path.dirname(currentDir);
-    if (parentDir === currentDir) {
-      break;
-    }
-
-    currentDir = parentDir;
-  }
-
-  return { path: null, checked };
 }
 
-const dllResolution = resolveLndDllPath();
-if (dllResolution.path === null) {
-  throw new Error(
-    [
-      "Unable to find liblnd.dll.",
-      \`cwd=\${process.cwd()}\`,
-      \`execPath=\${process.execPath}\`,
-      "Checked paths:",
-      ...dllResolution.checked.map((entry) => \`  - \${entry}\`),
-    ].join("\\n")
-  );
-}
-
-export const resolvedDllPath = dllResolution.path;
-
-const lnd: LndLibrary = dlopen<FfiSymbols>(
-  resolvedDllPath,
-  FFI_SIGNATURES as any
-);
-
-let startPromise: Promise<string> | null = null;
-
-export async function start(args: string): Promise<string> {
-  if (startPromise !== null) {
-    return startPromise;
-  }
-
-  startPromise = new Promise<string>((resolve, reject) => {
-    let settled = false;
-    let responseCallback: JSCallback | null = null;
-    let errorCallback: JSCallback | null = null;
-    let callbackStruct: ArrayBuffer | null = null;
-
-    let cleanupTimer: ReturnType<typeof setTimeout> | null = null;
-
-    const cleanup = () => {
-      if (cleanupTimer !== null) {
-        clearTimeout(cleanupTimer);
-        cleanupTimer = null;
-      }
-
-      responseCallback?.close();
-      errorCallback?.close();
-      responseCallback = null;
-      errorCallback = null;
-      callbackStruct = null;
-    };
-
-    const scheduleCleanup = () => {
-      if (cleanupTimer !== null) {
-        return;
-      }
-
-      cleanupTimer = setTimeout(() => {
-        cleanup();
-      }, CALLBACK_CLOSE_GRACE_MS);
-    };
-
-    const settle = (success: boolean, error?: unknown) => {
-      if (settled) {
-        return;
-      }
-      settled = true;
-      scheduleCleanup();
-
-      if (success) {
-        resolve("");
-      } else {
-        reject(error);
-      }
-    };
-
-    responseCallback = new JSCallback(
-      (_ctx: Pointer | null, responsePtr: Pointer | null) => {
-        try {
-          if (responsePtr !== null && responsePtr !== 0) {
-            lnd.symbols.lndFree(responsePtr);
-          }
-        } finally {
-          settle(true);
-        }
-      },
-      { args: ["ptr", "ptr", "i32"], returns: "void", threadsafe: true }
-    );
-
-    errorCallback = new JSCallback(
-      (_ctx: Pointer | null, errorPtr: Pointer | null) => {
-        let message = "Unknown lnd start error.";
-        try {
-          if (errorPtr !== null && errorPtr !== 0) {
-            message = new CString(errorPtr).toString();
-          }
-        } finally {
-          if (errorPtr !== null && errorPtr !== 0) {
-            lnd.symbols.lndFree(errorPtr);
-          }
-          settle(false, new Error(message));
-        }
-      },
-      { args: ["ptr", "ptr"], returns: "void", threadsafe: true }
-    );
-
-    callbackStruct = createCallbackStruct(
-      responseCallback.ptr,
-      errorCallback.ptr
-    );
-    const argsBytes = textEncoder.encode(\`\${args}\\0\`);
-    lnd.symbols.start(argsBytes, ptr(callbackStruct));
-  }).finally(() => {
-    startPromise = null;
-  });
-
-  return startPromise;
-}
-
-function invokeUnary(
-  method: ElectrobunUnaryMethod,
-  request: ProtobufBase64
-): Promise<ProtobufBase64> {
-  const requestPayload = decodeBase64(request);
-
-  return new Promise<ProtobufBase64>((resolve, reject) => {
-    let settled = false;
-    let responseCallback: JSCallback | null = null;
-    let errorCallback: JSCallback | null = null;
-    let callbackStruct: ArrayBuffer | null = null;
-
-    let cleanupTimer: ReturnType<typeof setTimeout> | null = null;
-
-    const cleanup = () => {
-      if (cleanupTimer !== null) {
-        clearTimeout(cleanupTimer);
-        cleanupTimer = null;
-      }
-
-      responseCallback?.close();
-      errorCallback?.close();
-      responseCallback = null;
-      errorCallback = null;
-      callbackStruct = null;
-    };
-
-    const scheduleCleanup = () => {
-      if (cleanupTimer !== null) {
-        return;
-      }
-
-      cleanupTimer = setTimeout(() => {
-        cleanup();
-      }, CALLBACK_CLOSE_GRACE_MS);
-    };
-
-    const settle = (success: boolean, result: ProtobufBase64 | Error) => {
-      if (settled) {
-        return;
-      }
-      settled = true;
-      scheduleCleanup();
-
-      if (success) {
-        resolve(result as ProtobufBase64);
-      } else {
-        reject(result);
-      }
-    };
-
-    responseCallback = new JSCallback(
-      (_ctx: Pointer | null, responsePtr: Pointer | null, length: number) => {
-        let payload = new Uint8Array(0);
-        try {
-          if (length > 0 && responsePtr !== null) {
-            payload = copyNativePayload(responsePtr, length);
-          }
-        } finally {
-          if (responsePtr !== null && responsePtr !== 0) {
-            lnd.symbols.lndFree(responsePtr);
-          }
-        }
-
-        settle(true, encodeBase64(payload));
-      },
-      { args: ["ptr", "ptr", "i32"], returns: "void", threadsafe: true }
-    );
-
-    errorCallback = new JSCallback(
-      (_ctx: Pointer | null, errorPtr: Pointer | null) => {
-        let message = \`Unknown \${method} error.\`;
-        try {
-          if (errorPtr !== null && errorPtr !== 0) {
-            message = new CString(errorPtr).toString();
-          }
-        } finally {
-          if (errorPtr !== null && errorPtr !== 0) {
-            lnd.symbols.lndFree(errorPtr);
-          }
-        }
-
-        settle(false, new Error(message));
-      },
-      { args: ["ptr", "ptr"], returns: "void", threadsafe: true }
-    );
-
-    callbackStruct = createCallbackStruct(
-      responseCallback.ptr,
-      errorCallback.ptr
-    );
-    const requestBuffer = toRequestBuffer(requestPayload);
-
-    lnd.symbols[method](requestBuffer, requestPayload.length, ptr(callbackStruct));
-  });
-}
-
-type ServerStreamState = {
-  active: boolean;
-  responseCallback: JSCallback;
-  errorCallback: JSCallback;
-  callbackStruct: ArrayBuffer;
-};
-
-const serverStreamStates = new Set<ServerStreamState>();
-
-function openNativeServerStream(
-  method: ElectrobunServerStreamMethod,
-  data: ProtobufBase64,
-  onResponse: OnResponseCallback,
-  onError: OnErrorCallback
-): UnsubscribeFromStream {
-  const requestPayload = decodeBase64(data);
-  const requestBuffer = toRequestBuffer(requestPayload);
-
-  let active = true;
-  const responseCallback = new JSCallback(
-    (_ctx: Pointer | null, responsePtr: Pointer | null, length: number) => {
-      if (!active) {
-        if (responsePtr !== null && responsePtr !== 0) {
-          lnd.symbols.lndFree(responsePtr);
-        }
-        return;
-      }
-
-      let payload = new Uint8Array(0);
-      try {
-        if (length > 0 && responsePtr !== null) {
-          payload = copyNativePayload(responsePtr, length);
-        }
-      } finally {
-        if (responsePtr !== null && responsePtr !== 0) {
-          lnd.symbols.lndFree(responsePtr);
-        }
-      }
-
-      onResponse(encodeBase64(payload));
-    },
-    { args: ["ptr", "ptr", "i32"], returns: "void", threadsafe: true }
-  );
-
-  const errorCallback = new JSCallback(
-    (_ctx: Pointer | null, errorPtr: Pointer | null) => {
-      if (!active) {
-        if (errorPtr !== null && errorPtr !== 0) {
-          lnd.symbols.lndFree(errorPtr);
-        }
-        return;
-      }
-
-      let message = \`Unknown \${method} stream error.\`;
-      try {
-        if (errorPtr !== null && errorPtr !== 0) {
-          message = new CString(errorPtr).toString();
-        }
-      } finally {
-        if (errorPtr !== null && errorPtr !== 0) {
-          lnd.symbols.lndFree(errorPtr);
-        }
-      }
-
-      active = false;
-      if (isEofError(message)) {
-        return;
-      }
-      onError(message);
-    },
-    { args: ["ptr", "ptr"], returns: "void", threadsafe: true }
-  );
-
-  const callbackStruct = createCallbackStruct(
-    responseCallback.ptr,
-    errorCallback.ptr
-  );
-  const streamState: ServerStreamState = {
-    active,
-    responseCallback,
-    errorCallback,
-    callbackStruct,
-  };
-  serverStreamStates.add(streamState);
-
-  lnd.symbols[method](requestBuffer, requestPayload.length, ptr(callbackStruct));
-
-  return () => {
-    active = false;
-    streamState.active = false;
-  };
-}
-
-function openServerStream(
-  method: ElectrobunServerStreamMethod,
-  data: ProtobufBase64,
-  onResponse: OnResponseCallback,
-  onError: OnErrorCallback
-): UnsubscribeFromStream {
-  return openNativeServerStream(method, data, onResponse, onError);
-}
-
-function openBidiStream(
-  method: ElectrobunBidiStreamMethod,
-  onResponse: OnResponseCallback,
-  onError: OnErrorCallback
-): WriteableStream {
-  let streamActive = true;
-  let stopRequested = false;
-  let isCleanedUp = false;
-  let cleanupTimer: ReturnType<typeof setTimeout> | null = null;
-  let responseCallback: JSCallback | null = null;
-  let errorCallback: JSCallback | null = null;
-  let callbackStruct: ArrayBuffer | null = null;
-
-  const cleanup = () => {
-    if (isCleanedUp) {
-      return;
-    }
-    isCleanedUp = true;
-
-    if (cleanupTimer !== null) {
-      clearTimeout(cleanupTimer);
-      cleanupTimer = null;
-    }
-
-    responseCallback?.close();
-    errorCallback?.close();
-    responseCallback = null;
-    errorCallback = null;
-    callbackStruct = null;
-  };
-
-  const scheduleCleanupFallback = () => {
-    if (cleanupTimer !== null || isCleanedUp) {
-      return;
-    }
-
-    cleanupTimer = setTimeout(() => {
-      cleanup();
-    }, 250);
-  };
-
-  responseCallback = new JSCallback(
-    (_ctx: Pointer | null, responsePtr: Pointer | null, length: number) => {
-      if (!streamActive) {
-        if (responsePtr !== null && responsePtr !== 0) {
-          lnd.symbols.lndFree(responsePtr);
-        }
-        return;
-      }
-
-      let payload = new Uint8Array(0);
-      try {
-        if (length > 0 && responsePtr !== null) {
-          payload = copyNativePayload(responsePtr, length);
-        }
-      } finally {
-        if (responsePtr !== null && responsePtr !== 0) {
-          lnd.symbols.lndFree(responsePtr);
-        }
-      }
-
-      onResponse(encodeBase64(payload));
-    },
-    { args: ["ptr", "ptr", "i32"], returns: "void", threadsafe: true }
-  );
-
-  errorCallback = new JSCallback(
-    (_ctx: Pointer | null, errorPtr: Pointer | null) => {
-      let message = \`Unknown \${method} stream error.\`;
-      try {
-        if (errorPtr !== null && errorPtr !== 0) {
-          message = new CString(errorPtr).toString();
-        }
-      } finally {
-        if (errorPtr !== null && errorPtr !== 0) {
-          lnd.symbols.lndFree(errorPtr);
-        }
-      }
-
-      streamActive = false;
-
-      if (stopRequested && isEofError(message)) {
-        cleanup();
-        return;
-      }
-
-      cleanup();
-      onError(message);
-    },
-    { args: ["ptr", "ptr"], returns: "void", threadsafe: true }
-  );
-
-  callbackStruct = createCallbackStruct(
-    responseCallback.ptr,
-    errorCallback.ptr
-  );
-  const streamPtr = lnd.symbols[method](ptr(callbackStruct));
-
-  if (streamPtr === 0n) {
-    streamActive = false;
-    cleanup();
-    throw new Error(\`\${method} returned an invalid stream pointer.\`);
-  }
-
-  return {
-    send(dataB64: ProtobufBase64): boolean {
-      if (!streamActive || stopRequested) {
-        return false;
-      }
-
-      try {
-        const payload = decodeBase64(dataB64);
-        const requestBuffer = toRequestBuffer(payload);
-        return (
-          lnd.symbols.SendStreamC(streamPtr, requestBuffer, payload.length) ===
-          0
-        );
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        onError(message);
-        return false;
-      }
-    },
-    stop(): boolean {
-      if (stopRequested) {
-        return true;
-      }
-
-      if (!streamActive) {
-        return false;
-      }
-
-      stopRequested = true;
-      streamActive = false;
-
-      let stopped = false;
-      try {
-        stopped = lnd.symbols.StopStreamC(streamPtr) === 0;
-      } catch (error) {
-        cleanup();
-        const message = error instanceof Error ? error.message : String(error);
-        onError(message);
-        return false;
-      }
-
-      if (stopped) {
-        scheduleCleanupFallback();
-      } else {
-        cleanup();
-      }
-
-      return stopped;
-    },
-  };
-}
-
-function createUnaryMethodMap() {
-  const entries = ELECTROBUN_UNARY_METHODS.map(
-    (method) =>
-      [
-        method,
-        (data: ProtobufBase64) => invokeUnary(method, data),
-      ] as const
-  );
-
-  return Object.fromEntries(entries) as Pick<Spec, ElectrobunUnaryMethod>;
-}
-
-function createServerStreamMethodMap() {
-  const entries = ELECTROBUN_SERVER_STREAM_METHODS.map(
-    (method) =>
-      [
-        method,
-        (
-          data: ProtobufBase64,
-          onResponse: OnResponseCallback,
-          onError: OnErrorCallback
-        ) => openServerStream(method, data, onResponse, onError),
-      ] as const
-  );
-
-  return Object.fromEntries(entries) as Pick<Spec, ElectrobunServerStreamMethod>;
-}
-
-function createBidiStreamMethodMap() {
-  const entries = ELECTROBUN_BIDI_STREAM_METHODS.map(
-    (method) =>
-      [
-        method,
-        (onResponse: OnResponseCallback, onError: OnErrorCallback) =>
-          openBidiStream(method, onResponse, onError),
-      ] as const
-  );
-
-  return Object.fromEntries(entries) as Pick<Spec, ElectrobunBidiStreamMethod>;
-}
-
-const TurboLndElectrobunBackend = {
-  start,
-  ...createUnaryMethodMap(),
-  ...createServerStreamMethodMap(),
-  ...createBidiStreamMethodMap(),
-} satisfies Spec;
+const selectedBackend = selectElectrobunBackend();
+logSelectedElectrobunBackend(selectedBackend.name);
+
+export const resolvedDllPath = selectedBackend.resolvedDllPath;
+
+const TurboLndElectrobunBackend = createElectrobunBackend({
+  driver: selectedBackend.driver,
+  methods: electrobunMethods,
+}) satisfies Spec;
 
 export default TurboLndElectrobunBackend;
 `;
