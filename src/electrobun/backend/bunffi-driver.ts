@@ -3,6 +3,7 @@ import {
   JSCallback,
   dlopen,
   ptr,
+  suffix,
   toArrayBuffer,
   type Pointer,
 } from "bun:ffi";
@@ -17,7 +18,7 @@ import type {
 } from "../../core/NativeTurboLnd";
 import type { ElectrobunBackendDriver, ElectrobunMethodLists } from "./types";
 
-const LND_DLL_FILENAME = "liblnd.dll";
+const LND_DLL_FILENAME = `liblnd.${suffix}`;
 const CALLBACK_STRUCT_SIZE_BYTES = 32;
 const CALLBACK_CLOSE_GRACE_MS = 5000;
 const DEFAULT_PARENT_SEARCH_DEPTH = 8;
@@ -254,7 +255,7 @@ export function createBunffiDriver<
   if (dllResolution.path === null) {
     throw new Error(
       [
-        "Unable to find liblnd.dll.",
+        "Unable to find the liblnd shared library.",
         `cwd=${process.cwd()}`,
         `execPath=${process.execPath}`,
         "Checked paths:",

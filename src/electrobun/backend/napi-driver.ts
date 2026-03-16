@@ -11,7 +11,6 @@ import type {
 } from "../../core/NativeTurboLnd";
 import type { ElectrobunBackendDriver, ElectrobunMethodLists } from "./types";
 
-const LND_DLL_FILENAME = "liblnd.dll";
 const NAPI_ADDON_FILENAME = "turbolnd_electrobun_napi.node";
 const DEFAULT_PARENT_SEARCH_DEPTH = 8;
 const NAPI_ADDON_OVERRIDE_ENV_VAR = "TURBOLND_ELECTROBUN_NAPI_ADDON_PATH";
@@ -19,6 +18,21 @@ const NAPI_PREBUILD_DIRNAME = "electrobun-napi";
 
 const requireFromHere = createRequire(import.meta.url);
 const moduleDir = path.dirname(fileURLToPath(import.meta.url));
+
+function getLndLibraryFilename(): string {
+  switch (process.platform) {
+    case "win32":
+      return "liblnd.dll";
+    case "linux":
+      return "liblnd.so";
+    case "darwin":
+      return "liblnd.dylib";
+    default:
+      throw new Error(`Unsupported platform for liblnd: ${process.platform}`);
+  }
+}
+
+const LND_DLL_FILENAME = getLndLibraryFilename();
 
 type DllResolution = {
   path: string | null;
@@ -268,7 +282,7 @@ export function createNapiDriver<
     if (dllResolution.path === null) {
       throw new Error(
         [
-          "Unable to find liblnd.dll for the N-API Electrobun backend.",
+          "Unable to find the liblnd shared library for the N-API Electrobun backend.",
           `cwd=${process.cwd()}`,
           `execPath=${process.execPath}`,
           "Checked paths:",
