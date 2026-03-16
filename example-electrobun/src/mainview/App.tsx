@@ -1,16 +1,25 @@
-import { create, fromBinary, toBinary, toJson } from "@bufbuild/protobuf";
-import { base64Decode, base64Encode } from "@bufbuild/protobuf/wire";
-import { useEffect, useRef, useState } from "react";
-import * as TurboLndElectrobunView from "../../../src/electrobun/view";
-import TurboLndElectrobunViewCore from "../../../src/electrobun/view-core";
+import { create, toBinary, toJson } from "@bufbuild/protobuf";
+import { base64Encode } from "@bufbuild/protobuf/wire";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  start,
+  subscribeState,
+  channelAcceptor,
+  subscribePeerEvents,
+  subscribeChannelEvents,
+  subscribeTransactions,
+  getState,
+  getInfo,
+} from "react-native-turbo-lnd";
+import type { UnsubscribeFromStream } from "react-native-turbo-lnd/core";
+
 import {
   ChannelEventUpdateSchema,
   GetInfoRequestSchema,
-  GetInfoResponseSchema,
   PeerEventSchema,
   TransactionSchema,
   WalletState,
-} from "../../../src/proto/lightning_pb";
+} from "react-native-turbo-lnd/protos/lightning_pb";
 import { examplePing, sendExampleLog } from "./example-rpc";
 
 const DEFAULT_START_ARGS = [
@@ -27,6 +36,10 @@ const DEFAULT_START_ARGS = [
   "--db.bolt.auto-compact-min-age=0",
   "--neutrino.connect=192.168.10.120:19444",
 ].join(" ");
+const DEFAULT_STRESS_CYCLES = "20";
+const DEFAULT_STRESS_SUBS_PER_METHOD = "12";
+const DEFAULT_STRESS_REQUEST_BURST = "24";
+const DEFAULT_STRESS_HOLD_MS = "250";
 
 function walletStateToLabel(state: WalletState): string {
   switch (state) {
@@ -59,21 +72,53 @@ function formatUnknownPayload(payload: unknown): string {
   }
 }
 
+function parseBoundedInteger(
+  input: string,
+  fallback: number,
+  min: number,
+  max: number
+): number {
+  const parsed = Number.parseInt(input, 10);
+  if (!Number.isFinite(parsed)) {
+    return fallback;
+  }
+
+  return Math.min(max, Math.max(min, parsed));
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 async function getCurrentWalletState(): Promise<WalletState> {
-  const response = await TurboLndElectrobunView.getState({});
+  const response = await getState({});
   return response.state;
 }
 
-type ChannelAcceptorStream = ReturnType<
-  typeof TurboLndElectrobunView.channelAcceptor
->;
+type ChannelAcceptorStream = ReturnType<typeof channelAcceptor>;
 
 function App() {
   const [startArgs, setStartArgs] = useState(DEFAULT_START_ARGS);
   const [logLines, setLogLines] = useState<string[]>([]);
+  const [stressCyclesInput, setStressCyclesInput] = useState(
+    DEFAULT_STRESS_CYCLES
+  );
+  const [stressSubsPerMethodInput, setStressSubsPerMethodInput] = useState(
+    DEFAULT_STRESS_SUBS_PER_METHOD
+  );
+  const [stressRequestBurstInput, setStressRequestBurstInput] = useState(
+    DEFAULT_STRESS_REQUEST_BURST
+  );
+  const [stressHoldMsInput, setStressHoldMsInput] = useState(
+    DEFAULT_STRESS_HOLD_MS
+  );
+  const [stressRunning, setStressRunning] = useState(false);
 
   const stateSubscriptionRef = useRef<(() => void) | null>(null);
   const channelAcceptorRef = useRef<ChannelAcceptorStream | null>(null);
+  const stressSubscriptionsRef = useRef<UnsubscribeFromStream[]>([]);
+  const stressRunningRef = useRef(false);
+  const stressCancelRequestedRef = useRef(false);
 
   const appendLog = (line: string) => {
     setLogLines((prev) => {
@@ -82,20 +127,69 @@ function App() {
     });
   };
 
+  type StressStats = {
+    startSucceeded: number;
+    startFailed: number;
+    subscriptionsOpened: number;
+    subscriptionsClosed: number;
+    subscriptionOpenErrors: number;
+    subscriptionCloseErrors: number;
+    subscriptionCallbackErrors: number;
+    subscriptionDataEvents: number;
+    requestSucceeded: number;
+    requestFailed: number;
+    requestSkipped: number;
+  };
+  type StressSubscriptionMode = "all" | "stateOnly" | "txOnly";
+
+  function stressModeToLabel(mode: StressSubscriptionMode): string {
+    switch (mode) {
+      case "stateOnly":
+        return "stateOnly";
+      case "txOnly":
+        return "txOnly";
+      default:
+        return "all";
+    }
+  }
+
+  const closeStressSubscriptions = useCallback(
+    (stats?: StressStats): number => {
+      const subscriptions = stressSubscriptionsRef.current.splice(0);
+      for (const unsubscribe of subscriptions) {
+        try {
+          unsubscribe();
+          if (stats) {
+            stats.subscriptionsClosed += 1;
+          }
+        } catch {
+          if (stats) {
+            stats.subscriptionCloseErrors += 1;
+          }
+        }
+      }
+
+      return subscriptions.length;
+    },
+    []
+  );
+
   useEffect(() => {
     return () => {
       stateSubscriptionRef.current?.();
       stateSubscriptionRef.current = null;
       channelAcceptorRef.current?.close();
       channelAcceptorRef.current = null;
+      stressCancelRequestedRef.current = true;
+      closeStressSubscriptions();
     };
-  }, []);
+  }, [closeStressSubscriptions]);
 
   const handleStart = async () => {
     appendLog("start() requested");
 
     try {
-      await TurboLndElectrobunView.start(startArgs);
+      await start(startArgs);
       appendLog("start() completed");
     } catch (error) {
       appendLog(`start() failed: ${toErrorMessage(error)}`);
@@ -116,14 +210,7 @@ function App() {
         );
         return;
       }
-
-      const request = create(GetInfoRequestSchema, {});
-      const requestB64 = base64Encode(toBinary(GetInfoRequestSchema, request));
-      const responseB64 = await TurboLndElectrobunViewCore.getInfo(requestB64);
-      const response = fromBinary(
-        GetInfoResponseSchema,
-        base64Decode(responseB64)
-      );
+      const response = await getInfo({});
 
       appendLog(
         `getInfo(): alias=${response.alias}, pubkey=${response.identityPubkey}, blockHeight=${response.blockHeight}`
@@ -149,12 +236,8 @@ function App() {
       }
 
       const startTime = performance.now();
-      const request = create(GetInfoRequestSchema, {});
-      const requestB64 = base64Encode(toBinary(GetInfoRequestSchema, request));
       for (let i = 0; i < 100; i++) {
-        const responseB64 =
-          await TurboLndElectrobunViewCore.getInfo(requestB64);
-        fromBinary(GetInfoResponseSchema, base64Decode(responseB64));
+        await getInfo({});
       }
       const endTime = performance.now();
       const executionTime = endTime - startTime;
@@ -165,12 +248,12 @@ function App() {
   };
 
   const handleSubscribeState = () => {
-    // if (stateSubscriptionRef.current !== null) {
-    //   appendLog("subscribeState(): already subscribed");
-    //   return;
-    // }
+    if (stateSubscriptionRef.current !== null) {
+      appendLog("subscribeState(): already subscribed");
+      return;
+    }
 
-    stateSubscriptionRef.current = TurboLndElectrobunView.subscribeState(
+    stateSubscriptionRef.current = subscribeState(
       {},
       (response) => {
         appendLog(`subscribeState(): ${walletStateToLabel(response.state)}`);
@@ -200,7 +283,7 @@ function App() {
       return;
     }
 
-    channelAcceptorRef.current = TurboLndElectrobunView.channelAcceptor(
+    channelAcceptorRef.current = channelAcceptor(
       (_response) => {
         appendLog("channelAcceptor(): data received");
       },
@@ -245,6 +328,257 @@ function App() {
     } catch (error) {
       appendLog(`__ExampleLog() failed: ${toErrorMessage(error)}`);
     }
+  };
+
+  const handleSpamSubscribeTransactions = () => {
+    const count = parseBoundedInteger(stressSubsPerMethodInput, 12, 1, 500);
+
+    appendLog(
+      `spamSubscribeTransactions(): opening ${count} native subscribeTransactions streams`
+    );
+
+    for (let i = 0; i < count; i += 1) {
+      try {
+        const unsubscribe = subscribeTransactions(
+          {},
+          (_transaction) => {
+            appendLog(`spamSubscribeTransactions()[${i}] data received`);
+          },
+          (error) => {
+            appendLog(`spamSubscribeTransactions()[${i}] error: ${error}`);
+          }
+        );
+        stressSubscriptionsRef.current.push(unsubscribe);
+      } catch (error) {
+        appendLog(
+          `spamSubscribeTransactions()[${i}] threw: ${toErrorMessage(error)}`
+        );
+        break;
+      }
+    }
+
+    appendLog(
+      `spamSubscribeTransactions(): active=${stressSubscriptionsRef.current.length}`
+    );
+  };
+
+  const handleCloseSpammedSubscriptions = () => {
+    const closed = closeStressSubscriptions();
+    appendLog(`spamSubscribeTransactions(): closed ${closed} subscriptions`);
+  };
+
+  const runSubscriptionStress = async (
+    includeStart: boolean,
+    mode: StressSubscriptionMode
+  ) => {
+    if (stressRunningRef.current) {
+      appendLog("stressSubscriptions(): already running");
+      return;
+    }
+
+    const cycles = parseBoundedInteger(stressCyclesInput, 20, 1, 500);
+    const subsPerMethod = parseBoundedInteger(
+      stressSubsPerMethodInput,
+      12,
+      1,
+      250
+    );
+    const requestBurst = parseBoundedInteger(
+      stressRequestBurstInput,
+      24,
+      0,
+      500
+    );
+    const holdMs = parseBoundedInteger(stressHoldMsInput, 250, 1, 10_000);
+    const stats: StressStats = {
+      startSucceeded: 0,
+      startFailed: 0,
+      subscriptionsOpened: 0,
+      subscriptionsClosed: 0,
+      subscriptionOpenErrors: 0,
+      subscriptionCloseErrors: 0,
+      subscriptionCallbackErrors: 0,
+      subscriptionDataEvents: 0,
+      requestSucceeded: 0,
+      requestFailed: 0,
+      requestSkipped: 0,
+    };
+
+    stressRunningRef.current = true;
+    stressCancelRequestedRef.current = false;
+    setStressRunning(true);
+    closeStressSubscriptions();
+    appendLog(
+      `stressSubscriptions(): start mode=${stressModeToLabel(mode)} includeStart=${includeStart} cycles=${cycles} subsPerMethod=${subsPerMethod} requestBurst=${requestBurst} holdMs=${holdMs}`
+    );
+
+    const recordDataEvent = () => {
+      stats.subscriptionDataEvents += 1;
+    };
+    const recordSubscriptionError = () => {
+      stats.subscriptionCallbackErrors += 1;
+    };
+
+    const openSubscriptionWave = () => {
+      for (let i = 0; i < subsPerMethod; i += 1) {
+        if (mode === "all" || mode === "stateOnly") {
+          try {
+            const unsubscribe = subscribeState(
+              {},
+              recordDataEvent,
+              recordSubscriptionError
+            );
+            stressSubscriptionsRef.current.push(unsubscribe);
+            stats.subscriptionsOpened += 1;
+          } catch {
+            stats.subscriptionOpenErrors += 1;
+          }
+        }
+
+        if (mode === "all") {
+          try {
+            const unsubscribe = subscribePeerEvents(
+              {},
+              recordDataEvent,
+              recordSubscriptionError
+            );
+            stressSubscriptionsRef.current.push(unsubscribe);
+            stats.subscriptionsOpened += 1;
+          } catch {
+            stats.subscriptionOpenErrors += 1;
+          }
+
+          try {
+            const unsubscribe = subscribeChannelEvents(
+              {},
+              recordDataEvent,
+              recordSubscriptionError
+            );
+            stressSubscriptionsRef.current.push(unsubscribe);
+            stats.subscriptionsOpened += 1;
+          } catch {
+            stats.subscriptionOpenErrors += 1;
+          }
+        }
+
+        if (mode === "all" || mode === "txOnly") {
+          try {
+            const unsubscribe = subscribeTransactions(
+              {},
+              recordDataEvent,
+              recordSubscriptionError
+            );
+            stressSubscriptionsRef.current.push(unsubscribe);
+            stats.subscriptionsOpened += 1;
+          } catch {
+            stats.subscriptionOpenErrors += 1;
+          }
+        }
+      }
+    };
+
+    const runRequestBurst = async () => {
+      const requestMessage = create(GetInfoRequestSchema, {});
+      const requestB64 = base64Encode(
+        toBinary(GetInfoRequestSchema, requestMessage)
+      );
+
+      const tasks = Array.from({ length: requestBurst }, async () => {
+        try {
+          const state = await getCurrentWalletState();
+          if (
+            state === WalletState.RPC_ACTIVE ||
+            state === WalletState.SERVER_ACTIVE
+          ) {
+            await TurboLndElectrobunViewCore.getInfo(requestB64);
+          } else {
+            stats.requestSkipped += 1;
+          }
+
+          await examplePing();
+          stats.requestSucceeded += 1;
+        } catch {
+          stats.requestFailed += 1;
+        }
+      });
+
+      await Promise.all(tasks);
+    };
+
+    let startPromise: Promise<void> | null = null;
+
+    try {
+      if (includeStart) {
+        startPromise = (async () => {
+          try {
+            await start(startArgs);
+            stats.startSucceeded += 1;
+          } catch (error) {
+            stats.startFailed += 1;
+            appendLog(
+              `stressSubscriptions(): start failed: ${toErrorMessage(error)}`
+            );
+          }
+        })();
+      }
+
+      for (let cycle = 1; cycle <= cycles; cycle += 1) {
+        if (stressCancelRequestedRef.current) {
+          break;
+        }
+
+        openSubscriptionWave();
+        await runRequestBurst();
+        await sleep(holdMs);
+        closeStressSubscriptions(stats);
+
+        appendLog(
+          `stressSubscriptions(): cycle ${cycle}/${cycles} active=${stressSubscriptionsRef.current.length} opened=${stats.subscriptionsOpened} reqOk=${stats.requestSucceeded} reqFail=${stats.requestFailed} subErr=${stats.subscriptionCallbackErrors}`
+        );
+      }
+
+      if (startPromise) {
+        await startPromise;
+      }
+    } finally {
+      closeStressSubscriptions(stats);
+      const cancelled = stressCancelRequestedRef.current;
+      stressCancelRequestedRef.current = false;
+      stressRunningRef.current = false;
+      setStressRunning(false);
+      appendLog(
+        `stressSubscriptions(): ${cancelled ? "cancelled" : "completed"} startOk=${stats.startSucceeded} startFail=${stats.startFailed} opened=${stats.subscriptionsOpened} closed=${stats.subscriptionsClosed} openErr=${stats.subscriptionOpenErrors} closeErr=${stats.subscriptionCloseErrors} subErr=${stats.subscriptionCallbackErrors} data=${stats.subscriptionDataEvents} reqOk=${stats.requestSucceeded} reqFail=${stats.requestFailed} reqSkipped=${stats.requestSkipped}`
+      );
+    }
+  };
+
+  const handleStressSubscriptions = () => {
+    void runSubscriptionStress(false, "all");
+  };
+
+  const handleStressStartAndSubscriptions = () => {
+    void runSubscriptionStress(true, "all");
+  };
+
+  const handleStressStateOnly = () => {
+    void runSubscriptionStress(false, "stateOnly");
+  };
+
+  const handleStressTransactionsOnly = () => {
+    void runSubscriptionStress(false, "txOnly");
+  };
+
+  const handleStopStress = () => {
+    if (!stressRunningRef.current) {
+      appendLog("stressSubscriptions(): no active run");
+      return;
+    }
+
+    stressCancelRequestedRef.current = true;
+    const closed = closeStressSubscriptions();
+    appendLog(
+      `stressSubscriptions(): stop requested, force-closed ${closed} active subscriptions`
+    );
   };
 
   return (
@@ -300,7 +634,7 @@ function App() {
               type="button"
               onClick={() => {
                 try {
-                  TurboLndElectrobunView.subscribeState(
+                  subscribeState(
                     {},
                     (state) => {
                       appendLog(
@@ -313,7 +647,7 @@ function App() {
                   );
                   appendLog("subscribeState(): subscribed");
 
-                  TurboLndElectrobunView.subscribePeerEvents(
+                  subscribePeerEvents(
                     {},
                     (state) => {
                       appendLog(
@@ -326,7 +660,7 @@ function App() {
                   );
                   appendLog("subscribePeerEvents(): subscribed");
 
-                  TurboLndElectrobunView.subscribeChannelEvents(
+                  subscribeChannelEvents(
                     {},
                     (state) => {
                       appendLog(
@@ -339,7 +673,7 @@ function App() {
                   );
                   appendLog("subscribeChannelEvents(): subscribed");
 
-                  TurboLndElectrobunView.subscribeTransactions(
+                  subscribeTransactions(
                     {},
                     (state) => {
                       appendLog(
@@ -399,10 +733,109 @@ function App() {
             </button>
             <button
               type="button"
+              onClick={handleSpamSubscribeTransactions}
+              className="rounded bg-slate-700 px-4 py-2 text-sm font-semibold"
+            >
+              SpamTxSubs
+            </button>
+            <button
+              type="button"
+              onClick={handleCloseSpammedSubscriptions}
+              className="rounded bg-slate-700 px-4 py-2 text-sm font-semibold"
+            >
+              CloseSpamSubs
+            </button>
+            <button
+              type="button"
               onClick={handleStopChannelAcceptor}
               className="rounded bg-slate-700 px-4 py-2 text-sm font-semibold"
             >
               StopChannelAcceptor
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-6 rounded-lg border border-amber-700 bg-slate-900 p-4">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-amber-300">
+            Stress Harness
+          </h2>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <label className="text-xs text-slate-300">
+              Cycles
+              <input
+                value={stressCyclesInput}
+                onChange={(event) => setStressCyclesInput(event.target.value)}
+                className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-sm text-slate-100 outline-none ring-amber-400 focus:ring"
+              />
+            </label>
+            <label className="text-xs text-slate-300">
+              Subs/Method
+              <input
+                value={stressSubsPerMethodInput}
+                onChange={(event) =>
+                  setStressSubsPerMethodInput(event.target.value)
+                }
+                className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-sm text-slate-100 outline-none ring-amber-400 focus:ring"
+              />
+            </label>
+            <label className="text-xs text-slate-300">
+              Request Burst
+              <input
+                value={stressRequestBurstInput}
+                onChange={(event) =>
+                  setStressRequestBurstInput(event.target.value)
+                }
+                className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-sm text-slate-100 outline-none ring-amber-400 focus:ring"
+              />
+            </label>
+            <label className="text-xs text-slate-300">
+              Hold Ms
+              <input
+                value={stressHoldMsInput}
+                onChange={(event) => setStressHoldMsInput(event.target.value)}
+                className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-sm text-slate-100 outline-none ring-amber-400 focus:ring"
+              />
+            </label>
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button
+              type="button"
+              disabled={stressRunning}
+              onClick={handleStressSubscriptions}
+              className="rounded bg-amber-500 px-4 py-2 text-sm font-semibold text-slate-950 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Stress Subs
+            </button>
+            <button
+              type="button"
+              disabled={stressRunning}
+              onClick={handleStressStartAndSubscriptions}
+              className="rounded bg-amber-500 px-4 py-2 text-sm font-semibold text-slate-950 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Stress Start+Subs
+            </button>
+            <button
+              type="button"
+              disabled={stressRunning}
+              onClick={handleStressStateOnly}
+              className="rounded bg-amber-500 px-4 py-2 text-sm font-semibold text-slate-950 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Stress State Only
+            </button>
+            <button
+              type="button"
+              disabled={stressRunning}
+              onClick={handleStressTransactionsOnly}
+              className="rounded bg-amber-500 px-4 py-2 text-sm font-semibold text-slate-950 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Stress Tx Only
+            </button>
+            <button
+              type="button"
+              onClick={handleStopStress}
+              className="rounded bg-slate-700 px-4 py-2 text-sm font-semibold"
+            >
+              Stop Stress
             </button>
           </div>
         </div>
