@@ -204,7 +204,7 @@
     "@typescript-eslint/parser": "^8.56.1",
     "commitlint": "^20.4.2",
     "del-cli": "^7.0.0",
-    "electrobun": "1.15.1",
+    "electrobun": "1.16.0",
     "eslint": "^9.0.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-eslint-comments": "^3.2.0",
