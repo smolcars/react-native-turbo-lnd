@@ -29,8 +29,8 @@ lnd embedded inside an app.
 ✅ Android
 ✅ iOS
 ✅ macOS
+✅ Windows
 🤨 Electrobun (Windows, Linux, macOS) [WIP]
-🚫 Windows (planned)
 🚫 Web
 ✅ Jest mocks (all gRPC methods not yet mocked)
 ```
@@ -89,7 +89,15 @@ For custom app-level Electrobun RPC methods/messages, use:
 node node_modules/react-native-turbo-lnd/fetch-lnd.js
 ```
 
-If you wish to download the binaries manually, follow the instructions below.
+By default the convenience script fetches the Android and iOS binaries.
+You can override that with `--targets=...`, for example:
+
+```sh
+node node_modules/react-native-turbo-lnd/fetch-lnd.js --targets=android,ios,macos,windows
+```
+
+Supported targets are `android`, `ios`, `macos`, and `windows`. If you wish to
+download the binaries manually, follow the instructions below.
 
 ### Android:
 
@@ -142,6 +150,30 @@ Note: You may need to also add libresolv to the Xcode project. Go to your app
 target in Xcode, then select the General tab. Find the "Frameworks, Libraries,
 and Embedded Content" section and click on the "+" button. Search for the
 `libresolv.tbd` file and add it.
+
+### Windows:
+
+Download or build `liblnd.dll`.
+
+Place it next to your Windows solution or in an ancestor directory.
+For a standard React Native Windows app that usually means:
+
+```text
+<project root>/windows/liblnd.dll
+```
+
+The autolinked `react-native-turbo-lnd` project will search upward from the
+consuming solution for `liblnd.dll`, generate an import library from it during
+the Windows build, link that generated import library, and stage `liblnd.dll`
+for deployment. By default the generated `.def`/`.lib` artifacts are written
+under the consuming app's `windows/generated-liblnd` directory.
+
+If your workspace layout is unusual, you can override the paths explicitly in
+MSBuild with `LndDllPath`. If you already have a known-good import library and
+want to use that instead, you can also set `LndImportLibPath` explicitly. When
+`LndImportLibPath` is set, the build skips import-library generation from
+`liblnd.dll`; if you also want the DLL copied into the app output, keep
+`LndDllPath` set as well.
 
 3. Done!
 

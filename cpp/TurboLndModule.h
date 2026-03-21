@@ -4,8 +4,11 @@
 // Any changes to this file should be made there instead.
 #pragma once
 
+// Windows
+#if defined(_WIN32) && __has_include("windows-jsi/ReactNativeTurboLndJSI.h")
+#include "windows-jsi/ReactNativeTurboLndJSI.h"
 // Apple
-#if __has_include(<React-Codegen/RNTurboLndSpecJSI.h>)
+#elif __has_include(<React-Codegen/RNTurboLndSpecJSI.h>)
 #include <React-Codegen/RNTurboLndSpecJSI.h>
 // Android
 #elif __has_include("RNTurboLndSpecJSI.h")
@@ -25,6 +28,7 @@ class TurboLndModule : public NativeTurboLndCxxSpec<TurboLndModule> {
 
   static void promiseOnResponseStatic(void* context, const char* data, int length);
   static void promiseOnErrorStatic(void* context, const char* error);
+  static void startOnResponseStatic(void* context, const char* data, int length);
   static void callbackOnResponseStatic(void* context, const char* data, int length);
   static void callbackOnErrorStatic(void* context, const char* error);
 

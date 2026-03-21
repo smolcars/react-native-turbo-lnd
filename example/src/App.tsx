@@ -1,14 +1,14 @@
 /* eslint-disable */
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   StyleSheet,
   View,
   Button,
-  Platform,
-  Alert,
+  ScrollView,
+  Text,
   TextInput,
 } from "react-native";
-import * as RNFS from "@dr.pogodin/react-native-fs";
+import NativeExampleAppPaths from "./turbomodules/NativeExampleAppPaths";
 
 // The default protobuf-es bindings
 import {
@@ -35,23 +35,57 @@ import { toJson } from "@bufbuild/protobuf";
 
 export default function App() {
   const [nodeUri, setNodeUri] = useState("");
+  const [logs, setLogs] = useState<string[]>([]);
+  const logScrollRef = useRef<ScrollView | null>(null);
+
+  const appendLog = (...parts: unknown[]) => {
+    const message = parts
+      .map((part) =>
+        typeof part === "string"
+          ? part
+          : (JSON.stringify(part, null, 2) ?? String(part))
+      )
+      .join(" ");
+
+    console.log(...parts);
+    setLogs((current) => [...current.slice(-199), message]);
+  };
+
+  const appendError = (...parts: unknown[]) => {
+    const message = parts
+      .map((part) =>
+        part instanceof Error
+          ? (part.stack ?? part.message)
+          : typeof part === "string"
+            ? part
+            : (JSON.stringify(part, null, 2) ?? String(part))
+      )
+      .join(" ");
+
+    console.error(...parts);
+    setLogs((current) => [...current.slice(-199), `[error] ${message}`]);
+  };
+
+  const normalizeLndDirectory = (directory: string): string => {
+    const normalized = directory.replace(/\\/g, "/");
+    return normalized.endsWith("/") ? normalized : `${normalized}/`;
+  };
+
+  const getLndDirectory = (): string => {
+    return normalizeLndDirectory(NativeExampleAppPaths.getLndDirectory());
+  };
 
   return (
     <View style={styles.container}>
       <Button
         title="start"
         onPress={async () => {
-          let lnddir: string = "";
-          if (Platform.OS === "android") {
-            lnddir = "/data/user/0/com.turbolndexample/files/";
-          } else if (Platform.OS === "ios") {
-            lnddir = RNFS.LibraryDirectoryPath + "/Application Support/lnd/";
-          } else if (Platform.OS === "macos") {
-            lnddir = RNFS.LibraryDirectoryPath + "/Application Support/lnd/";
-          }
+          const lnddir = getLndDirectory();
 
-          console.log(
-            await start(
+          appendLog("start lnddir", lnddir);
+
+          try {
+            const result = await start(
               `--lnddir="${lnddir}"
               --noseedbackup
               --nolisten
@@ -64,15 +98,23 @@ export default function App() {
               --db.bolt.auto-compact
               --db.bolt.auto-compact-min-age=0
               --neutrino.connect=192.168.10.120:19444`
-            )
-          );
+            );
+
+            appendLog("start result", result);
+          } catch (error) {
+            appendError("start failed", error);
+          }
         }}
       />
       <Button
         title="getInfo"
         onPress={async () => {
-          const result = await getInfo({});
-          console.log("getInfo", toJson(GetInfoResponseSchema, result));
+          try {
+            const result = await getInfo({});
+            appendLog("getInfo", toJson(GetInfoResponseSchema, result));
+          } catch (error) {
+            appendError("getInfo failed", error);
+          }
         }}
       />
       <Button
@@ -85,11 +127,8 @@ export default function App() {
           const endTime = performance.now();
           const executionTime = endTime - startTime;
 
-          console.log("done");
-          console.log(`Execution time: ${executionTime} milliseconds`);
-          if (!__DEV__) {
-            Alert.alert(`Execution time: ${executionTime} milliseconds`);
-          }
+          appendLog("done");
+          appendLog(`Execution time: ${executionTime} milliseconds`);
         }}
       />
       <Button
@@ -98,10 +137,10 @@ export default function App() {
           subscribeState(
             {},
             (state) => {
-              console.log("state", toJson(SubscribeStateResponseSchema, state));
+              appendLog("state", toJson(SubscribeStateResponseSchema, state));
             },
             (err) => {
-              console.log("error from subscribeState", err);
+              appendError("error from subscribeState", err);
             }
           );
         }}
@@ -115,30 +154,39 @@ export default function App() {
                 accept: true,
                 pendingChanId: request.pendingChanId,
               });
+              appendLog("channelAcceptor request", request);
             },
             (error) => {
-              console.error(error);
+              appendError("channelAcceptor error", error);
             }
           );
-          console.log("channelAcceptor", acceptor);
+          appendLog("channelAcceptor", acceptor);
         }}
       />
       <Button
         title="listChannels"
         onPress={async () => {
-          const result = await listChannels({
-            activeOnly: true,
-          });
+          try {
+            const result = await listChannels({
+              activeOnly: true,
+            });
 
-          console.log("listChannels", result);
+            appendLog("listChannels", result);
+          } catch (error) {
+            appendError("listChannels failed", error);
+          }
         }}
       />
       <Button
         title="listPeers"
         onPress={async () => {
-          const result = await listPeers({});
+          try {
+            const result = await listPeers({});
 
-          console.log("listPeers", result);
+            appendLog("listPeers", result);
+          } catch (error) {
+            appendError("listPeers failed", error);
+          }
         }}
       />
       <View style={{ flexDirection: "column" }}>
@@ -153,17 +201,36 @@ export default function App() {
           onPress={async () => {
             const [pubkey, host] = nodeUri.split("@");
 
-            const result = await connectPeer({
-              addr: {
-                host: pubkey,
-                pubkey: host,
-              },
-            });
-            console.log("connectPeer", result);
+            try {
+              const result = await connectPeer({
+                addr: {
+                  host,
+                  pubkey,
+                },
+              });
+              appendLog("connectPeer", result);
+            } catch (error) {
+              appendError("connectPeer failed", error);
+            }
           }}
           title="connectPeer"
         />
       </View>
+      <Button title="clear logs" onPress={() => setLogs([])} />
+      <ScrollView
+        ref={logScrollRef}
+        style={styles.logContainer}
+        contentContainerStyle={styles.logContent}
+        onContentSizeChange={() =>
+          logScrollRef.current?.scrollToEnd({ animated: true })
+        }
+      >
+        {logs.map((entry, index) => (
+          <Text key={`${index}-${entry}`} style={styles.logText}>
+            {entry}
+          </Text>
+        ))}
+      </ScrollView>
     </View>
   );
 }
@@ -173,10 +240,28 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: "gray",
   },
   box: {
     width: 60,
     height: 60,
     marginVertical: 20,
+  },
+  logContainer: {
+    alignSelf: "stretch",
+    flex: 1,
+    maxHeight: 340,
+    backgroundColor: "#111",
+    borderRadius: 8,
+    marginTop: 8,
+  },
+  logContent: {
+    padding: 12,
+    gap: 2,
+  },
+  logText: {
+    color: "#fff",
+    fontFamily: "monospace",
+    fontSize: 10,
   },
 });
