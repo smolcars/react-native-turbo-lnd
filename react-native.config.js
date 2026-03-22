@@ -16,6 +16,7 @@ module.exports = {
         cxxModuleHeaderName: "TurboLndModule",
         sourceDir: "cpp",
       },
+      windows: {},
     },
   },
 };

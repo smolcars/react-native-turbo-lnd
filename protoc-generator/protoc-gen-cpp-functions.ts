@@ -409,7 +409,11 @@ ${cppHeaderResult.join("\n\n")}
 `${contributorNotice}
 #include "TurboLndModule.h"
 
+#if defined(_WIN32)
+#include "liblnd_windows/liblnd.h"
+#else
 #include "liblnd.h"
+#endif
 
 #include "utils/PromiseKeeper.h"
 #include "utils/CallbackKeeper.h"

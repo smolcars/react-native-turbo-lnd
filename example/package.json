@@ -8,18 +8,20 @@
     "start": "react-native start",
     "build:android": "cd android && ./gradlew assembleDebug --no-daemon --console=plain -PreactNativeArchitectures=arm64-v8a",
     "build:ios": "cd ios && xcodebuild -workspace TurboLndExample.xcworkspace -scheme TurboLndExample -configuration Debug -sdk iphonesimulator CC=clang CPLUSPLUS=clang++ LD=clang LDPLUSPLUS=clang++ GCC_OPTIMIZATION_LEVEL=0 GCC_PRECOMPILE_PREFIX_HEADER=YES ASSETCATALOG_COMPILER_OPTIMIZATION=time DEBUG_INFORMATION_FORMAT=dwarf COMPILER_INDEX_STORE_ENABLE=NO",
-    "generate-protos": "@bufbuild/buf generate"
+    "generate-protos": "@bufbuild/buf generate",
+    "codegen:windows": "npx @react-native-community/cli codegen-windows",
+    "windows": "npx @react-native-community/cli run-windows"
   },
   "dependencies": {
     "@bufbuild/buf": "^1.66.0",
     "@bufbuild/protobuf": "^2.0.0",
     "@bufbuild/protoc-gen-es": "^2.0.0",
-    "@dr.pogodin/react-native-fs": "2.37.0",
     "base64-js": "^1.5.1",
     "fast-text-encoding": "^1.0.6",
-    "react": "19.2.4",
+    "react": "19.2.3",
     "react-native": "0.84.1",
-    "@react-native/codegen": "0.84.1"
+    "@react-native/codegen": "0.84.1",
+    "react-native-windows": "0.82.1"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
@@ -34,9 +36,30 @@
     "@react-native/metro-config": "0.84.1",
     "@react-native/typescript-config": "0.84.1",
     "babel-plugin-module-resolver": "^5.0.0",
-    "react-native-monorepo-config": "^0.3.3"
+    "react-native-monorepo-config": "^0.3.3",
+    "@rnx-kit/jest-preset": "^0.1.17"
   },
   "engines": {
     "node": ">= 22.11.0"
+  },
+  "codegenConfig": {
+    "name": "TurboLndExampleSpec",
+    "type": "modules",
+    "jsSrcsDir": "src/turbomodules",
+    "android": {
+      "javaPackageName": "com.turbolndexample.specs"
+    },
+    "windows": {
+      "namespace": "ReactNativeTurboLndExampleCodegen",
+      "outputDirectory": "windows/ReactNativeTurboLndExample/codegen",
+      "separateDataTypes": true
+    }
+  },
+  "react-native-windows": {
+    "init-windows": {
+      "name": "ReactNativeTurboLndExample",
+      "namespace": "ReactNativeTurboLndExample",
+      "template": "cpp-app"
+    }
   }
 }

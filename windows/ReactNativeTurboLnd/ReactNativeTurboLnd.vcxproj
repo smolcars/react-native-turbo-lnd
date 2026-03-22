@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This project was created with react-native-windows 0.82.1 -->
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(SolutionDir)\ExperimentalFeatures.props" Condition="Exists('$(SolutionDir)\ExperimentalFeatures.props')" />
+  <PropertyGroup Label="Globals">
+    <CppWinRTOptimized>true</CppWinRTOptimized>
+    <MinimalCoreWin>true</MinimalCoreWin>
+    <ProjectGuid>{41E7298D-F62D-4A2D-800D-A6EBE28AA954}</ProjectGuid>
+    <ProjectName>ReactNativeTurboLnd</ProjectName>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>ReactNativeTurboLnd</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <DefaultLanguage>en-US</DefaultLanguage>
+    <MinimumVisualStudioVersion>17.0</MinimumVisualStudioVersion>
+    <AppxPackage>false</AppxPackage>
+  </PropertyGroup>
+  <PropertyGroup Label="ReactNativeWindowsProps">
+    <SolutionReactNativeWindowsRoot Condition="'$(SolutionDir)' != ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(SolutionDir), 'node_modules\react-native-windows\package.json'))</SolutionReactNativeWindowsRoot>
+    <RepoReactNativeWindowsRoot Condition="'$(SolutionReactNativeWindowsRoot)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), 'node_modules\react-native-windows\package.json'))</RepoReactNativeWindowsRoot>
+    <ReactNativeWindowsDir Condition="'$(ReactNativeWindowsDir)' == '' and '$(SolutionReactNativeWindowsRoot)' != ''">$(SolutionReactNativeWindowsRoot)\node_modules\react-native-windows\</ReactNativeWindowsDir>
+    <ReactNativeWindowsDir Condition="'$(ReactNativeWindowsDir)' == '' and '$(RepoReactNativeWindowsRoot)' != ''">$(RepoReactNativeWindowsRoot)\node_modules\react-native-windows\</ReactNativeWindowsDir>
+    <RunAutolinkCheck>false</RunAutolinkCheck>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SolutionLndDllRoot Condition="'$(SolutionDir)' != ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(SolutionDir), 'liblnd.dll'))</SolutionLndDllRoot>
+    <RepoLndDllRoot Condition="'$(SolutionLndDllRoot)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), 'liblnd.dll'))</RepoLndDllRoot>
+    <LndDllPath Condition="'$(LndDllPath)' == '' and '$(SolutionLndDllRoot)' != ''">$(SolutionLndDllRoot)\liblnd.dll</LndDllPath>
+    <LndDllPath Condition="'$(LndDllPath)' == '' and '$(RepoLndDllRoot)' != ''">$(RepoLndDllRoot)\liblnd.dll</LndDllPath>
+    <LndToolArch>x64</LndToolArch>
+    <LndLibMachine>X64</LndLibMachine>
+    <GeneratedLndRoot Condition="'$(SolutionDir)' != ''">$(SolutionDir)generated-liblnd\$(MSBuildProjectName)</GeneratedLndRoot>
+    <GeneratedLndRoot Condition="'$(GeneratedLndRoot)' == '' and '$(TEMP)' != ''">$(TEMP)\react-native-turbo-lnd\generated-liblnd\$(MSBuildProjectName)</GeneratedLndRoot>
+    <GeneratedLndRoot Condition="'$(GeneratedLndRoot)' == ''">$(MSBuildThisFileDirectory)generated-liblnd\$(MSBuildProjectName)</GeneratedLndRoot>
+    <GeneratedLndDir>$(GeneratedLndRoot)\$(Platform)\$(Configuration)</GeneratedLndDir>
+    <GeneratedLndDefPath>$(GeneratedLndDir)\liblnd.def</GeneratedLndDefPath>
+    <GeneratedLndImportLibPath>$(GeneratedLndDir)\liblnd.generated.lib</GeneratedLndImportLibPath>
+    <NormalizedVCToolsInstallDir>$([System.String]::Copy('$(VCToolsInstallDir)').TrimEnd('\'))</NormalizedVCToolsInstallDir>
+    <ResolvedLndImportLibPath Condition="'$(LndImportLibPath)' != ''">$(LndImportLibPath)</ResolvedLndImportLibPath>
+    <ResolvedLndImportLibPath Condition="'$(ResolvedLndImportLibPath)' == '' and '$(LndDllPath)' != ''">$(GeneratedLndImportLibPath)</ResolvedLndImportLibPath>
+  </PropertyGroup>
+  <Import Project="$(ReactNativeWindowsDir)\PropertySheets\External\Microsoft.ReactNative.WindowsSdk.Default.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+    <GenerateManifest>false</GenerateManifest>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">
+    <UseDebugLibraries>true</UseDebugLibraries>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Release'" Label="Configuration">
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="ReactNativeWindowsPropertySheets">
+    <Import Project="$(ReactNativeWindowsDir)\PropertySheets\External\Microsoft.ReactNative.CppLib.props" Condition="Exists('$(ReactNativeWindowsDir)\PropertySheets\External\Microsoft.ReactNative.CppLib.props')" />
+  </ImportGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile>$(IntDir)pch.pch</PrecompiledHeaderOutputFile>
+      <WarningLevel>Level4</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalOptions>%(AdditionalOptions) /bigobj</AdditionalOptions>
+      <DisableSpecificWarnings>4453;28204</DisableSpecificWarnings>
+      <PreprocessorDefinitions>_WINRT_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalUsingDirectories>$(WindowsSDK_WindowsMetadata);$(AdditionalUsingDirectories)</AdditionalUsingDirectories>
+      <AdditionalIncludeDirectories>
+        $(MSBuildThisFileDirectory);
+        $(MSBuildThisFileDirectory)..\..\cpp;
+        $(MSBuildThisFileDirectory)..\..\;
+        %(AdditionalIncludeDirectories)
+      </AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>$(ResolvedLndImportLibPath);shell32.lib;user32.lib;windowsapp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SubSystem>Console</SubSystem>
+      <GenerateWindowsMetadata>true</GenerateWindowsMetadata>
+      <ModuleDefinitionFile>ReactNativeTurboLnd.def</ModuleDefinitionFile>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
+    <ClCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
+    <ClCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <PropertyGroup Label="UserMacros" />
+  <ItemGroup>
+    <ClInclude Include="..\..\cpp\TurboLndModule.h" />
+    <ClInclude Include="..\..\cpp\liblnd_windows\liblnd.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\cpp\windows-jsi\ReactNativeTurboLndJSI.h" />
+    <ClInclude Include="ReactPackageProvider.h">
+      <DependentUpon>ReactPackageProvider.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="targetver.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\cpp\TurboLndModule.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="pch.cpp">
+      <PrecompiledHeader>Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="ReactPackageProvider.cpp">
+      <DependentUpon>ReactPackageProvider.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="ReactPackageProvider.idl" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="ReactNativeTurboLnd.rc" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(LndDllPath)' != '' and Exists('$(LndDllPath)')">
+    <None Include="$(LndDllPath)">
+      <DeploymentContent>true</DeploymentContent>
+      <Link>liblnd.dll</Link>
+    </None>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ReactNativeWindowsTargets">
+    <Import Project="$(ReactNativeWindowsDir)\PropertySheets\External\Microsoft.ReactNative.CppLib.targets" Condition="Exists('$(ReactNativeWindowsDir)\PropertySheets\External\Microsoft.ReactNative.CppLib.targets')" />
+  </ImportGroup>
+  <ItemGroup>
+  </ItemGroup>
+  <Target Name="EnsureReactNativeWindowsTargets" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references targets in your node_modules\react-native-windows folder. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="'$(Platform)' != 'x64'" Text="[react-native-turbo-lnd] Windows support is currently x64-only. Build the ReactNativeTurboLnd project with Platform=x64." />
+    <Error Condition="!Exists('$(ReactNativeWindowsDir)\PropertySheets\External\Microsoft.ReactNative.CppLib.props')" Text="$([System.String]::Format('$(ErrorText)', '$(ReactNativeWindowsDir)\PropertySheets\External\Microsoft.ReactNative.CppLib.props'))" />
+    <Error Condition="!Exists('$(ReactNativeWindowsDir)\PropertySheets\External\Microsoft.ReactNative.CppLib.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(ReactNativeWindowsDir)\PropertySheets\External\Microsoft.ReactNative.CppLib.targets'))" />
+    <Error Condition="'$(LndImportLibPath)' == '' and ('$(LndDllPath)' == '' or !Exists('$(LndDllPath)'))" Text="[react-native-turbo-lnd] Could not find liblnd.dll. Set LndDllPath explicitly, place liblnd.dll next to the Windows solution or in an ancestor directory, or set LndImportLibPath to use a prebuilt import library." />
+    <Error Condition="'$(LndImportLibPath)' != '' and !Exists('$(LndImportLibPath)')" Text="[react-native-turbo-lnd] LndImportLibPath was set explicitly, but the file does not exist." />
+    <Error Condition="'$(LndImportLibPath)' == '' and !Exists('$(MSBuildThisFileDirectory)generate-liblnd-importlib.ps1')" Text="[react-native-turbo-lnd] Missing windows\\ReactNativeTurboLnd\\generate-liblnd-importlib.ps1 required to generate the liblnd import library from liblnd.dll." />
+  </Target>
+  <Target
+    Name="GenerateLndImportLib"
+    BeforeTargets="Link"
+    Condition="'$(LndImportLibPath)' == '' and '$(LndDllPath)' != '' and Exists('$(LndDllPath)')"
+    Inputs="$(LndDllPath);$(MSBuildThisFileDirectory)generate-liblnd-importlib.ps1"
+    Outputs="$(GeneratedLndImportLibPath)">
+    <MakeDir Directories="$(GeneratedLndDir)" />
+    <Exec
+      Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)generate-liblnd-importlib.ps1&quot; -DllPath &quot;$(LndDllPath)&quot; -OutDefPath &quot;$(GeneratedLndDefPath)&quot; -OutLibPath &quot;$(GeneratedLndImportLibPath)&quot; -VCToolsInstallDir &quot;$(NormalizedVCToolsInstallDir)&quot; -ToolArch &quot;$(LndToolArch)&quot; -Machine &quot;$(LndLibMachine)&quot;" />
+  </Target>
+  <Target Name="CopyLndRuntime" AfterTargets="Build" Condition="'$(LndDllPath)' != '' and Exists('$(LndDllPath)')">
+    <Copy SourceFiles="$(LndDllPath)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
+  <Target Name="ReportLndArtifacts" BeforeTargets="PrepareForBuild">
+    <Message Importance="High" Text="[react-native-turbo-lnd] Windows build using $(ResolvedLndImportLibPath) and $(LndDllPath)" />
+  </Target>
+</Project>

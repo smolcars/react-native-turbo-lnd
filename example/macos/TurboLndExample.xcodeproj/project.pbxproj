@@ -11,6 +11,7 @@
 		514201522437B4B40078DB4F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 514201512437B4B40078DB4F /* Assets.xcassets */; };
 		514201552437B4B40078DB4F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 514201532437B4B40078DB4F /* Main.storyboard */; };
 		514201582437B4B40078DB4F /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 514201572437B4B40078DB4F /* main.m */; };
+		5A8D6E5B2EAD4F7100B1C031 /* ExampleAppPaths.mm in Sources */ = {isa = PBXBuildFile; fileRef = 5A8D6E5B2EAD4F7100B1C032 /* ExampleAppPaths.mm */; };
 		A176B27A72B7D2285881AB41 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = AAEFBF5C790DA86DFA6F905D /* PrivacyInfo.xcprivacy */; };
 		AB17FFACF5C18C28E0355A91 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 8A31347F9210852F2E4081C3 /* PrivacyInfo.xcprivacy */; };
 		CCEA0C6D2C83E4D40006D912 /* liblnd.a in Frameworks */ = {isa = PBXBuildFile; fileRef = CCEA0C6C2C83E4D40006D912 /* liblnd.a */; };
@@ -29,6 +30,7 @@
 		514201562437B4B40078DB4F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		514201572437B4B40078DB4F /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		514201592437B4B40078DB4F /* TurboLndExample.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TurboLndExample.entitlements; sourceTree = "<group>"; };
+		5A8D6E5B2EAD4F7100B1C032 /* ExampleAppPaths.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = ExampleAppPaths.mm; path = ../ios/TurboLndExample/ExampleAppPaths.mm; sourceTree = "<group>"; };
 		8A31347F9210852F2E4081C3 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		9DCF0706495EBBE13D64005A /* Pods-TurboLndExample-macOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TurboLndExample-macOS.release.xcconfig"; path = "Target Support Files/Pods-TurboLndExample-macOS/Pods-TurboLndExample-macOS.release.xcconfig"; sourceTree = "<group>"; };
 		AAEFBF5C790DA86DFA6F905D /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = ../PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
@@ -76,6 +78,7 @@
 				CCEA0C702C83E5DB0006D912 /* TurboLndExample-macOS.entitlements */,
 				5142014B2437B4B30078DB4F /* AppDelegate.h */,
 				5142014C2437B4B30078DB4F /* AppDelegate.mm */,
+				5A8D6E5B2EAD4F7100B1C032 /* ExampleAppPaths.mm */,
 				514201512437B4B40078DB4F /* Assets.xcassets */,
 				514201532437B4B40078DB4F /* Main.storyboard */,
 				514201562437B4B40078DB4F /* Info.plist */,
@@ -324,6 +327,7 @@
 			files = (
 				514201582437B4B40078DB4F /* main.m in Sources */,
 				5142014D2437B4B30078DB4F /* AppDelegate.mm in Sources */,
+				5A8D6E5B2EAD4F7100B1C031 /* ExampleAppPaths.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

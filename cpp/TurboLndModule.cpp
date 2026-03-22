@@ -4,7 +4,11 @@
 // Any changes to this file should be made there instead.
 #include "TurboLndModule.h"
 
+#if defined(_WIN32)
+#include "liblnd_windows/liblnd.h"
+#else
 #include "liblnd.h"
+#endif
 
 #include "utils/PromiseKeeper.h"
 #include "utils/CallbackKeeper.h"
@@ -25,9 +29,9 @@ void TurboLndModule::promiseOnResponseStatic(void* context, const char* data, in
         return;
     }
 
-    std::string encoded = base64::to_base64(
-        std::string_view(data ? data : "", static_cast<size_t>(length))
-    );
+    std::string encoded = length > 0
+        ? base64::to_base64(std::string_view(data, static_cast<size_t>(length)))
+        : std::string{};
 
     if (data) {
         ::lndFree(const_cast<char*>(data));
@@ -48,6 +52,21 @@ void TurboLndModule::promiseOnErrorStatic(void* context, const char* error) {
     PromiseKeeper::getInstance().rejectPromise(id, std::move(msg));
 }
 
+void TurboLndModule::startOnResponseStatic(void* context, const char* data, int length) {
+    uint64_t id = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(context));
+
+    if (length < 0 || (length > 0 && data == nullptr)) {
+        PromiseKeeper::getInstance().rejectPromise(id, "invalid callback payload");
+        return;
+    }
+
+    if (data) {
+        ::lndFree(const_cast<char*>(data));
+    }
+
+    PromiseKeeper::getInstance().resolvePromise(id, "");
+}
+
 void TurboLndModule::callbackOnResponseStatic(void* context, const char* data, int length) {
     uint64_t id = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(context));
 
@@ -56,9 +75,9 @@ void TurboLndModule::callbackOnResponseStatic(void* context, const char* data, i
         return;
     }
 
-    std::string encoded = base64::to_base64(
-        std::string_view(data ? data : "", static_cast<size_t>(length))
-    );
+    std::string encoded = length > 0
+        ? base64::to_base64(std::string_view(data, static_cast<size_t>(length)))
+        : std::string{};
 
     if (data) {
         ::lndFree(const_cast<char*>(data));
@@ -86,15 +105,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::start(jsi::Runtime &r
     uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
 
     CCallback callback = {
-        .onResponse = [](void* context, const char* data, int length) {
-            uint64_t id = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(context));
-            std::string encoded = base64::to_base64(std::string_view(data, length));
-            PromiseKeeper::getInstance().resolvePromise(id, std::move(encoded));
-        },
-        .onError = [](void* context, const char* error) {
-            uint64_t id = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(context));
-            PromiseKeeper::getInstance().rejectPromise(id, std::string(error));
-        },
+        .onResponse = &startOnResponseStatic,
+        .onError = &promiseOnErrorStatic,
         .responseContext = static_cast<uintptr_t>(promiseId),
         .errorContext = static_cast<uintptr_t>(promiseId)
     };
