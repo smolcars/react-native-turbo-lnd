@@ -1,0 +1,251 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: Semver increment to publish
+        required: true
+        default: patch
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      dry_run:
+        description: Run the full release flow without publishing or uploading assets
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+  id-token: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  LND_REPOSITORY: hsjoberg/lnd
+  LND_REF: 37c73db524159d9532b2c0d7c47fd220a52122c9
+  LND_GO_VERSION: 1.25.5
+  ANDROID_NDK_VERSION: 27.2.12479018
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Ensure release runs from master
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF_NAME}" != "master" ]]; then
+            echo "This release workflow must run from master." >&2
+            exit 1
+          fi
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Install protoc
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes protobuf-compiler
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Validate release candidate
+        run: |
+          bun run generate-bindings
+          bun run generate-codegen-specs
+          bun run lint
+          bun run typecheck
+          bun run test
+          bun run build
+
+  native-artifacts:
+    needs: validate
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: android
+            runner: ubuntu-latest
+            asset_name: liblnd-android.zip
+          - target: ios
+            runner: macos-14
+            asset_name: liblnd-ios.zip
+          - target: macos
+            runner: macos-14
+            asset_name: liblnd-mac.zip
+          - target: windows
+            runner: ubuntu-latest
+            asset_name: liblnd-windows.zip
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Checkout pinned lnd CGO fork
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.LND_REPOSITORY }}
+          ref: ${{ env.LND_REF }}
+          path: .cache/lnd-cgo
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.LND_GO_VERSION }}
+          cache-dependency-path: .cache/lnd-cgo/go.sum
+
+      - name: Add Go bin to PATH
+        shell: bash
+        run: echo "$(go env GOPATH)/bin" >> "${GITHUB_PATH}"
+
+      - name: Setup Java
+        if: ${{ matrix.target == 'android' }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: "17"
+
+      - name: Setup Android SDK
+        if: ${{ matrix.target == 'android' }}
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android NDK
+        if: ${{ matrix.target == 'android' }}
+        shell: bash
+        run: |
+          yes | sdkmanager --licenses > /dev/null || true
+          sdkmanager "ndk;${ANDROID_NDK_VERSION}"
+
+      - name: Install MinGW
+        if: ${{ matrix.target == 'windows' }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes mingw-w64
+
+      - name: Install local proto generation tools
+        shell: bash
+        run: |
+          if [[ "${{ matrix.runner }}" == "macos-14" ]]; then
+            brew install protobuf clang-format
+          else
+            sudo apt-get update
+            sudo apt-get install --yes protobuf-compiler clang-format
+          fi
+          cd "${GITHUB_WORKSPACE}/.cache/lnd-cgo/lnrpc"
+          bash ./install_gen_tools.sh
+
+      - name: Build native artifact
+        shell: bash
+        run: |
+          mkdir -p dist
+          export PATH="$(go env GOPATH)/bin:${PATH}"
+          cd "${GITHUB_WORKSPACE}/.cache/lnd-cgo"
+
+          case "${{ matrix.target }}" in
+            android)
+              make android-cgo MOBILE_RPC_MODE=local
+              artifact_root="${GITHUB_WORKSPACE}/.cache/lnd-cgo/mobile/build/cgo/android"
+              asset_name="liblnd-android.zip"
+              ;;
+            ios)
+              make ios-cgo MOBILE_RPC_MODE=local
+              artifact_root="${GITHUB_WORKSPACE}/.cache/lnd-cgo/mobile/build/cgo/ios"
+              asset_name="liblnd-ios.zip"
+              ;;
+            macos)
+              make macos-cgo MOBILE_RPC_MODE=local
+              artifact_root="${GITHUB_WORKSPACE}/.cache/lnd-cgo/mobile/build/cgo/macos"
+              asset_name="liblnd-mac.zip"
+              ;;
+            windows)
+              make windows-cgo MOBILE_RPC_MODE=local WINDOWS_CGO_CC=x86_64-w64-mingw32-gcc
+              artifact_root="${GITHUB_WORKSPACE}/.cache/lnd-cgo/mobile/build/cgo/windows"
+              asset_name="liblnd-windows.zip"
+              ;;
+            *)
+              echo "Unsupported target ${{ matrix.target }}" >&2
+              exit 1
+              ;;
+          esac
+
+          cd "${artifact_root}"
+          zip -rq "${GITHUB_WORKSPACE}/dist/${asset_name}" .
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-${{ matrix.target }}
+          path: dist/${{ matrix.asset_name }}
+          if-no-files-found: error
+
+  release:
+    needs: native-artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Ensure release runs from master
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF_NAME}" != "master" ]]; then
+            echo "This release workflow must run from master." >&2
+            exit 1
+          fi
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Setup Node.js for npm trusted publishing
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          registry-url: https://registry.npmjs.org
+
+      - name: Install protoc
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes protobuf-compiler
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Download native artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: native-*
+          merge-multiple: true
+          path: ${{ runner.temp }}/release-assets
+
+      - name: Run release-it
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          args=(
+            "${{ inputs.release_type }}"
+            "--ci"
+            "--github.assets=${RUNNER_TEMP}/release-assets/*.zip"
+          )
+          if [[ "${{ inputs.dry_run }}" == "true" ]]; then
+            args+=("--dry-run")
+          fi
+          bunx release-it "${args[@]}"

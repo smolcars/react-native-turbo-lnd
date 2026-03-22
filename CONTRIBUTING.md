@@ -82,15 +82,25 @@ We use [TypeScript](https://www.typescriptlang.org/) for type checking, [ESLint]
 
 Our pre-commit hooks verify that the linter and tests pass when committing.
 
-### Publishing to npm
+### Publishing to npm and GitHub Releases
 
-We use [release-it](https://github.com/release-it/release-it) to make it easier to publish new versions. It handles common tasks like bumping version based on semver, creating tags and releases etc.
+We use [release-it](https://github.com/release-it/release-it) inside GitHub Actions to publish releases.
 
-To publish new versions, run the following:
+To publish a new version:
 
-```sh
-bun run release
-```
+1. Open the `Release` workflow in GitHub Actions on the `master` branch.
+2. Choose the semver increment (`patch`, `minor`, or `major`).
+3. Optionally run a dry run first.
+4. Start the workflow.
+
+The workflow will:
+
+- run validation checks
+- bump `package.json`
+- create the release commit and `v<version>` tag on the same commit
+- publish the package to npm
+- create the GitHub Release
+- build and attach the native `liblnd` artifacts for Android, iOS, macOS, and Windows
 
 ### Scripts
 

@@ -151,13 +151,14 @@
     "example": "bun run --cwd example",
     "build": "bun run generate-bindings && bun run generate-codegen-specs && bun run bob",
     "bob": "bob build",
-    "test": "bun test tests/**/*.test.ts",
+    "test": "bun test ./tests",
     "typecheck": "tsc -p tsconfig.build.json --noEmit",
     "lint": "eslint .",
     "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build lib",
     "prepare": "lefthook install && node ./scripts/fix-lefthook-hooks.cjs",
     "prepack": "bun run build",
     "release": "release-it",
+    "release:ci": "release-it --ci",
     "generate-codegen-specs": "node ./scripts/generate-codegen-specs.cjs",
     "generate-bindings": "bun run --cwd protoc-generator generate",
     "example-electrobun": "bun run --cwd example-electrobun",
@@ -272,14 +273,19 @@
   },
   "release-it": {
     "git": {
+      "requireBranch": "master",
       "commitMessage": "chore: release ${version}",
       "tagName": "v${version}"
     },
     "npm": {
-      "publish": true
+      "publish": true,
+      "skipChecks": true
     },
     "github": {
-      "release": true
+      "release": true,
+      "assets": [
+        "dist/*.zip"
+      ]
     },
     "plugins": {
       "@release-it/conventional-changelog": {

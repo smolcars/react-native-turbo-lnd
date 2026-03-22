@@ -101,7 +101,7 @@ download the binaries manually, follow the instructions below.
 
 ### Android:
 
-Download the latest `lnd-cgo-android.zip` from [hsjoberg/react-native-turbo-lnd/releases](https://github.com/hsjoberg/react-native-turbo-lnd/releases)
+Download the latest `liblnd-android.zip` from [hsjoberg/react-native-turbo-lnd/releases](https://github.com/hsjoberg/react-native-turbo-lnd/releases)
 containing lnd `.so` binaries and unzip the files to
 `<project root>/android/app/src/main/jniLibs`.
 The structure should look like this:
