@@ -38,7 +38,7 @@ function main() {
   const destinationDir = path.join(
     projectRoot,
     "native",
-    "electrobun-napi",
+    "napi",
     platformArchDir
   );
   const destinationPath = path.join(destinationDir, ADDON_FILENAME);

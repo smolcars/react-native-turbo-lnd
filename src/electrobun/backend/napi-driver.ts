@@ -14,7 +14,7 @@ import type { ElectrobunBackendDriver, ElectrobunMethodLists } from "./types";
 const NAPI_ADDON_FILENAME = "turbolnd_electrobun_napi.node";
 const DEFAULT_PARENT_SEARCH_DEPTH = 8;
 const NAPI_ADDON_OVERRIDE_ENV_VAR = "TURBOLND_ELECTROBUN_NAPI_ADDON_PATH";
-const NAPI_PREBUILD_DIRNAME = "electrobun-napi";
+const NAPI_PREBUILD_DIRNAME = "napi";
 
 const requireFromHere = createRequire(import.meta.url);
 const moduleDir = path.dirname(fileURLToPath(import.meta.url));

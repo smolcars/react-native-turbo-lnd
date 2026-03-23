@@ -47,7 +47,7 @@ function resolveAddonSourcePath(exampleRoot) {
     path.join(
       packageRoot,
       "native",
-      "electrobun-napi",
+      "napi",
       platformArchDir,
       ADDON_FILENAME
     ),

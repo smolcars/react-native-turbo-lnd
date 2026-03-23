@@ -1,4 +1,5 @@
-Prebuilt Electrobun Node-API binaries live here.
+Prebuilt desktop Node-API binaries live here under the generic `native/napi`
+package path.
 
 Layout:
 
@@ -23,3 +24,13 @@ Runtime notes:
 - macOS uses `liblnd.dylib`.
 - The static `liblnd-fat.a` archive used by the React Native Apple targets is
   not sufficient for the N-API or Bun FFI runtimes on macOS.
+
+Release artifact notes:
+
+- `liblnd-windows.zip` contains the Windows desktop DLL and is shared with the
+  React Native Windows flow.
+- `liblnd-linux.zip` contains the Linux desktop shared library.
+- `liblnd-macos-dylib.zip` contains the macOS desktop shared library.
+- `liblnd-macos.zip` contains the static Apple archive for the React Native
+  Apple/macOS targets and cannot be loaded directly by the desktop N-API or
+  Bun FFI runtimes.

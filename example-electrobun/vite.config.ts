@@ -5,6 +5,7 @@ export default defineConfig({
   plugins: [react()],
   root: "src/mainview",
   resolve: {
+    dedupe: ["react", "react-dom"],
     alias: [
       {
         find: /^react-native-turbo-lnd$/,

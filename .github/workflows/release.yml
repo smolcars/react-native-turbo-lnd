@@ -29,7 +29,7 @@ concurrency:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   LND_REPOSITORY: hsjoberg/lnd
-  LND_REF: 37c73db524159d9532b2c0d7c47fd220a52122c9
+  LND_REF: 5802da9dd2a5201b77d48e01b45ae794252689c0
   LND_GO_VERSION: 1.25.5
   ANDROID_NDK_VERSION: 27.2.12479018
 
@@ -83,11 +83,17 @@ jobs:
             runner: ubuntu-latest
             asset_name: liblnd-android.zip
           - target: ios
-            runner: macos-14
+            runner: macos-15
             asset_name: liblnd-ios.zip
           - target: macos
-            runner: macos-14
-            asset_name: liblnd-mac.zip
+            runner: macos-15
+            asset_name: liblnd-macos.zip
+          - target: macos-shared
+            runner: macos-15
+            asset_name: liblnd-macos-dylib.zip
+          - target: linux
+            runner: ubuntu-latest
+            asset_name: liblnd-linux.zip
           - target: windows
             runner: ubuntu-latest
             asset_name: liblnd-windows.zip
@@ -139,7 +145,7 @@ jobs:
       - name: Install local proto generation tools
         shell: bash
         run: |
-          if [[ "${{ matrix.runner }}" == "macos-14" ]]; then
+          if [[ "${{ startsWith(matrix.runner, 'macos-') }}" == "true" ]]; then
             brew install protobuf clang-format
           else
             sudo apt-get update
@@ -169,7 +175,17 @@ jobs:
             macos)
               make macos-cgo MOBILE_RPC_MODE=local
               artifact_root="${GITHUB_WORKSPACE}/.cache/lnd-cgo/mobile/build/cgo/macos"
-              asset_name="liblnd-mac.zip"
+              asset_name="liblnd-macos.zip"
+              ;;
+            macos-shared)
+              make macos-cgo-shared MOBILE_RPC_MODE=local
+              artifact_root="${GITHUB_WORKSPACE}/.cache/lnd-cgo/mobile/build/cgo/macos"
+              asset_name="liblnd-macos-dylib.zip"
+              ;;
+            linux)
+              make linux-cgo MOBILE_RPC_MODE=local
+              artifact_root="${GITHUB_WORKSPACE}/.cache/lnd-cgo/mobile/build/cgo/linux"
+              asset_name="liblnd-linux.zip"
               ;;
             windows)
               make windows-cgo MOBILE_RPC_MODE=local WINDOWS_CGO_CC=x86_64-w64-mingw32-gcc
@@ -192,8 +208,190 @@ jobs:
           path: dist/${{ matrix.asset_name }}
           if-no-files-found: error
 
-  release:
+  build-android:
     needs: native-artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: "17"
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install protoc
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes protobuf-compiler
+
+      - name: Download Android native artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: native-android
+          path: ${{ runner.temp }}/native-android
+
+      - name: Prepare generated sources
+        run: |
+          bun run generate-bindings
+          bun run generate-codegen-specs
+
+      - name: Install Android native artifact
+        shell: bash
+        run: |
+          rm -rf android/src/main/jniLibs
+          mkdir -p android/src/main/jniLibs
+          unzip -q "${RUNNER_TEMP}/native-android/liblnd-android.zip" -d android/src/main/jniLibs
+
+      - name: Build example for Android
+        run: bun run --cwd example build:android
+
+  build-ios:
+    needs: native-artifacts
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Install protoc
+        shell: bash
+        run: brew install protobuf
+
+      - name: Prepare generated sources
+        run: |
+          bun run generate-bindings
+          bun run generate-codegen-specs
+
+      - name: Download iOS native artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: native-ios
+          path: ${{ runner.temp }}/native-ios
+
+      - name: Install iOS native artifact
+        shell: bash
+        run: |
+          rm -f ios/liblnd.a
+          unzip -q "${RUNNER_TEMP}/native-ios/liblnd-ios.zip" -d "${RUNNER_TEMP}/native-ios/unpacked"
+          mv "${RUNNER_TEMP}/native-ios/unpacked/liblnd-fat.a" ios/liblnd.a
+
+      - name: Install CocoaPods for iOS example
+        shell: bash
+        run: |
+          cd example/ios
+          pod install
+
+      - name: Build example for iOS device
+        shell: bash
+        run: |
+          cd example/ios
+          xcodebuild \
+            -workspace TurboLndExample.xcworkspace \
+            -scheme TurboLndExample \
+            -configuration Debug \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            CC=clang \
+            CPLUSPLUS=clang++ \
+            LD=clang \
+            LDPLUSPLUS=clang++ \
+            GCC_OPTIMIZATION_LEVEL=0 \
+            GCC_PRECOMPILE_PREFIX_HEADER=YES \
+            ASSETCATALOG_COMPILER_OPTIMIZATION=time \
+            DEBUG_INFORMATION_FORMAT=dwarf \
+            COMPILER_INDEX_STORE_ENABLE=NO
+
+  # build-macos:
+  #   needs: native-artifacts
+  #   runs-on: macos-15
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
+  #
+  #     - name: Setup
+  #       uses: ./.github/actions/setup
+  #
+  #     - name: Download macOS native artifact
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: native-macos
+  #         path: ${{ runner.temp }}/native-macos
+  #
+  #     - name: Install macOS native artifact
+  #       shell: bash
+  #       run: |
+  #         rm -f macos/liblnd.a
+  #         unzip -q "${RUNNER_TEMP}/native-macos/liblnd-mac.zip" -d "${RUNNER_TEMP}/native-macos/unpacked"
+  #         mv "${RUNNER_TEMP}/native-macos/unpacked/liblnd-fat.a" macos/liblnd.a
+  #
+  #     - name: Install CocoaPods for macOS example
+  #       shell: bash
+  #       run: |
+  #         cd example/macos
+  #         pod install
+  #
+  #     - name: Build example for macOS
+  #       shell: bash
+  #       run: |
+  #         cd example/macos
+  #         xcodebuild \
+  #           -workspace TurboLndExample.xcworkspace \
+  #           -scheme TurboLndExample-macOS \
+  #           -configuration Debug \
+  #           -sdk macosx \
+  #           CODE_SIGNING_ALLOWED=NO \
+  #           COMPILER_INDEX_STORE_ENABLE=NO
+
+  # build-windows:
+  #   needs: native-artifacts
+  #   runs-on: windows-2022
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
+  #
+  #     - name: Setup
+  #       uses: ./.github/actions/setup
+  #
+  #     - name: Setup MSBuild
+  #       uses: microsoft/setup-msbuild@v2
+  #
+  #     - name: Download Windows native artifact
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: native-windows
+  #         path: ${{ runner.temp }}\native-windows
+  #
+  #     - name: Install Windows native artifact
+  #       shell: powershell
+  #       run: |
+  #         Remove-Item -Force windows\liblnd.dll -ErrorAction SilentlyContinue
+  #         Expand-Archive -Path "$env:RUNNER_TEMP\native-windows\liblnd-windows.zip" -DestinationPath "$env:RUNNER_TEMP\native-windows\unpacked" -Force
+  #         Move-Item "$env:RUNNER_TEMP\native-windows\unpacked\liblnd.dll" "windows\liblnd.dll"
+  #
+  #     - name: Generate Windows example codegen
+  #       run: bun run --cwd example codegen:windows
+  #
+  #     - name: Build example for Windows
+  #       shell: powershell
+  #       run: |
+  #         msbuild example\windows\ReactNativeTurboLndExample\ReactNativeTurboLndExample.vcxproj /restore /p:Configuration=Debug /p:Platform=x64
+  release:
+    needs:
+      - build-android
+      - build-ios
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

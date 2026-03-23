@@ -30,7 +30,7 @@ lnd embedded inside an app.
 ✅ iOS
 ✅ macOS
 ✅ Windows
-🤨 Electrobun (Windows, Linux, macOS) [WIP]
+✅ Electrobun (Windows, Linux, macOS) [WIP]
 🚫 Web
 ✅ Jest mocks (all gRPC methods not yet mocked)
 ```
@@ -71,18 +71,6 @@ If you wish to use the protobuf-es bindings:
 | -------------------------------- | ----------------------------- |
 | `npm install @bufbuild/protobuf` | `yarn add @bufbuild/protobuf` |
 
-If you wish to use the Electrobun entrypoints (`react-native-turbo-lnd/electrobun/*`):
-
-| npm                     | yarn                 |
-| ----------------------- | -------------------- |
-| `npm install electrobun` | `yarn add electrobun` |
-
-For custom app-level Electrobun RPC methods/messages, use:
-
-- `react-native-turbo-lnd/electrobun/view` for typed LND RPC methods.
-- `react-native-turbo-lnd/electrobun/custom-rpc` for transport helpers
-  (`invokeElectrobunRequest`, `sendElectrobunMessage`).
-
 2. Download the lnd binaries automatically using a convenience script from the root of your project:
 
 ```sh
@@ -97,8 +85,10 @@ You can override that with `--targets=...`, for example:
 node node_modules/react-native-turbo-lnd/fetch-lnd.js --targets=android,ios,macos,windows
 ```
 
-Supported targets are `android`, `ios`, `macos`, and `windows`. If you wish to
-download the binaries manually, follow the instructions below.
+Supported targets are `android`, `ios`, `macos`, and `windows`.
+
+<details>
+<summary>Download and place libs yourself</summary>
 
 ### Android:
 
@@ -147,12 +137,15 @@ defaultConfig {
 
 ### iOS/macOS:
 
-Download the latest `liblnd-{ios|mac}.zip` file from
+Download the latest `liblnd-ios.zip` or `liblnd-macos.zip` file from
 [hsjoberg/react-native-turbo-lnd/releases](https://github.com/hsjoberg/react-native-turbo-lnd/releases)
 and unzip it. Then rename `liblnd-fat.a` to `liblnd.a` and place it in
 `<project root>/node_modules/react-native-turbo-lnd/{ios|macos}/liblnd.a`.
 Then rerun `pod install` so CocoaPods picks up the vendored archive
 automatically.
+
+> Note: iOS Simulator is currently not supported by the CGO `lnd` bindings used here.
+> The current iOS archive is for real devices only.
 
 ### Windows:
 
@@ -178,18 +171,24 @@ want to use that instead, you can also set `LndImportLibPath` explicitly. When
 `liblnd.dll`; if you also want the DLL copied into the app output, keep
 `LndDllPath` set as well.
 
+</details>
+
 3. Done!
 
 ## Usage
 
 ```TSX
 import { Button, View } from "react-native";
+import RNFS from "@dr.pogodin/react-native-fs";
+
 import { start, getInfo } from "react-native-turbo-lnd";
 
 export default function App() {
   const onPressStart = async () => {
+    const lndDir = `${RNFS.DocumentDirectoryPath}/lnd`;
+
     await start(
-      `--lnddir="<TODO>" --noseedbackup --nolisten --bitcoin.active --bitcoin.mainnet --bitcoin.node=neutrino --feeurl="https://nodes.lightning.computer/fees/v1/btc-fee-estimates.json" --routing.assumechanvalid --tlsdisableautofill --neutrino.connect=192.168.10.120:19444`
+      `--lnddir="${lndDir}" --noseedbackup --nolisten --bitcoin.active --bitcoin.mainnet --bitcoin.node=neutrino --feeurl="https://nodes.lightning.computer/fees/v1/btc-fee-estimates.json" --routing.assumechanvalid --tlsdisableautofill --neutrino.connect=192.168.10.120:19444`
     );
   }
 
@@ -213,6 +212,109 @@ export default function App() {
 > [!NOTE]
 > If you wish to compile your own lnd binaries, you can follow the instructions
 > [here](https://github.com/hsjoberg/lnd/tree/cgo/mobile#cgo-build).
+> The lnd CGO backend is still a work in progress and subject to change.
+
+## Electrobun
+
+If you wish to use the [Electrobun](https://blackboard.sh/electrobun) backend,
+wire it up through an app-local Bun entrypoint plus your renderer build config.
+
+On the Bun side, create the shared RPC instance and pass it to your
+`BrowserWindow`. Create an app-local wrapper module around
+`defineTurboLndElectrobunRPC()` so you can add your own requests/messages in
+one place:
+
+```ts
+// src/bun/index.ts
+import { BrowserWindow } from "electrobun/bun";
+import { defineTurboLndElectrobunRPC } from "react-native-turbo-lnd/electrobun/bun-rpc";
+
+export function defineAppRPC() {
+  return defineTurboLndElectrobunRPC({
+    // Add your own RPC here
+    requests: {
+      __Ping: async () => ({ ok: true, now: Date.now() }),
+    },
+    messages: {
+      __Log: (payload: unknown) => {
+        console.log("[electrobun] __Log", payload);
+      },
+    },
+  });
+}
+
+const appRpc = defineAppRPC();
+
+new BrowserWindow({
+  title: "TurboLnd Electrobun App",
+  url: "views://mainview/index.html",
+  rpc: appRpc,
+});
+```
+
+In your bundler, alias `react-native-turbo-lnd` to the Electrobun view
+entrypoint so your app code can import from `react-native-turbo-lnd`. For
+Vite:
+
+```ts
+// vite.config.ts
+import react from "@vitejs/plugin-react";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [react()],
+  resolve: {
+    alias: [
+      {
+        find: /^react-native-turbo-lnd$/,
+        replacement: "react-native-turbo-lnd/electrobun/view",
+      },
+      {
+        find: /^react-native-turbo-lnd\/core$/,
+        replacement: "react-native-turbo-lnd/electrobun/view-core",
+      },
+    ],
+  },
+});
+```
+
+Then inside the view, import LND methods from `react-native-turbo-lnd` as
+usual, and use `react-native-turbo-lnd/electrobun/custom-rpc` for your
+app-defined requests/messages:
+
+```ts
+import { getInfo, start } from "react-native-turbo-lnd";
+import {
+  invokeElectrobunRequest,
+  sendElectrobunMessage,
+} from "react-native-turbo-lnd/electrobun/custom-rpc";
+
+await start('--lnddir="/path/to/lnd/" --noseedbackup --nolisten');
+
+const info = await getInfo({});
+const pong = await invokeElectrobunRequest<{ ok: boolean; now: number }>(
+  "__Ping"
+);
+
+sendElectrobunMessage("__Log", {
+  syncedToChain: info.syncedToChain,
+  pong,
+});
+```
+
+`react-native-turbo-lnd` defaults Electrobun to the `napi` backend. You can
+override that with `TURBOLND_ELECTROBUN_BACKEND=bunffi`, but `bunffi` is still
+unstable and experimental.
+
+For desktop runtimes, install the shared library for the current platform:
+
+- Windows: place `liblnd.dll` where your runtime/addon can load it
+- Linux: place `liblnd.so` where your runtime/addon can load it
+- macOS: place `liblnd.dylib` where your runtime/addon can load it
+
+The static Apple archive in `liblnd-macos.zip` is for React Native Apple builds
+and cannot be loaded directly by the Electrobun desktop runtimes. Use
+`liblnd-macos-dylib.zip` on macOS instead.
 
 ## Contributing
 

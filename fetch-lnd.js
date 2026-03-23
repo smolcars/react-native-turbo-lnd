@@ -189,7 +189,7 @@ async function setupIOSBinaries() {
 }
 
 async function setupMacOSBinaries() {
-  await setupAppleBinaries("macos", "liblnd-mac.zip");
+  await setupAppleBinaries("macos", "liblnd-macos.zip");
 }
 
 async function setupAppleBinaries(targetDir, artifactName) {
