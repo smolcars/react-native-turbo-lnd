@@ -179,7 +179,7 @@ want to use that instead, you can also set `LndImportLibPath` explicitly. When
 
 ```TSX
 import { Button, View } from "react-native";
-import RNFS from "@dr.pogodin/react-native-fs";
+import { DocumentDirectoryPath } from "@dr.pogodin/react-native-fs";
 
 import { start, getInfo } from "react-native-turbo-lnd";
 
