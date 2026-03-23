@@ -17,8 +17,6 @@
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		B02BC9DF0A4647E1B4B01B75 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 85BF90E3BA05D13F725F11E9 /* PrivacyInfo.xcprivacy */; };
 		CC2A9B982E81A21800D4855F /* UniformTypeIdentifiers.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CCF3607B2E819F7300357D74 /* UniformTypeIdentifiers.framework */; };
-		CCFFA2632C826B3C00D9FD3C /* liblnd.a in Frameworks */ = {isa = PBXBuildFile; fileRef = CCFFA2622C826B3C00D9FD3C /* liblnd.a */; };
-		CCFFA2652C826B5A00D9FD3C /* libresolv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = CCFFA2642C826B5300D9FD3C /* libresolv.tbd */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -52,8 +50,6 @@
 		85BF90E3BA05D13F725F11E9 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = TurboLndExample/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		89C6BE57DB24E9ADA2F236DE /* Pods-TurboLndExample-TurboLndExampleTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TurboLndExample-TurboLndExampleTests.release.xcconfig"; path = "Target Support Files/Pods-TurboLndExample-TurboLndExampleTests/Pods-TurboLndExample-TurboLndExampleTests.release.xcconfig"; sourceTree = "<group>"; };
 		CCF3607B2E819F7300357D74 /* UniformTypeIdentifiers.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UniformTypeIdentifiers.framework; path = System/Library/Frameworks/UniformTypeIdentifiers.framework; sourceTree = SDKROOT; };
-		CCFFA2622C826B3C00D9FD3C /* liblnd.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = liblnd.a; sourceTree = "<group>"; };
-		CCFFA2642C826B5300D9FD3C /* libresolv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libresolv.tbd; path = usr/lib/libresolv.tbd; sourceTree = SDKROOT; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -71,9 +67,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				CC2A9B982E81A21800D4855F /* UniformTypeIdentifiers.framework in Frameworks */,
-				CCFFA2632C826B3C00D9FD3C /* liblnd.a in Frameworks */,
 				0C80B921A6F3F58F76C31292 /* libPods-TurboLndExample.a in Frameworks */,
-				CCFFA2652C826B5A00D9FD3C /* libresolv.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -117,7 +111,6 @@
 			isa = PBXGroup;
 			children = (
 				CCF3607B2E819F7300357D74 /* UniformTypeIdentifiers.framework */,
-				CCFFA2642C826B5300D9FD3C /* libresolv.tbd */,
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
 				5DCACB8F33CDC322A6C60F78 /* libPods-TurboLndExample.a */,
 				19F6CBCC0A4E27FBF8BF4A61 /* libPods-TurboLndExample-TurboLndExampleTests.a */,
@@ -135,7 +128,6 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
-				CCFFA2622C826B3C00D9FD3C /* liblnd.a */,
 				13B07FAE1A68108700A75B9A /* TurboLndExample */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				00E356EF1AD99517003FC87E /* TurboLndExampleTests */,
@@ -499,7 +491,6 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(SDKROOT)/usr/lib/swift",
 					"$(inherited)",
-					"$(PROJECT_DIR)",
 				);
 				MARKETING_VERSION = 1.0;
 				OTHER_LDFLAGS = (
@@ -532,7 +523,6 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(SDKROOT)/usr/lib/swift",
 					"$(inherited)",
-					"$(PROJECT_DIR)",
 				);
 				MARKETING_VERSION = 1.0;
 				OTHER_LDFLAGS = (

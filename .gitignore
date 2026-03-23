@@ -84,6 +84,7 @@ lib/
 # lnd
 liblnd.so
 liblnd.a
+liblnd.dll
 windows/ReactNativeTurboLnd/generated-liblnd/
 
 

@@ -1,6 +1,7 @@
 const https = require("https");
 const fs = require("fs");
 const fsp = fs.promises;
+const os = require("os");
 const path = require("path");
 const { execFile } = require("child_process");
 const util = require("util");
@@ -9,6 +10,7 @@ const execFilePromise = util.promisify(execFile);
 
 const { version: packageVersion } = require("./package.json");
 const lndDownloadUrl = `https://github.com/hsjoberg/react-native-turbo-lnd/releases/download/v${packageVersion}`;
+const packageRoot = __dirname;
 const defaultTargets = ["ios", "android"];
 const supportedTargets = new Set(["android", "ios", "macos", "windows"]);
 const targetSetups = {
@@ -74,6 +76,16 @@ async function downloadFile(url, outputPath) {
   });
 }
 
+async function withTempDir(prefix, callback) {
+  const tempDir = await fsp.mkdtemp(path.join(os.tmpdir(), prefix));
+
+  try {
+    return await callback(tempDir);
+  } finally {
+    await fsp.rm(tempDir, { recursive: true, force: true });
+  }
+}
+
 async function unzip(zipPath, outputDir) {
   console.log(`Unzipping ${zipPath} to ${outputDir}`);
   try {
@@ -116,33 +128,46 @@ async function replaceFile(sourcePath, targetPath) {
 }
 
 async function setupAndroidBinaries() {
-  const jniLibsPath = path.join(
-    process.cwd(),
+  const androidLibsPath = path.join(
+    packageRoot,
     "android",
-    "app",
     "src",
     "main",
     "jniLibs"
   );
-  await fsp.mkdir(jniLibsPath, { recursive: true });
+  await fsp.mkdir(androidLibsPath, { recursive: true });
 
-  const zipPath = path.join(process.cwd(), "liblnd-android.zip");
-  await downloadFile(`${lndDownloadUrl}/liblnd-android.zip`, zipPath);
+  await withTempDir("react-native-turbo-lnd-android-", async (tempDir) => {
+    const zipPath = path.join(tempDir, "liblnd-android.zip");
+    await downloadFile(`${lndDownloadUrl}/liblnd-android.zip`, zipPath);
+    await unzip(zipPath, tempDir);
 
-  await unzip(zipPath, jniLibsPath);
-  await fsp.unlink(zipPath);
+    const expectedArchitectures = ["arm64-v8a", "armeabi-v7a", "x86", "x86_64"];
+    for (const arch of expectedArchitectures) {
+      const sourceDir = path.join(tempDir, arch);
+      const soSource = path.join(sourceDir, "liblnd.so");
+      const targetLibDir = path.join(androidLibsPath, arch);
+
+      await fsp.mkdir(targetLibDir, { recursive: true });
+
+      try {
+        await fsp.access(soSource);
+        await replaceFile(soSource, path.join(targetLibDir, "liblnd.so"));
+      } catch {
+        // validated below
+      }
+    }
+  });
 
   const expectedArchitectures = ["arm64-v8a", "armeabi-v7a", "x86", "x86_64"];
   const missingArchitectures = [];
 
   for (const arch of expectedArchitectures) {
-    const archPath = path.join(jniLibsPath, arch);
+    const archPath = path.join(androidLibsPath, arch);
     const soPath = path.join(archPath, "liblnd.so");
-    const hPath = path.join(archPath, "liblnd.h");
 
     try {
       await fsp.access(soPath);
-      await removeFile(hPath);
     } catch {
       missingArchitectures.push(arch);
     }
@@ -153,7 +178,7 @@ async function setupAndroidBinaries() {
       `Warning: Missing architectures: ${missingArchitectures.join(", ")}`
     );
   } else {
-    console.log("All expected architectures found and .h files removed");
+    console.log("All expected Android architectures found");
   }
 
   console.log("Android binaries setup completed.");
@@ -168,62 +193,53 @@ async function setupMacOSBinaries() {
 }
 
 async function setupAppleBinaries(targetDir, artifactName) {
-  const platformPath = path.join(process.cwd(), targetDir);
+  const platformPath = path.join(packageRoot, targetDir);
   await fsp.mkdir(platformPath, { recursive: true });
 
-  const zipPath = path.join(process.cwd(), artifactName);
-  await downloadFile(`${lndDownloadUrl}/${artifactName}`, zipPath);
+  await withTempDir(`react-native-turbo-lnd-${targetDir}-`, async (tempDir) => {
+    const zipPath = path.join(tempDir, artifactName);
+    await downloadFile(`${lndDownloadUrl}/${artifactName}`, zipPath);
+    await unzip(zipPath, tempDir);
 
-  const tempDir = path.join(process.cwd(), `temp-${targetDir}`);
-  await fsp.mkdir(tempDir, { recursive: true });
-  await unzip(zipPath, tempDir);
+    const sourcePath = path.join(tempDir, "liblnd-fat.a");
+    const targetPath = path.join(platformPath, "liblnd.a");
 
-  const sourcePath = path.join(tempDir, "liblnd-fat.a");
-  const targetPath = path.join(platformPath, "liblnd.a");
+    try {
+      await fsp.access(sourcePath);
+      await replaceFile(sourcePath, targetPath);
 
-  try {
-    await fsp.access(sourcePath);
-    await replaceFile(sourcePath, targetPath);
-
-    // Remove liblnd.h if it exists
-    const hPath = path.join(tempDir, "liblnd.h");
-    await removeFile(hPath);
-  } catch {
-    console.warn(`Warning: Expected file ${sourcePath} not found`);
-  }
-
-  await fsp.unlink(zipPath);
-  await fsp.rm(tempDir, { recursive: true, force: true });
+      const hPath = path.join(tempDir, "liblnd.h");
+      await removeFile(hPath);
+    } catch {
+      console.warn(`Warning: Expected file ${sourcePath} not found`);
+    }
+  });
 
   console.log(`${targetDir} binary setup completed.`);
 }
 
 async function setupWindowsBinaries() {
-  const windowsPath = path.join(process.cwd(), "windows");
+  const windowsPath = path.join(packageRoot, "windows");
   await fsp.mkdir(windowsPath, { recursive: true });
 
-  const zipPath = path.join(process.cwd(), "liblnd-windows.zip");
-  await downloadFile(`${lndDownloadUrl}/liblnd-windows.zip`, zipPath);
+  await withTempDir("react-native-turbo-lnd-windows-", async (tempDir) => {
+    const zipPath = path.join(tempDir, "liblnd-windows.zip");
+    await downloadFile(`${lndDownloadUrl}/liblnd-windows.zip`, zipPath);
+    await unzip(zipPath, tempDir);
 
-  const tempDir = path.join(process.cwd(), "temp-windows");
-  await fsp.mkdir(tempDir, { recursive: true });
-  await unzip(zipPath, tempDir);
+    const sourcePath = path.join(tempDir, "liblnd.dll");
+    const targetPath = path.join(windowsPath, "liblnd.dll");
 
-  const sourcePath = path.join(tempDir, "liblnd.dll");
-  const targetPath = path.join(windowsPath, "liblnd.dll");
+    try {
+      await fsp.access(sourcePath);
+      await replaceFile(sourcePath, targetPath);
 
-  try {
-    await fsp.access(sourcePath);
-    await replaceFile(sourcePath, targetPath);
-
-    const hPath = path.join(tempDir, "liblnd.h");
-    await removeFile(hPath);
-  } catch {
-    console.warn(`Warning: Expected file ${sourcePath} not found`);
-  }
-
-  await fsp.unlink(zipPath);
-  await fsp.rm(tempDir, { recursive: true, force: true });
+      const hPath = path.join(tempDir, "liblnd.h");
+      await removeFile(hPath);
+    } catch {
+      console.warn(`Warning: Expected file ${sourcePath} not found`);
+    }
+  });
 
   console.log("Windows binary setup completed.");
 }

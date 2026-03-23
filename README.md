@@ -89,7 +89,8 @@ For custom app-level Electrobun RPC methods/messages, use:
 node node_modules/react-native-turbo-lnd/fetch-lnd.js
 ```
 
-By default the convenience script fetches the Android and iOS binaries.
+By default the convenience script fetches the Android and iOS binaries into
+package-owned paths under `node_modules/react-native-turbo-lnd`.
 You can override that with `--targets=...`, for example:
 
 ```sh
@@ -102,12 +103,12 @@ download the binaries manually, follow the instructions below.
 ### Android:
 
 Download the latest `liblnd-android.zip` from [hsjoberg/react-native-turbo-lnd/releases](https://github.com/hsjoberg/react-native-turbo-lnd/releases)
-containing lnd `.so` binaries and unzip the files to
-`<project root>/android/app/src/main/jniLibs`.
+containing lnd `.so` binaries. Place the shared libraries in
+`<project root>/node_modules/react-native-turbo-lnd/android/src/main/jniLibs`.
 The structure should look like this:
 
 ```
-android/app/src/main/jniLibs
+node_modules/react-native-turbo-lnd/android/src/main/jniLibs
 ├── arm64-v8a
 │   └── liblnd.so
 ├── armeabi-v7a
@@ -118,8 +119,15 @@ android/app/src/main/jniLibs
     └── liblnd.so
 ```
 
-Note: CMake will by default look for the files in
-`../../../android/app/src/main/jniLibs`, starting from
+This package now ships a real Android library module, so the package-owned
+`android/src/main/jniLibs` directory is what gets bundled into the APK.
+
+The Android `liblnd.h` headers are already checked into this repo under
+`node_modules/react-native-turbo-lnd/cpp/liblnd` and are not part of the
+downloaded artifact installation step.
+
+CMake will by default look for the files in
+`../android/src/main/jniLibs`, starting from
 `<project root>/node_modules/react-native-turbo-lnd/cpp`.
 
 If you have another structure or wish to customize it, you can pass in
@@ -142,31 +150,26 @@ defaultConfig {
 Download the latest `liblnd-{ios|mac}.zip` file from
 [hsjoberg/react-native-turbo-lnd/releases](https://github.com/hsjoberg/react-native-turbo-lnd/releases)
 and unzip it. Then rename `liblnd-fat.a` to `liblnd.a` and place it in
-`<project root>/{ios|macos}/liblnd.a`. Navigate to the folder in Finder and drag
-the `liblnd.a` file into the Xcode project root. Check "Copy items if needed".
-Be sure to also select the correct app target.
-
-Note: You may need to also add libresolv to the Xcode project. Go to your app
-target in Xcode, then select the General tab. Find the "Frameworks, Libraries,
-and Embedded Content" section and click on the "+" button. Search for the
-`libresolv.tbd` file and add it.
+`<project root>/node_modules/react-native-turbo-lnd/{ios|macos}/liblnd.a`.
+Then rerun `pod install` so CocoaPods picks up the vendored archive
+automatically.
 
 ### Windows:
 
 Download or build `liblnd.dll`.
 
-Place it next to your Windows solution or in an ancestor directory.
-For a standard React Native Windows app that usually means:
+Place it in the package-owned Windows folder:
 
 ```text
-<project root>/windows/liblnd.dll
+<project root>/node_modules/react-native-turbo-lnd/windows/liblnd.dll
 ```
 
-The autolinked `react-native-turbo-lnd` project will search upward from the
-consuming solution for `liblnd.dll`, generate an import library from it during
-the Windows build, link that generated import library, and stage `liblnd.dll`
-for deployment. By default the generated `.def`/`.lib` artifacts are written
-under the consuming app's `windows/generated-liblnd` directory.
+The autolinked `react-native-turbo-lnd` project will search upward from both
+the consuming solution and the package's own Windows project for `liblnd.dll`,
+generate an import library from it during the Windows build, link that
+generated import library, and stage `liblnd.dll` for deployment. By default
+the generated `.def`/`.lib` artifacts are written under the consuming app's
+`windows/generated-liblnd` directory.
 
 If your workspace layout is unusual, you can override the paths explicitly in
 MSBuild with `LndDllPath`. If you already have a known-good import library and

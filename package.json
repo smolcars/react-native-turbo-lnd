@@ -13,6 +13,7 @@
     "native/electrobun-napi",
     "android",
     "ios",
+    "macos",
     "cpp",
     "liblnd.h",
     "NuGet.config",

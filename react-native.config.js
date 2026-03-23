@@ -11,10 +11,14 @@ module.exports = {
        * @type {import("@react-native-community/cli-types").AndroidDependencyParams}
        */
       android: {
+        packageImportPath:
+          "import com.reactnativeturbolnd.TurboLndPackage;",
+        packageInstance: "new TurboLndPackage()",
+        cmakeListsPath: "../cpp/build/generated/source/codegen/jni/CMakeLists.txt",
         cxxModuleCMakeListsModuleName: "TurboLnd",
-        cxxModuleCMakeListsPath: `CMakeLists.txt`,
+        cxxModuleCMakeListsPath: "../cpp/CMakeLists.txt",
         cxxModuleHeaderName: "TurboLndModule",
-        sourceDir: "cpp",
+        sourceDir: "android",
       },
       windows: {},
     },

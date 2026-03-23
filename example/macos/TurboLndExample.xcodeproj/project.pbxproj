@@ -14,8 +14,6 @@
 		5A8D6E5B2EAD4F7100B1C031 /* ExampleAppPaths.mm in Sources */ = {isa = PBXBuildFile; fileRef = 5A8D6E5B2EAD4F7100B1C032 /* ExampleAppPaths.mm */; };
 		A176B27A72B7D2285881AB41 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = AAEFBF5C790DA86DFA6F905D /* PrivacyInfo.xcprivacy */; };
 		AB17FFACF5C18C28E0355A91 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 8A31347F9210852F2E4081C3 /* PrivacyInfo.xcprivacy */; };
-		CCEA0C6D2C83E4D40006D912 /* liblnd.a in Frameworks */ = {isa = PBXBuildFile; fileRef = CCEA0C6C2C83E4D40006D912 /* liblnd.a */; };
-		CCEA0C6F2C83E4E00006D912 /* libresolv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = CCEA0C6E2C83E4DC0006D912 /* libresolv.tbd */; };
 		EAEA08D828F78259DEB917CD /* libPods-TurboLndExample-macOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 07DEBA7E2EE478AEFE82BF18 /* libPods-TurboLndExample-macOS.a */; };
 /* End PBXBuildFile section */
 
@@ -35,8 +33,6 @@
 		9DCF0706495EBBE13D64005A /* Pods-TurboLndExample-macOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TurboLndExample-macOS.release.xcconfig"; path = "Target Support Files/Pods-TurboLndExample-macOS/Pods-TurboLndExample-macOS.release.xcconfig"; sourceTree = "<group>"; };
 		AAEFBF5C790DA86DFA6F905D /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = ../PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		B8EB69F51531EDFC23A55C2F /* Pods-TurboLndExample-macOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TurboLndExample-macOS.debug.xcconfig"; path = "Target Support Files/Pods-TurboLndExample-macOS/Pods-TurboLndExample-macOS.debug.xcconfig"; sourceTree = "<group>"; };
-		CCEA0C6C2C83E4D40006D912 /* liblnd.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = liblnd.a; sourceTree = "<group>"; };
-		CCEA0C6E2C83E4DC0006D912 /* libresolv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libresolv.tbd; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.5.sdk/usr/lib/libresolv.tbd; sourceTree = DEVELOPER_DIR; };
 		CCEA0C702C83E5DB0006D912 /* TurboLndExample-macOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "TurboLndExample-macOS.entitlements"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
@@ -53,9 +49,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				CCEA0C6D2C83E4D40006D912 /* liblnd.a in Frameworks */,
 				EAEA08D828F78259DEB917CD /* libPods-TurboLndExample-macOS.a in Frameworks */,
-				CCEA0C6F2C83E4E00006D912 /* libresolv.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,7 +59,6 @@
 		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				CCEA0C6E2C83E4DC0006D912 /* libresolv.tbd */,
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
 				07DEBA7E2EE478AEFE82BF18 /* libPods-TurboLndExample-macOS.a */,
 			);
@@ -108,7 +101,6 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
-				CCEA0C6C2C83E4D40006D912 /* liblnd.a */,
 				5142014A2437B4B30078DB4F /* TurboLndExample-macOS */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
@@ -357,7 +349,6 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(SDKROOT)/usr/lib/swift",
 					"$(inherited)",
-					"$(PROJECT_DIR)",
 				);
 				OTHER_LDFLAGS = (
 					"$(inherited)",
@@ -383,7 +374,6 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(SDKROOT)/usr/lib/swift",
 					"$(inherited)",
-					"$(PROJECT_DIR)",
 				);
 				OTHER_LDFLAGS = (
 					"$(inherited)",
@@ -411,7 +401,6 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(SDKROOT)/usr/lib/swift",
 					"$(inherited)",
-					"$(PROJECT_DIR)",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 11.0;
 				OTHER_LDFLAGS = (
@@ -440,7 +429,6 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(SDKROOT)/usr/lib/swift",
 					"$(inherited)",
-					"$(PROJECT_DIR)",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 11.0;
 				OTHER_LDFLAGS = (
