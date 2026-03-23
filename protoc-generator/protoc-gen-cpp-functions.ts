@@ -36,11 +36,17 @@ const contributorNotice = `// NOTE TO REACT-NATIVE-TURBO-LND CONTRIBUTORS:
 // protoc-generator folder.
 // Any changes to this file should be made there instead.`;
 
-const lowercaseFirst = (str: string): string => str.charAt(0).toLowerCase() + str.slice(1);
+const lowercaseFirst = (str: string): string =>
+  str.charAt(0).toLowerCase() + str.slice(1);
 
 async function loadProtoFiles() {
   const protoDir = path.resolve(process.cwd(), "protos");
-  const descriptorPath = path.resolve(protoDir, "google", "protobuf", "descriptor.proto");
+  const descriptorPath = path.resolve(
+    protoDir,
+    "google",
+    "protobuf",
+    "descriptor.proto"
+  );
   const pluginPath = path.resolve(protoDir, "plugin.proto");
 
   const root = new protobuf.Root();
@@ -77,7 +83,9 @@ function extractComments(filePath: string): Record<string, string> {
       }
     } else if (isInComment) {
       // Remove leading "*"" if present, but keep the space after it
-      const commentLine = trimmedLine.startsWith("*") ? " " + trimmedLine.slice(1) : trimmedLine;
+      const commentLine = trimmedLine.startsWith("*")
+        ? " " + trimmedLine.slice(1)
+        : trimmedLine;
       currentComment.push(commentLine);
     }
   });
@@ -155,14 +163,20 @@ function generateCode(request: any): {
         if (service.method && Array.isArray(service.method)) {
           service.method.forEach((method: Method) => {
             let methodName = method.name;
-            if (serviceName === "Lightning" || serviceName === "WalletUnlocker" || serviceName === "State") {
+            if (
+              serviceName === "Lightning" ||
+              serviceName === "WalletUnlocker" ||
+              serviceName === "State"
+            ) {
               methodName = lowercaseFirst(methodName);
             } else {
               methodName = lowercaseFirst(serviceName + methodName);
             }
 
-            const [_, inputTypeService, inputType] = method.input_type.split(".");
-            const [_2, outputTypeService, outputType] = method.output_type.split(".");
+            const [_, inputTypeService, inputType] =
+              method.input_type.split(".");
+            const [_2, outputTypeService, outputType] =
+              method.output_type.split(".");
             const isServerStreaming = method.server_streaming;
             const isClientStreaming = method.client_streaming;
 
@@ -206,7 +220,6 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::${methodName}(jsi::Ru
     return *promise;
 }`;
               rnMethodSpec = `  ${comment}\n  ${methodName}(data: ProtobufBase64): Promise<ProtobufBase64>;`;
-
 
               protobufEsWrapperMethod = `${comment}
 export async function ${methodName}(
@@ -286,7 +299,7 @@ export function ${methodName}(
 
   return TurboLnd.${methodName}(requestB64, onResponseWrapper, onErrorWrapper);
 }
-`
+`;
             } else if (isClientStreaming && isServerStreaming) {
               // Bidirectional streaming RPC
               cppMethodDeclaration = `  jsi::Object ${methodName}(jsi::Runtime &rt, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError);`;
@@ -344,7 +357,7 @@ export function ${methodName}(
       writeableStream.stop();
     }
   }
-}`
+}`;
             }
 
             if (cppMethodDeclaration) {
@@ -366,12 +379,14 @@ export function ${methodName}(
   });
 
   // Combine results into final content strings
-  const cppHeaderContent =
-`${contributorNotice}
+  const cppHeaderContent = `${contributorNotice}
 #pragma once
 
+// Windows
+#if defined(_WIN32) && __has_include("windows-jsi/ReactNativeTurboLndJSI.h")
+#include "windows-jsi/ReactNativeTurboLndJSI.h"
 // Apple
-#if __has_include(<React-Codegen/RNTurboLndSpecJSI.h>)
+#elif __has_include(<React-Codegen/RNTurboLndSpecJSI.h>)
 #include <React-Codegen/RNTurboLndSpecJSI.h>
 // Android
 #elif __has_include("RNTurboLndSpecJSI.h")
@@ -391,6 +406,7 @@ class TurboLndModule : public NativeTurboLndCxxSpec<TurboLndModule> {
 
   static void promiseOnResponseStatic(void* context, const char* data, int length);
   static void promiseOnErrorStatic(void* context, const char* error);
+  static void startOnResponseStatic(void* context, const char* data, int length);
   static void callbackOnResponseStatic(void* context, const char* data, int length);
   static void callbackOnErrorStatic(void* context, const char* error);
 
@@ -405,8 +421,7 @@ ${cppHeaderResult.join("\n\n")}
 } // namespace facebook::react
 `;
 
-  const cppContent =
-`${contributorNotice}
+  const cppContent = `${contributorNotice}
 #include "TurboLndModule.h"
 
 #if defined(_WIN32)
@@ -434,9 +449,9 @@ void TurboLndModule::promiseOnResponseStatic(void* context, const char* data, in
         return;
     }
 
-    std::string encoded = base64::to_base64(
-        std::string_view(data ? data : "", static_cast<size_t>(length))
-    );
+    std::string encoded = length > 0
+        ? base64::to_base64(std::string_view(data, static_cast<size_t>(length)))
+        : std::string{};
 
     if (data) {
         ::lndFree(const_cast<char*>(data));
@@ -457,6 +472,21 @@ void TurboLndModule::promiseOnErrorStatic(void* context, const char* error) {
     PromiseKeeper::getInstance().rejectPromise(id, std::move(msg));
 }
 
+void TurboLndModule::startOnResponseStatic(void* context, const char* data, int length) {
+    uint64_t id = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(context));
+
+    if (length < 0 || (length > 0 && data == nullptr)) {
+        PromiseKeeper::getInstance().rejectPromise(id, "invalid callback payload");
+        return;
+    }
+
+    if (data) {
+        ::lndFree(const_cast<char*>(data));
+    }
+
+    PromiseKeeper::getInstance().resolvePromise(id, "");
+}
+
 void TurboLndModule::callbackOnResponseStatic(void* context, const char* data, int length) {
     uint64_t id = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(context));
 
@@ -465,9 +495,9 @@ void TurboLndModule::callbackOnResponseStatic(void* context, const char* data, i
         return;
     }
 
-    std::string encoded = base64::to_base64(
-        std::string_view(data ? data : "", static_cast<size_t>(length))
-    );
+    std::string encoded = length > 0
+        ? base64::to_base64(std::string_view(data, static_cast<size_t>(length)))
+        : std::string{};
 
     if (data) {
         ::lndFree(const_cast<char*>(data));
@@ -495,15 +525,8 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::start(jsi::Runtime &r
     uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
 
     CCallback callback = {
-        .onResponse = [](void* context, const char* data, int length) {
-            uint64_t id = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(context));
-            std::string encoded = base64::to_base64(std::string_view(data, length));
-            PromiseKeeper::getInstance().resolvePromise(id, std::move(encoded));
-        },
-        .onError = [](void* context, const char* error) {
-            uint64_t id = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(context));
-            PromiseKeeper::getInstance().rejectPromise(id, std::string(error));
-        },
+        .onResponse = &startOnResponseStatic,
+        .onError = &promiseOnErrorStatic,
         .responseContext = static_cast<uintptr_t>(promiseId),
         .errorContext = static_cast<uintptr_t>(promiseId)
     };
@@ -523,8 +546,7 @@ ${cppResult.join("\n\n")}
 } // namespace facebook::react
 `;
 
-  const turboSpec =
-`${contributorNotice}
+  const turboSpec = `${contributorNotice}
 /* eslint-disable */
 import type { TurboModule } from "react-native";
 import { TurboModuleRegistry } from "react-native";
@@ -623,8 +645,12 @@ export default TurboModuleRegistry.getEnforcing<Spec>("TurboLndModuleCxx");
 async function main() {
   try {
     const root = await loadProtoFiles();
-    const PluginRequest = root.lookupType("google.protobuf.compiler.CodeGeneratorRequest");
-    const PluginResponse = root.lookupType("google.protobuf.compiler.CodeGeneratorResponse");
+    const PluginRequest = root.lookupType(
+      "google.protobuf.compiler.CodeGeneratorRequest"
+    );
+    const PluginResponse = root.lookupType(
+      "google.protobuf.compiler.CodeGeneratorResponse"
+    );
 
     const inputBuffer = await readStdin();
     const uint8Array = new Uint8Array(inputBuffer);
