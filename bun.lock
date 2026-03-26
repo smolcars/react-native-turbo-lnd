@@ -4,9 +4,6 @@
   "workspaces": {
     "": {
       "name": "react-native-turbo-lnd",
-      "dependencies": {
-        "@babel/runtime": "^7.25.0",
-      },
       "devDependencies": {
         "@babel/eslint-parser": "^7.25.1",
         "@bufbuild/protobuf": "^2.0.0",

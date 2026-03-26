@@ -186,9 +186,6 @@
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },
-  "dependencies": {
-    "@babel/runtime": "^7.25.0"
-  },
   "devDependencies": {
     "@babel/eslint-parser": "^7.25.1",
     "@bufbuild/protobuf": "^2.0.0",
