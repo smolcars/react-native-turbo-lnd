@@ -437,6 +437,7 @@ jobs:
         shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TURBOLND_RELEASE_ASSETS_DIR: ${{ runner.temp }}/release-assets
         run: |
           args=(
             "${{ inputs.release_type }}"

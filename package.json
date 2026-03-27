@@ -16,6 +16,7 @@
     "macos",
     "cpp",
     "liblnd.h",
+    "artifacts.json",
     "NuGet.config",
     "*.podspec",
     "!ios/build",
@@ -166,7 +167,8 @@
     "electrobun-napi-addon": "bun run --cwd electrobun-napi-addon",
     "build-napi-addon": "bun run --cwd electrobun-napi-addon build",
     "sync-napi-prebuild": "node ./scripts/sync-electrobun-napi-prebuild.cjs",
-    "build-napi-prebuild": "bun run build-napi-addon && bun run sync-napi-prebuild"
+    "build-napi-prebuild": "bun run build-napi-addon && bun run sync-napi-prebuild",
+    "write-artifacts-manifest": "node ./scripts/write-artifacts-manifest.cjs"
   },
   "keywords": [
     "react-native",
@@ -284,6 +286,9 @@
       "assets": [
         "dist/*.zip"
       ]
+    },
+    "hooks": {
+      "after:bump": "node ./scripts/write-artifacts-manifest.cjs"
     },
     "plugins": {
       "@release-it/conventional-changelog": {

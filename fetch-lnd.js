@@ -3,12 +3,17 @@ const fs = require("fs");
 const fsp = fs.promises;
 const os = require("os");
 const path = require("path");
+const crypto = require("crypto");
 const { execFile } = require("child_process");
 const util = require("util");
 
 const execFilePromise = util.promisify(execFile);
+const ANSI_YELLOW = "\x1b[33m";
+const ANSI_RED = "\x1b[31m";
+const ANSI_RESET = "\x1b[0m";
 
 const packageJson = require("./package.json");
+const artifactsManifest = require("./artifacts.json");
 const { version: packageVersion, repository } = packageJson;
 
 function getGitHubRepoPath() {
@@ -154,6 +159,57 @@ async function replaceFile(sourcePath, targetPath) {
   console.log(`Copied ${sourcePath} to ${targetPath}`);
 }
 
+function warn(message) {
+  console.warn(`${ANSI_YELLOW}Warning:${ANSI_RESET} ${message}`);
+}
+
+function errorWithPrefix(message, cause) {
+  if (cause !== undefined) {
+    console.error(`${ANSI_RED}Error:${ANSI_RESET} ${message}`, cause);
+    return;
+  }
+
+  console.error(`${ANSI_RED}Error:${ANSI_RESET} ${message}`);
+}
+
+async function sha256File(filePath) {
+  const hash = crypto.createHash("sha256");
+  const fileStream = fs.createReadStream(filePath);
+
+  return new Promise((resolve, reject) => {
+    fileStream.on("data", (chunk) => hash.update(chunk));
+    fileStream.on("end", () => resolve(`sha256:${hash.digest("hex")}`));
+    fileStream.on("error", reject);
+  });
+}
+
+function getExpectedAssetChecksum(assetName) {
+  if (artifactsManifest?.version !== packageVersion) {
+    throw new Error(
+      `artifacts.json version mismatch. Expected ${packageVersion}, got ${artifactsManifest?.version}`
+    );
+  }
+
+  return artifactsManifest?.assets?.[assetName] ?? null;
+}
+
+async function verifyAssetChecksum(zipPath, assetName) {
+  const expectedChecksum = getExpectedAssetChecksum(assetName);
+  if (!expectedChecksum) {
+    warn(
+      `No checksum present in artifacts.json for ${assetName}; skipping verification`
+    );
+    return;
+  }
+
+  const actualChecksum = await sha256File(zipPath);
+  if (actualChecksum !== expectedChecksum) {
+    throw new Error(
+      `Checksum mismatch for ${assetName}. Expected ${expectedChecksum}, got ${actualChecksum}`
+    );
+  }
+}
+
 async function setupAndroidBinaries() {
   const androidLibsPath = path.join(
     packageRoot,
@@ -165,8 +221,10 @@ async function setupAndroidBinaries() {
   await fsp.mkdir(androidLibsPath, { recursive: true });
 
   await withTempDir("react-native-turbo-lnd-android-", async (tempDir) => {
-    const zipPath = path.join(tempDir, "liblnd-android.zip");
-    await downloadFile(`${lndDownloadUrl}/liblnd-android.zip`, zipPath);
+    const assetName = "liblnd-android.zip";
+    const zipPath = path.join(tempDir, assetName);
+    await downloadFile(`${lndDownloadUrl}/${assetName}`, zipPath);
+    await verifyAssetChecksum(zipPath, assetName);
     await unzip(zipPath, tempDir);
 
     const expectedArchitectures = ["arm64-v8a", "armeabi-v7a", "x86", "x86_64"];
@@ -201,9 +259,7 @@ async function setupAndroidBinaries() {
   }
 
   if (missingArchitectures.length > 0) {
-    console.warn(
-      `Warning: Missing architectures: ${missingArchitectures.join(", ")}`
-    );
+    warn(`Missing architectures: ${missingArchitectures.join(", ")}`);
   } else {
     console.log("All expected Android architectures found");
   }
@@ -237,6 +293,7 @@ async function setupAppleBinaries(targetDir, artifactName) {
   await withTempDir(`react-native-turbo-lnd-${targetDir}-`, async (tempDir) => {
     const zipPath = path.join(tempDir, artifactName);
     await downloadFile(`${lndDownloadUrl}/${artifactName}`, zipPath);
+    await verifyAssetChecksum(zipPath, artifactName);
     await unzip(zipPath, tempDir);
 
     const sourcePath = path.join(tempDir, "liblnd-fat.a");
@@ -249,7 +306,7 @@ async function setupAppleBinaries(targetDir, artifactName) {
       const hPath = path.join(tempDir, "liblnd.h");
       await removeFile(hPath);
     } catch {
-      console.warn(`Warning: Expected file ${sourcePath} not found`);
+      warn(`Expected file ${sourcePath} not found`);
     }
   });
 
@@ -268,6 +325,7 @@ async function setupDesktopSharedLibraryBinaries(
     async (tempDir) => {
       const zipPath = path.join(tempDir, artifactName);
       await downloadFile(`${lndDownloadUrl}/${artifactName}`, zipPath);
+      await verifyAssetChecksum(zipPath, artifactName);
       await unzip(zipPath, tempDir);
 
       const sourcePath = path.join(tempDir, libraryFilename);
@@ -280,7 +338,7 @@ async function setupDesktopSharedLibraryBinaries(
         const hPath = path.join(tempDir, "liblnd.h");
         await removeFile(hPath);
       } catch {
-        console.warn(`Warning: Expected file ${sourcePath} not found`);
+        warn(`Expected file ${sourcePath} not found`);
       }
     }
   );
@@ -293,8 +351,10 @@ async function setupWindowsBinaries() {
   await fsp.mkdir(windowsPath, { recursive: true });
 
   await withTempDir("react-native-turbo-lnd-windows-", async (tempDir) => {
-    const zipPath = path.join(tempDir, "liblnd-windows.zip");
-    await downloadFile(`${lndDownloadUrl}/liblnd-windows.zip`, zipPath);
+    const assetName = "liblnd-windows.zip";
+    const zipPath = path.join(tempDir, assetName);
+    await downloadFile(`${lndDownloadUrl}/${assetName}`, zipPath);
+    await verifyAssetChecksum(zipPath, assetName);
     await unzip(zipPath, tempDir);
 
     const sourcePath = path.join(tempDir, "liblnd.dll");
@@ -307,7 +367,7 @@ async function setupWindowsBinaries() {
       const hPath = path.join(tempDir, "liblnd.h");
       await removeFile(hPath);
     } catch {
-      console.warn(`Warning: Expected file ${sourcePath} not found`);
+      warn(`Expected file ${sourcePath} not found`);
     }
   });
 
@@ -326,7 +386,7 @@ async function main() {
     console.log("LND binaries setup completed successfully.");
     process.exit(0);
   } catch (error) {
-    console.error("Error setting up LND binaries:", error);
+    errorWithPrefix("Error setting up LND binaries:", error);
     process.exit(1);
   }
 }
