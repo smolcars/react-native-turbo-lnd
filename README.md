@@ -92,7 +92,7 @@ Supported targets are `android`, `ios`, `macos`, and `windows`.
 
 ### Android:
 
-Download the latest `liblnd-android.zip` from [hsjoberg/react-native-turbo-lnd/releases](https://github.com/hsjoberg/react-native-turbo-lnd/releases)
+Download the latest `liblnd-android.zip` from [smolcars/react-native-turbo-lnd/releases](https://github.com/smolcars/react-native-turbo-lnd/releases)
 containing lnd `.so` binaries. Place the shared libraries in
 `<project root>/node_modules/react-native-turbo-lnd/android/src/main/jniLibs`.
 The structure should look like this:
@@ -138,7 +138,7 @@ defaultConfig {
 ### iOS/macOS:
 
 Download the latest `liblnd-ios.zip` or `liblnd-macos.zip` file from
-[hsjoberg/react-native-turbo-lnd/releases](https://github.com/hsjoberg/react-native-turbo-lnd/releases)
+[smolcars/react-native-turbo-lnd/releases](https://github.com/smolcars/react-native-turbo-lnd/releases)
 and unzip it. Then rename `liblnd-fat.a` to `liblnd.a` and place it in
 `<project root>/node_modules/react-native-turbo-lnd/{ios|macos}/liblnd.a`.
 Then rerun `pod install` so CocoaPods picks up the vendored archive

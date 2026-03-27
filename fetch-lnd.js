@@ -8,8 +8,25 @@ const util = require("util");
 
 const execFilePromise = util.promisify(execFile);
 
-const { version: packageVersion } = require("./package.json");
-const lndDownloadUrl = `https://github.com/hsjoberg/react-native-turbo-lnd/releases/download/v${packageVersion}`;
+const packageJson = require("./package.json");
+const { version: packageVersion, repository } = packageJson;
+
+function getGitHubRepoPath() {
+  const repositoryUrl = repository?.url;
+  const match = String(repositoryUrl).match(
+    /github\.com[:/]([^/]+\/[^/#.]+)(?:\.git)?(?:#.*)?$/
+  );
+
+  if (match) {
+    return match[1];
+  }
+
+  throw new Error(
+    "Unable to resolve GitHub repository path from package.json repository.url"
+  );
+}
+
+const lndDownloadUrl = `https://github.com/${getGitHubRepoPath()}/releases/download/v${packageVersion}`;
 const packageRoot = __dirname;
 const defaultTargets = ["ios", "android"];
 const supportedTargets = new Set(["android", "ios", "macos", "windows"]);

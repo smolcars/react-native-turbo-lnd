@@ -175,14 +175,14 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/hsjoberg/react-native-turbo-lnd.git"
+    "url": "git+https://github.com/smolcars/react-native-turbo-lnd.git"
   },
   "author": "Hampus Sjöberg <hampus.sjoberg@protonmail.com> (https://github.com/hsjoberg)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/hsjoberg/react-native-turbo-lnd/issues"
+    "url": "https://github.com/smolcars/react-native-turbo-lnd/issues"
   },
-  "homepage": "https://github.com/hsjoberg/react-native-turbo-lnd#readme",
+  "homepage": "https://github.com/smolcars/react-native-turbo-lnd#readme",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },
