@@ -82,10 +82,10 @@ package-owned paths under `node_modules/react-native-turbo-lnd`.
 You can override that with `--targets=...`, for example:
 
 ```sh
-node node_modules/react-native-turbo-lnd/fetch-lnd.js --targets=android,ios,macos,windows
+node node_modules/react-native-turbo-lnd/fetch-lnd.js --targets=android,ios,macos,macos-dylib,linux,windows
 ```
 
-Supported targets are `android`, `ios`, `macos`, and `windows`.
+Supported targets are `android`, `ios`, `macos`, `macos-dylib`, `linux`, and `windows`.
 
 <details>
 <summary>Download and place libs yourself</summary>

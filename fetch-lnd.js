@@ -29,12 +29,22 @@ function getGitHubRepoPath() {
 const lndDownloadUrl = `https://github.com/${getGitHubRepoPath()}/releases/download/v${packageVersion}`;
 const packageRoot = __dirname;
 const defaultTargets = ["ios", "android"];
-const supportedTargets = new Set(["android", "ios", "macos", "windows"]);
+const supportedTargets = new Set([
+  "android",
+  "ios",
+  "macos",
+  "macos-dylib",
+  "linux",
+  "windows",
+]);
+const supportedTargetsList = [...supportedTargets].join(", ");
 const targetSetups = {
-  android: setupAndroidBinaries,
-  ios: setupIOSBinaries,
-  macos: setupMacOSBinaries,
-  windows: setupWindowsBinaries,
+  "android": setupAndroidBinaries,
+  "ios": setupIOSBinaries,
+  "macos": setupMacOSBinaries,
+  "macos-dylib": setupMacOSDylibBinaries,
+  "linux": setupLinuxBinaries,
+  "windows": setupWindowsBinaries,
 };
 
 function parseTargetsArg(argv) {
@@ -51,7 +61,7 @@ function parseTargetsArg(argv) {
 
   if (rawTargets.length === 0) {
     throw new Error(
-      "--targets must include at least one target: android, ios, macos, windows"
+      `--targets must include at least one target: ${supportedTargetsList}`
     );
   }
 
@@ -62,7 +72,7 @@ function parseTargetsArg(argv) {
     throw new Error(
       `Unsupported targets: ${invalidTargets.join(
         ", "
-      )}. Supported targets are: android, ios, macos, windows`
+      )}. Supported targets are: ${supportedTargetsList}`
     );
   }
 
@@ -209,6 +219,17 @@ async function setupMacOSBinaries() {
   await setupAppleBinaries("macos", "liblnd-macos.zip");
 }
 
+async function setupMacOSDylibBinaries() {
+  await setupDesktopSharedLibraryBinaries(
+    "liblnd-macos-dylib.zip",
+    "liblnd.dylib"
+  );
+}
+
+async function setupLinuxBinaries() {
+  await setupDesktopSharedLibraryBinaries("liblnd-linux.zip", "liblnd.so");
+}
+
 async function setupAppleBinaries(targetDir, artifactName) {
   const platformPath = path.join(packageRoot, targetDir);
   await fsp.mkdir(platformPath, { recursive: true });
@@ -233,6 +254,38 @@ async function setupAppleBinaries(targetDir, artifactName) {
   });
 
   console.log(`${targetDir} binary setup completed.`);
+}
+
+async function setupDesktopSharedLibraryBinaries(
+  artifactName,
+  libraryFilename
+) {
+  const outputDir = process.cwd();
+  await fsp.mkdir(outputDir, { recursive: true });
+
+  await withTempDir(
+    `react-native-turbo-lnd-${libraryFilename}-`,
+    async (tempDir) => {
+      const zipPath = path.join(tempDir, artifactName);
+      await downloadFile(`${lndDownloadUrl}/${artifactName}`, zipPath);
+      await unzip(zipPath, tempDir);
+
+      const sourcePath = path.join(tempDir, libraryFilename);
+      const targetPath = path.join(outputDir, libraryFilename);
+
+      try {
+        await fsp.access(sourcePath);
+        await replaceFile(sourcePath, targetPath);
+
+        const hPath = path.join(tempDir, "liblnd.h");
+        await removeFile(hPath);
+      } catch {
+        console.warn(`Warning: Expected file ${sourcePath} not found`);
+      }
+    }
+  );
+
+  console.log(`${libraryFilename} setup completed.`);
 }
 
 async function setupWindowsBinaries() {
