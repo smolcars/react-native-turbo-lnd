@@ -35,7 +35,7 @@ env:
 
 jobs:
   validate:
-    runs-on: ubuntu-self-hosted
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -80,22 +80,22 @@ jobs:
       matrix:
         include:
           - target: android
-            runner: ubuntu-self-hosted
+            runner: ubuntu-latest
             asset_name: liblnd-android.zip
           - target: ios
-            runner: macOS
+            runner: macos-15
             asset_name: liblnd-ios.zip
           - target: macos
-            runner: macOS
+            runner: macos-15
             asset_name: liblnd-macos.zip
           - target: macos-shared
-            runner: macOS
+            runner: macos-15
             asset_name: liblnd-macos-dylib.zip
           - target: linux
-            runner: ubuntu-self-hosted
+            runner: ubuntu-latest
             asset_name: liblnd-linux.zip
           - target: windows
-            runner: ubuntu-self-hosted
+            runner: ubuntu-latest
             asset_name: liblnd-windows.zip
     steps:
       - name: Checkout
@@ -210,7 +210,7 @@ jobs:
 
   build-android:
     needs: native-artifacts
-    runs-on: ubuntu-self-hosted
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -255,7 +255,7 @@ jobs:
 
   build-ios:
     needs: native-artifacts
-    runs-on: macOS
+    runs-on: macos-15
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -392,7 +392,7 @@ jobs:
     needs:
       - build-android
       - build-ios
-    runs-on: ubuntu-self-hosted
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
