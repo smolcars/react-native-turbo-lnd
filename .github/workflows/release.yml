@@ -337,6 +337,9 @@ jobs:
           node-version: "24"
           registry-url: https://registry.npmjs.org
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
       - name: Configure git identity
         run: |
           git config user.name "github-actions[bot]"
@@ -355,19 +358,17 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TURBOLND_RELEASE_ASSETS_DIR: ${{ runner.temp }}/release-assets
         run: |
-          nix develop --command bash -c '
-            set -euo pipefail
-            bun install --frozen-lockfile --ignore-scripts
+          set -euo pipefail
+          bun install --frozen-lockfile --ignore-scripts
 
-            args=(
-              "${{ inputs.release_type }}"
-              "--ci"
-              "--github.assets=${RUNNER_TEMP}/release-assets/*.zip"
-            )
+          args=(
+            "${{ inputs.release_type }}"
+            "--ci"
+            "--github.assets=${RUNNER_TEMP}/release-assets/*.zip"
+          )
 
-            if [[ "${{ inputs.dry_run }}" == "true" ]]; then
-              args+=("--dry-run")
-            fi
+          if [[ "${{ inputs.dry_run }}" == "true" ]]; then
+            args+=("--dry-run")
+          fi
 
-            bunx release-it "${args[@]}"
-          '
+          bunx release-it "${args[@]}"
