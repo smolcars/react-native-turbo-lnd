@@ -36,6 +36,11 @@ import {
   GetRecoveryInfoResponseSchema,
   GenSeedRequestSchema,
   GenSeedResponseSchema,
+  InvoiceSchema,
+  AddInvoiceResponseSchema,
+  PaymentHashSchema,
+  Invoice_InvoiceState,
+  type Invoice,
 } from "../proto/lightning_pb";
 import type {
   Spec,
@@ -60,6 +65,12 @@ let subscribeStateOnResponseCallbacks: {
   onResponse: OnResponseCallback;
   onError: OnErrorCallback;
 }[] = [];
+let mockInvoices: Invoice[] = [];
+let nextInvoiceAddIndex = 1n;
+let subscribeInvoicesOnResponseCallbacks: {
+  onResponse: OnResponseCallback;
+  onError: OnErrorCallback;
+}[] = [];
 
 const hexToUint8Array = (hex: string): Uint8Array => {
   const normalizedHex = hex.trim();
@@ -73,6 +84,85 @@ const hexToUint8Array = (hex: string): Uint8Array => {
   }
 
   return bytes;
+};
+
+const uint8ArrayToHex = (bytes: Uint8Array): string =>
+  Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+
+const createRandomBytes = (length: number): Uint8Array =>
+  Uint8Array.from(
+    Array.from({ length }, () => Math.floor(Math.random() * 256))
+  );
+
+const createFallbackInvoiceHash = (preimage: Uint8Array): Uint8Array => {
+  const hash = new Uint8Array(32);
+
+  for (let i = 0; i < hash.length; i += 1) {
+    const left = preimage[i % preimage.length] ?? 0;
+    const right = preimage[(i * 7 + 13) % preimage.length] ?? 0;
+    hash[i] = (left + right + i * 17) % 256;
+  }
+
+  return hash;
+};
+
+const deriveInvoiceHash = async (preimage: Uint8Array): Promise<Uint8Array> => {
+  const subtle = globalThis.crypto?.subtle;
+  if (subtle) {
+    const digestInput = Uint8Array.from(preimage);
+    const digest = await subtle.digest("SHA-256", digestInput);
+    return new Uint8Array(digest);
+  }
+
+  return createFallbackInvoiceHash(preimage);
+};
+
+const normalizeInvoiceAmounts = (
+  invoice: Invoice
+): { valueSat: bigint; valueMsat: bigint } => {
+  if (invoice.valueMsat > 0n) {
+    return {
+      valueSat: invoice.valueMsat / 1000n,
+      valueMsat: invoice.valueMsat,
+    };
+  }
+
+  if (invoice.value > 0n) {
+    return {
+      valueSat: invoice.value,
+      valueMsat: invoice.value * 1000n,
+    };
+  }
+
+  return {
+    valueSat: 0n,
+    valueMsat: 0n,
+  };
+};
+
+const createMockPaymentRequest = (
+  addIndex: bigint,
+  amountSat: bigint,
+  rHash: Uint8Array
+): string => {
+  const hashPrefix = uint8ArrayToHex(rHash).slice(0, 24);
+
+  return `lnbc${amountSat}mockinvoice${addIndex}${hashPrefix}`;
+};
+
+const emitInvoice = (
+  onResponse: OnResponseCallback,
+  invoice: Invoice
+): void => {
+  onResponse(base64Encode(toBinary(InvoiceSchema, invoice)));
+};
+
+const emitInvoiceToSubscribers = (invoice: Invoice): void => {
+  setTimeout(() => {
+    subscribeInvoicesOnResponseCallbacks.forEach((cb) => {
+      emitInvoice(cb.onResponse, invoice);
+    });
+  }, 0);
 };
 
 const callSubscribeStateOnResponseCallbacks = () => {
@@ -470,7 +560,52 @@ const TurboLnd: Spec = {
   },
 
   addInvoice: async (_data) => {
-    throw new Error("addInvoice Not Implemented");
+    const request = fromBinary(InvoiceSchema, base64Decode(_data));
+    const addIndex = nextInvoiceAddIndex;
+    const { valueSat, valueMsat } = normalizeInvoiceAmounts(request);
+    const rPreimage =
+      request.rPreimage.length === 32
+        ? request.rPreimage
+        : createRandomBytes(32);
+    const rHash = await deriveInvoiceHash(rPreimage);
+    const paymentAddr = createRandomBytes(32);
+    const paymentRequest = createMockPaymentRequest(addIndex, valueSat, rHash);
+    const invoice = create(InvoiceSchema, request);
+
+    invoice.rPreimage = rPreimage;
+    invoice.rHash = rHash;
+    invoice.creationDate = BigInt(Math.floor(Date.now() / 1000));
+    invoice.settleDate = 0n;
+    invoice.value = valueSat;
+    invoice.valueMsat = valueMsat;
+    invoice.paymentRequest = paymentRequest;
+    invoice.expiry = request.expiry > 0n ? request.expiry : 86400n;
+    invoice.private = request.private || request.routeHints.length > 0;
+    invoice.addIndex = addIndex;
+    invoice.settleIndex = 0n;
+    invoice.amtPaid = 0n;
+    invoice.amtPaidSat = 0n;
+    invoice.amtPaidMsat = 0n;
+    invoice.state = Invoice_InvoiceState.OPEN;
+    invoice.settled = false;
+    invoice.htlcs = [];
+    invoice.paymentAddr = paymentAddr;
+
+    mockInvoices.push(invoice);
+    nextInvoiceAddIndex += 1n;
+    emitInvoiceToSubscribers(invoice);
+
+    return base64Encode(
+      toBinary(
+        AddInvoiceResponseSchema,
+        create(AddInvoiceResponseSchema, {
+          rHash,
+          paymentRequest,
+          addIndex,
+          paymentAddr,
+        })
+      )
+    );
   },
 
   listInvoices: async (_data) => {
@@ -478,13 +613,52 @@ const TurboLnd: Spec = {
   },
 
   lookupInvoice: async (_data) => {
-    throw new Error("lookupInvoice Not Implemented");
+    const request = fromBinary(PaymentHashSchema, base64Decode(_data));
+    const targetHashHex = request.rHash.length
+      ? uint8ArrayToHex(request.rHash)
+      : request.rHashStr.toLowerCase();
+    const invoice = mockInvoices.find(
+      (candidate) => uint8ArrayToHex(candidate.rHash) === targetHashHex
+    );
+
+    if (!invoice) {
+      throw new Error("Invoice not found");
+    }
+
+    return base64Encode(toBinary(InvoiceSchema, invoice));
   },
 
   subscribeInvoices: (_data, _onResponse, _onError) => {
-    fromBinary(InvoiceSubscriptionSchema, base64Decode(_data));
+    const request = fromBinary(InvoiceSubscriptionSchema, base64Decode(_data));
+    const subscription = {
+      onResponse: _onResponse,
+      onError: _onError,
+    };
 
-    return () => {};
+    subscribeInvoicesOnResponseCallbacks.push(subscription);
+
+    if (request.addIndex > 0n) {
+      const invoicesToReplay = mockInvoices.filter(
+        (invoice) => invoice.addIndex > request.addIndex
+      );
+
+      setTimeout(() => {
+        if (!subscribeInvoicesOnResponseCallbacks.includes(subscription)) {
+          return;
+        }
+
+        invoicesToReplay.forEach((invoice) => {
+          emitInvoice(subscription.onResponse, invoice);
+        });
+      }, 0);
+    }
+
+    return () => {
+      subscribeInvoicesOnResponseCallbacks =
+        subscribeInvoicesOnResponseCallbacks.filter(
+          (cb) => cb !== subscription
+        );
+    };
   },
 
   decodePayReq: async (_data) => {

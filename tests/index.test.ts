@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test } from "bun:test";
 
-import { WalletState } from "../src/proto/lightning_pb";
+import { Invoice_InvoiceState, WalletState } from "../src/proto/lightning_pb";
 
 describe("TurboLnd mock", () => {
   beforeEach(() => {
@@ -36,5 +36,68 @@ describe("TurboLnd mock", () => {
         }
       );
     });
+  });
+
+  test("addInvoice should emit the created invoice to subscribeInvoices", async () => {
+    const { addInvoice, subscribeInvoices } = await import("../src/mock");
+
+    const invoicePromise = new Promise<any>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error("Timed out waiting for subscribeInvoices response"));
+      }, 1000);
+
+      let unsubscribe = () => {};
+      unsubscribe = subscribeInvoices(
+        {},
+        (invoice: any) => {
+          clearTimeout(timeout);
+          unsubscribe();
+          resolve(invoice);
+        },
+        (error: string) => {
+          clearTimeout(timeout);
+          unsubscribe();
+          reject(new Error(error));
+        }
+      );
+    });
+
+    const response = await addInvoice({
+      memo: "Mock invoice",
+      value: BigInt(2100),
+    });
+    const invoice = await invoicePromise;
+
+    expect(response.addIndex > 0n).toBe(true);
+    expect(response.paymentRequest.length).toBeGreaterThan(0);
+    expect(response.rHash.length).toBe(32);
+    expect(invoice.memo).toBe("Mock invoice");
+    expect(invoice.value).toBe(BigInt(2100));
+    expect(invoice.addIndex).toBe(response.addIndex);
+    expect(invoice.rHash).toEqual(response.rHash);
+    expect(invoice.state).toBe(Invoice_InvoiceState.OPEN);
+  });
+
+  test("lookupInvoice should return the created invoice by rHash", async () => {
+    const { addInvoice, lookupInvoice } = await import("../src/mock");
+
+    const response = await addInvoice({
+      memo: "Lookup invoice",
+      valueMsat: BigInt(42000),
+      expiry: BigInt(3600),
+    });
+
+    const invoice = await lookupInvoice({
+      rHash: response.rHash,
+    });
+
+    expect(invoice.memo).toBe("Lookup invoice");
+    expect(invoice.rHash).toEqual(response.rHash);
+    expect(invoice.paymentRequest).toBe(response.paymentRequest);
+    expect(invoice.value).toBe(BigInt(42));
+    expect(invoice.valueMsat).toBe(BigInt(42000));
+    expect(invoice.expiry).toBe(BigInt(3600));
+    expect(invoice.addIndex).toBe(response.addIndex);
+    expect(invoice.state).toBe(Invoice_InvoiceState.OPEN);
   });
 });
