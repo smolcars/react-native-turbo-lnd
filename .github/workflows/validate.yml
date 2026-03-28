@@ -21,7 +21,7 @@ jobs:
       - name: Validate in Nix shell
         shell: bash
         run: |
-          nix develop --command bash -lc '
+          nix develop --command bash -c '
             set -euo pipefail
             bun install --frozen-lockfile
             bun run generate-bindings

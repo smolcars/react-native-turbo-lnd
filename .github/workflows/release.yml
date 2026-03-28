@@ -46,7 +46,7 @@ jobs:
       - name: Validate release candidate
         shell: bash
         run: |
-          nix develop --command bash -lc '
+          nix develop --command bash -c '
             set -euo pipefail
             bun install --frozen-lockfile
             bun run generate-bindings
@@ -96,7 +96,7 @@ jobs:
       - name: Build native artifact
         shell: bash
         run: |
-          nix develop --command bash -lc '
+          nix develop --command bash -c '
             set -euo pipefail
             cd "${GITHUB_WORKSPACE}/.cache/lnd-cgo/lnrpc"
             bash ./install_gen_tools.sh
@@ -168,7 +168,7 @@ jobs:
       - name: Build Android example in Nix shell
         shell: bash
         run: |
-          nix develop --command bash -lc '
+          nix develop --command bash -c '
             set -euo pipefail
             bun install --frozen-lockfile
             bun run generate-bindings
@@ -197,7 +197,7 @@ jobs:
       - name: Build iOS example in Nix shell
         shell: bash
         run: |
-          nix develop --command bash -lc '
+          nix develop --command bash -c '
             set -euo pipefail
             bun install --frozen-lockfile
             bun run generate-bindings
@@ -347,7 +347,7 @@ jobs:
   #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   #         TURBOLND_RELEASE_ASSETS_DIR: ${{ runner.temp }}/release-assets
   #       run: |
-  #         nix develop --command bash -lc '
+  #         nix develop --command bash -c '
   #           set -euo pipefail
   #           bun install --frozen-lockfile
   #
