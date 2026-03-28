@@ -30,47 +30,29 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   LND_REPOSITORY: hsjoberg/lnd
   LND_REF: 6fc085be1a4d434758b8f2f99bec21f00d167471
-  LND_GO_VERSION: 1.25.5
-  ANDROID_NDK_VERSION: 27.2.12479018
 
 jobs:
   validate:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-self-hosted
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Ensure release runs from master
+      - name: Validate release candidate
         shell: bash
         run: |
-          if [[ "${GITHUB_REF_NAME}" != "master" ]]; then
-            echo "This release workflow must run from master." >&2
-            exit 1
-          fi
-
-      - name: Setup
-        uses: ./.github/actions/setup
-
-      - name: Install protoc
-        run: |
-          sudo apt-get update
-          sudo apt-get install --yes protobuf-compiler
-
-      - name: Configure git identity
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-      - name: Validate release candidate
-        run: |
-          bun run generate-bindings
-          bun run generate-codegen-specs
-          bun run lint
-          bun run typecheck
-          bun run test
-          bun run build
+          nix develop --command bash -c '
+            set -euo pipefail
+            bun install --frozen-lockfile --ignore-scripts
+            bun run generate-bindings
+            bun run generate-codegen-specs
+            bun run lint
+            bun run typecheck
+            bun run test
+            bun run build
+          '
 
   native-artifacts:
     needs: validate
@@ -80,22 +62,22 @@ jobs:
       matrix:
         include:
           - target: android
-            runner: ubuntu-latest
+            runner: ubuntu-self-hosted
             asset_name: liblnd-android.zip
           - target: ios
-            runner: macos-15
+            runner: macOS
             asset_name: liblnd-ios.zip
           - target: macos
-            runner: macos-15
+            runner: macOS
             asset_name: liblnd-macos.zip
           - target: macos-shared
-            runner: macos-15
+            runner: macOS
             asset_name: liblnd-macos-dylib.zip
           - target: linux
-            runner: ubuntu-latest
+            runner: ubuntu-self-hosted
             asset_name: liblnd-linux.zip
           - target: windows
-            runner: ubuntu-latest
+            runner: ubuntu-self-hosted
             asset_name: liblnd-windows.zip
     steps:
       - name: Checkout
@@ -108,98 +90,68 @@ jobs:
           ref: ${{ env.LND_REF }}
           path: .cache/lnd-cgo
 
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: ${{ env.LND_GO_VERSION }}
-          cache-dependency-path: .cache/lnd-cgo/go.sum
-
-      - name: Add Go bin to PATH
-        shell: bash
-        run: echo "$(go env GOPATH)/bin" >> "${GITHUB_PATH}"
-
-      - name: Setup Java
-        if: ${{ matrix.target == 'android' }}
-        uses: actions/setup-java@v4
-        with:
-          distribution: zulu
-          java-version: "17"
-
-      - name: Setup Android SDK
-        if: ${{ matrix.target == 'android' }}
-        uses: android-actions/setup-android@v3
-
-      - name: Install Android NDK
-        if: ${{ matrix.target == 'android' }}
-        shell: bash
-        run: |
-          yes | sdkmanager --licenses > /dev/null || true
-          sdkmanager "ndk;${ANDROID_NDK_VERSION}"
-
-      - name: Install MinGW
-        if: ${{ matrix.target == 'windows' }}
-        run: |
-          sudo apt-get update
-          sudo apt-get install --yes mingw-w64
-
-      - name: Install local proto generation tools
-        shell: bash
-        run: |
-          if [[ "${{ startsWith(matrix.runner, 'macos-') }}" == "true" ]]; then
-            brew install protobuf clang-format
-          else
-            sudo apt-get update
-            sudo apt-get install --yes protobuf-compiler clang-format
-          fi
-          cd "${GITHUB_WORKSPACE}/.cache/lnd-cgo/lnrpc"
-          bash ./install_gen_tools.sh
-
       - name: Build native artifact
         shell: bash
         run: |
-          mkdir -p dist
-          export PATH="$(go env GOPATH)/bin:${PATH}"
-          cd "${GITHUB_WORKSPACE}/.cache/lnd-cgo"
+          nix develop --command bash -c '
+            set -euo pipefail
+            build_root="${GITHUB_WORKSPACE}/.cache/lnd-cgo"
 
-          case "${{ matrix.target }}" in
-            android)
-              make android-cgo MOBILE_RPC_MODE=local
-              artifact_root="${GITHUB_WORKSPACE}/.cache/lnd-cgo/mobile/build/cgo/android"
-              asset_name="liblnd-android.zip"
-              ;;
-            ios)
-              make ios-cgo MOBILE_RPC_MODE=local
-              artifact_root="${GITHUB_WORKSPACE}/.cache/lnd-cgo/mobile/build/cgo/ios"
-              asset_name="liblnd-ios.zip"
-              ;;
-            macos)
-              make macos-cgo MOBILE_RPC_MODE=local
-              artifact_root="${GITHUB_WORKSPACE}/.cache/lnd-cgo/mobile/build/cgo/macos"
-              asset_name="liblnd-macos.zip"
-              ;;
-            macos-shared)
-              make macos-cgo-shared MOBILE_RPC_MODE=local
-              artifact_root="${GITHUB_WORKSPACE}/.cache/lnd-cgo/mobile/build/cgo/macos"
-              asset_name="liblnd-macos-dylib.zip"
-              ;;
-            linux)
-              make linux-cgo MOBILE_RPC_MODE=local
-              artifact_root="${GITHUB_WORKSPACE}/.cache/lnd-cgo/mobile/build/cgo/linux"
-              asset_name="liblnd-linux.zip"
-              ;;
-            windows)
-              make windows-cgo MOBILE_RPC_MODE=local WINDOWS_CGO_CC=x86_64-w64-mingw32-gcc
-              artifact_root="${GITHUB_WORKSPACE}/.cache/lnd-cgo/mobile/build/cgo/windows"
-              asset_name="liblnd-windows.zip"
-              ;;
-            *)
-              echo "Unsupported target ${{ matrix.target }}" >&2
-              exit 1
-              ;;
-          esac
+            case "${{ matrix.target }}" in
+              ios|macos|macos-shared)
+                short_root="/tmp/lnd-cgo-${{ matrix.target }}"
+                rm -rf "$short_root"
+                cp -R "${GITHUB_WORKSPACE}/.cache/lnd-cgo" "$short_root"
+                build_root="$short_root"
+                ;;
+            esac
 
-          cd "${artifact_root}"
-          zip -rq "${GITHUB_WORKSPACE}/dist/${asset_name}" .
+            cd "$build_root/lnrpc"
+            bash ./install_gen_tools.sh
+
+            mkdir -p "${GITHUB_WORKSPACE}/dist"
+            cd "$build_root"
+
+            case "${{ matrix.target }}" in
+              android)
+                make android-cgo MOBILE_RPC_MODE=local
+                artifact_root="$build_root/mobile/build/cgo/android"
+                asset_name="liblnd-android.zip"
+                ;;
+              ios)
+                make ios-cgo MOBILE_RPC_MODE=local
+                artifact_root="$build_root/mobile/build/cgo/ios"
+                asset_name="liblnd-ios.zip"
+                ;;
+              macos)
+                make macos-cgo MOBILE_RPC_MODE=local
+                artifact_root="$build_root/mobile/build/cgo/macos"
+                asset_name="liblnd-macos.zip"
+                ;;
+              macos-shared)
+                make macos-cgo-shared MOBILE_RPC_MODE=local
+                artifact_root="$build_root/mobile/build/cgo/macos"
+                asset_name="liblnd-macos-dylib.zip"
+                ;;
+              linux)
+                make linux-cgo MOBILE_RPC_MODE=local
+                artifact_root="$build_root/mobile/build/cgo/linux"
+                asset_name="liblnd-linux.zip"
+                ;;
+              windows)
+                make windows-cgo MOBILE_RPC_MODE=local WINDOWS_CGO_CC=x86_64-w64-mingw32-gcc
+                artifact_root="$build_root/mobile/build/cgo/windows"
+                asset_name="liblnd-windows.zip"
+                ;;
+              *)
+                echo "Unsupported target ${{ matrix.target }}" >&2
+                exit 1
+                ;;
+            esac
+
+            cd "${artifact_root}"
+            zip -rq "${GITHUB_WORKSPACE}/dist/${asset_name}" .
+          '
 
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v4
@@ -210,27 +162,10 @@ jobs:
 
   build-android:
     needs: native-artifacts
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-self-hosted
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Setup
-        uses: ./.github/actions/setup
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: zulu
-          java-version: "17"
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install protoc
-        run: |
-          sudo apt-get update
-          sudo apt-get install --yes protobuf-compiler
 
       - name: Download Android native artifact
         uses: actions/download-artifact@v4
@@ -238,39 +173,28 @@ jobs:
           name: native-android
           path: ${{ runner.temp }}/native-android
 
-      - name: Prepare generated sources
-        run: |
-          bun run generate-bindings
-          bun run generate-codegen-specs
-
-      - name: Install Android native artifact
+      - name: Build Android example in Nix shell
         shell: bash
         run: |
-          rm -rf android/src/main/jniLibs
-          mkdir -p android/src/main/jniLibs
-          unzip -q "${RUNNER_TEMP}/native-android/liblnd-android.zip" -d android/src/main/jniLibs
+          nix develop --command bash -c '
+            set -euo pipefail
+            bun install --frozen-lockfile --ignore-scripts
+            bun run generate-bindings
+            bun run generate-codegen-specs
 
-      - name: Build example for Android
-        run: bun run --cwd example build:android
+            rm -rf android/src/main/jniLibs
+            mkdir -p android/src/main/jniLibs
+            unzip -q "${RUNNER_TEMP}/native-android/liblnd-android.zip" -d android/src/main/jniLibs
+
+            bun run --cwd example build:android
+          '
 
   build-ios:
     needs: native-artifacts
-    runs-on: macos-15
+    runs-on: macOS
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Setup
-        uses: ./.github/actions/setup
-
-      - name: Install protoc
-        shell: bash
-        run: brew install protobuf
-
-      - name: Prepare generated sources
-        run: |
-          bun run generate-bindings
-          bun run generate-codegen-specs
 
       - name: Download iOS native artifact
         uses: actions/download-artifact@v4
@@ -278,41 +202,41 @@ jobs:
           name: native-ios
           path: ${{ runner.temp }}/native-ios
 
-      - name: Install iOS native artifact
+      - name: Build iOS example in Nix shell
         shell: bash
         run: |
-          rm -f ios/liblnd.a
-          unzip -q "${RUNNER_TEMP}/native-ios/liblnd-ios.zip" -d "${RUNNER_TEMP}/native-ios/unpacked"
-          mv "${RUNNER_TEMP}/native-ios/unpacked/liblnd-fat.a" ios/liblnd.a
+          nix develop --command bash -c '
+            set -euo pipefail
+            bun install --frozen-lockfile --ignore-scripts
+            bun run generate-bindings
+            bun run generate-codegen-specs
 
-      - name: Install CocoaPods for iOS example
-        shell: bash
-        run: |
-          cd example/ios
-          pod install
+            rm -f ios/liblnd.a
+            unzip -q "${RUNNER_TEMP}/native-ios/liblnd-ios.zip" -d "${RUNNER_TEMP}/native-ios/unpacked"
+            mv "${RUNNER_TEMP}/native-ios/unpacked/liblnd-fat.a" ios/liblnd.a
 
-      - name: Build example for iOS device
-        shell: bash
-        run: |
-          cd example/ios
-          xcodebuild \
-            -workspace TurboLndExample.xcworkspace \
-            -scheme TurboLndExample \
-            -configuration Debug \
-            -sdk iphoneos \
-            -destination 'generic/platform=iOS' \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGN_IDENTITY="" \
-            CC=clang \
-            CPLUSPLUS=clang++ \
-            LD=clang \
-            LDPLUSPLUS=clang++ \
-            GCC_OPTIMIZATION_LEVEL=0 \
-            GCC_PRECOMPILE_PREFIX_HEADER=YES \
-            ASSETCATALOG_COMPILER_OPTIMIZATION=time \
-            DEBUG_INFORMATION_FORMAT=dwarf \
-            COMPILER_INDEX_STORE_ENABLE=NO
+            cd example/ios
+            pod install
+
+            /usr/bin/xcodebuild \
+              -workspace TurboLndExample.xcworkspace \
+              -scheme TurboLndExample \
+              -configuration Debug \
+              -sdk iphoneos \
+              -destination "generic/platform=iOS" \
+              CODE_SIGNING_ALLOWED=NO \
+              CODE_SIGNING_REQUIRED=NO \
+              CODE_SIGN_IDENTITY="" \
+              CC=/usr/bin/clang \
+              CPLUSPLUS=/usr/bin/clang++ \
+              LD=/usr/bin/clang \
+              LDPLUSPLUS=/usr/bin/clang++ \
+              GCC_OPTIMIZATION_LEVEL=0 \
+              GCC_PRECOMPILE_PREFIX_HEADER=YES \
+              ASSETCATALOG_COMPILER_OPTIMIZATION=time \
+              DEBUG_INFORMATION_FORMAT=dwarf \
+              COMPILER_INDEX_STORE_ENABLE=NO
+          '
 
   # build-macos:
   #   needs: native-artifacts
@@ -392,7 +316,7 @@ jobs:
     needs:
       - build-android
       - build-ios
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-self-hosted
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -407,19 +331,11 @@ jobs:
             exit 1
           fi
 
-      - name: Setup
-        uses: ./.github/actions/setup
-
       - name: Setup Node.js for npm trusted publishing
         uses: actions/setup-node@v4
         with:
           node-version: "24"
           registry-url: https://registry.npmjs.org
-
-      - name: Install protoc
-        run: |
-          sudo apt-get update
-          sudo apt-get install --yes protobuf-compiler
 
       - name: Configure git identity
         run: |
@@ -439,12 +355,19 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TURBOLND_RELEASE_ASSETS_DIR: ${{ runner.temp }}/release-assets
         run: |
-          args=(
-            "${{ inputs.release_type }}"
-            "--ci"
-            "--github.assets=${RUNNER_TEMP}/release-assets/*.zip"
-          )
-          if [[ "${{ inputs.dry_run }}" == "true" ]]; then
-            args+=("--dry-run")
-          fi
-          bunx release-it "${args[@]}"
+          nix develop --command bash -c '
+            set -euo pipefail
+            bun install --frozen-lockfile --ignore-scripts
+
+            args=(
+              "${{ inputs.release_type }}"
+              "--ci"
+              "--github.assets=${RUNNER_TEMP}/release-assets/*.zip"
+            )
+
+            if [[ "${{ inputs.dry_run }}" == "true" ]]; then
+              args+=("--dry-run")
+            fi
+
+            bunx release-it "${args[@]}"
+          '

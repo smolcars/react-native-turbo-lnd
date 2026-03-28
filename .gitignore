@@ -96,3 +96,6 @@ windows/ReactNativeTurboLnd/generated-liblnd/
 # example-electrobun
 example-electrobun/dist/
 example-electrobun/artifacts/
+
+# Nix
+.direnv/
