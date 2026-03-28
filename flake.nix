@@ -146,7 +146,6 @@
               [
                 bundler
                 cocoapods
-                xcodeWrapper
               ]
             else
               [ ];
@@ -194,7 +193,6 @@
                   . "${xcodeWrapper}/bin/env.sh"
                 fi
 
-                export PATH="${xcodeWrapper}/bin:$PATH"
                 export CC=/usr/bin/clang
                 export CXX=/usr/bin/clang++
                 export LD=/usr/bin/clang

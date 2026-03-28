@@ -210,7 +210,7 @@ jobs:
             cd example/ios
             pod install
 
-            xcodebuild \
+            /usr/bin/xcodebuild \
               -workspace TurboLndExample.xcworkspace \
               -scheme TurboLndExample \
               -configuration Debug \
@@ -219,10 +219,10 @@ jobs:
               CODE_SIGNING_ALLOWED=NO \
               CODE_SIGNING_REQUIRED=NO \
               CODE_SIGN_IDENTITY="" \
-              CC=clang \
-              CPLUSPLUS=clang++ \
-              LD=clang \
-              LDPLUSPLUS=clang++ \
+              CC=/usr/bin/clang \
+              CPLUSPLUS=/usr/bin/clang++ \
+              LD=/usr/bin/clang \
+              LDPLUSPLUS=/usr/bin/clang++ \
               GCC_OPTIMIZATION_LEVEL=0 \
               GCC_PRECOMPILE_PREFIX_HEADER=YES \
               ASSETCATALOG_COMPILER_OPTIMIZATION=time \
