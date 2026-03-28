@@ -23,7 +23,7 @@ jobs:
         run: |
           nix develop --command bash -c '
             set -euo pipefail
-            bun install --frozen-lockfile
+            bun install --frozen-lockfile --ignore-scripts
             bun run generate-bindings
             bun run generate-codegen-specs
             bun run lint
