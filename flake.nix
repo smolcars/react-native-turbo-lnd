@@ -154,13 +154,20 @@
             export LANG=en_US.UTF-8
             export JAVA_HOME="${pkgs.jdk17.home}"
 
-            cache_root="''${RUNNER_TEMP:-$PWD/.cache}"
+            cache_root_base="/tmp/turbolnd"
+            if [ -n "''${GITHUB_RUN_ID:-}" ]; then
+              cache_root="$cache_root_base/''${GITHUB_RUN_ID}-''${GITHUB_RUN_ATTEMPT:-0}-''${GITHUB_JOB:-shell}"
+            else
+              cache_root="$cache_root_base/local"
+            fi
+
+            export TMPDIR="$cache_root/tmp"
             export GOPATH="$cache_root/go"
             export GOBIN="$GOPATH/bin"
-            export GOCACHE="$cache_root/gocache"
-            export GOMODCACHE="$GOPATH/pkg/mod"
+            export GOCACHE="$cache_root/cache"
+            export GOMODCACHE="$cache_root/mod"
 
-            mkdir -p "$GOBIN" "$GOCACHE" "$GOMODCACHE"
+            mkdir -p "$TMPDIR" "$GOBIN" "$GOCACHE" "$GOMODCACHE"
             export PATH="$GOBIN:$PATH"
           '';
           linuxHook =
