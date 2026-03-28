@@ -1,9 +1,6 @@
 name: Release
 
 on:
-  pull_request:
-    branches:
-      - master
   workflow_dispatch:
     inputs:
       release_type:
@@ -315,62 +312,62 @@ jobs:
   #       shell: powershell
   #       run: |
   #         msbuild example\windows\ReactNativeTurboLndExample\ReactNativeTurboLndExample.vcxproj /restore /p:Configuration=Debug /p:Platform=x64
-  # release:
-  #   needs:
-  #     - build-android
-  #     - build-ios
-  #   runs-on: ubuntu-self-hosted
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v4
-  #       with:
-  #         fetch-depth: 0
-  #
-  #     - name: Ensure release runs from master
-  #       shell: bash
-  #       run: |
-  #         if [[ "${GITHUB_REF_NAME}" != "master" ]]; then
-  #           echo "This release workflow must run from master." >&2
-  #           exit 1
-  #         fi
-  #
-  #     - name: Setup Node.js for npm trusted publishing
-  #       uses: actions/setup-node@v4
-  #       with:
-  #         node-version: "24"
-  #         registry-url: https://registry.npmjs.org
-  #
-  #     - name: Configure git identity
-  #       run: |
-  #         git config user.name "github-actions[bot]"
-  #         git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-  #
-  #     - name: Download native artifacts
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         pattern: native-*
-  #         merge-multiple: true
-  #         path: ${{ runner.temp }}/release-assets
-  #
-  #     - name: Run release-it
-  #       shell: bash
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #         TURBOLND_RELEASE_ASSETS_DIR: ${{ runner.temp }}/release-assets
-  #       run: |
-  #         nix develop --command bash -c '
-  #           set -euo pipefail
-  #           bun install --frozen-lockfile --ignore-scripts
-  #
-  #           args=(
-  #             "${{ inputs.release_type }}"
-  #             "--ci"
-  #             "--github.assets=${RUNNER_TEMP}/release-assets/*.zip"
-  #           )
-  #
-  #           if [[ "${{ inputs.dry_run }}" == "true" ]]; then
-  #             args+=("--dry-run")
-  #           fi
-  #
-  #           bunx release-it "${args[@]}"
-  #         '
+  release:
+    needs:
+      - build-android
+      - build-ios
+    runs-on: ubuntu-self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Ensure release runs from master
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF_NAME}" != "master" ]]; then
+            echo "This release workflow must run from master." >&2
+            exit 1
+          fi
+
+      - name: Setup Node.js for npm trusted publishing
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          registry-url: https://registry.npmjs.org
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Download native artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: native-*
+          merge-multiple: true
+          path: ${{ runner.temp }}/release-assets
+
+      - name: Run release-it
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TURBOLND_RELEASE_ASSETS_DIR: ${{ runner.temp }}/release-assets
+        run: |
+          nix develop --command bash -c '
+            set -euo pipefail
+            bun install --frozen-lockfile --ignore-scripts
+
+            args=(
+              "${{ inputs.release_type }}"
+              "--ci"
+              "--github.assets=${RUNNER_TEMP}/release-assets/*.zip"
+            )
+
+            if [[ "${{ inputs.dry_run }}" == "true" ]]; then
+              args+=("--dry-run")
+            fi
+
+            bunx release-it "${args[@]}"
+          '
