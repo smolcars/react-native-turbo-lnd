@@ -122,7 +122,7 @@
           commonPackages = with pkgs; [
             nodejs_24
             bun
-            go
+            go_1_25
             protobuf
             clang-tools
             jdk17
@@ -154,7 +154,12 @@
             export LANG=en_US.UTF-8
             export JAVA_HOME="${pkgs.jdk17.home}"
 
-            cache_root_base="/tmp/tl"
+            if [ "${if isDarwin then "1" else "0"}" = "1" ]; then
+              cache_root_base="/tmp/tl"
+            else
+              cache_root_base="''${RUNNER_TEMP:-$PWD/.cache}/tl"
+            fi
+
             if [ -n "''${GITHUB_RUN_ID:-}" ]; then
               cache_root="$cache_root_base/''${GITHUB_RUN_ID}-''${GITHUB_RUN_ATTEMPT:-0}"
             else
@@ -200,6 +205,42 @@
                 if [ -f "${xcodeWrapper}/bin/env.sh" ]; then
                   . "${xcodeWrapper}/bin/env.sh"
                 fi
+
+                apple_toolshim="$cache_root/apple-tools"
+                mkdir -p "$apple_toolshim"
+
+                cat > "$apple_toolshim/xcrun" <<'EOF'
+                #!/bin/sh
+                exec /usr/bin/xcrun "$@"
+                EOF
+
+                cat > "$apple_toolshim/xcodebuild" <<'EOF'
+                #!/bin/sh
+                exec /usr/bin/xcodebuild "$@"
+                EOF
+
+                cat > "$apple_toolshim/xcode-select" <<'EOF'
+                #!/bin/sh
+                exec /usr/bin/xcode-select "$@"
+                EOF
+
+                cat > "$apple_toolshim/clang" <<'EOF'
+                #!/bin/sh
+                exec /usr/bin/clang "$@"
+                EOF
+
+                cat > "$apple_toolshim/clang++" <<'EOF'
+                #!/bin/sh
+                exec /usr/bin/clang++ "$@"
+                EOF
+
+                cat > "$apple_toolshim/ar" <<'EOF'
+                #!/bin/sh
+                exec "''${DEVELOPER_DIR}/Toolchains/XcodeDefault.xctoolchain/usr/bin/ar" "$@"
+                EOF
+
+                chmod +x "$apple_toolshim/"*
+                export PATH="$apple_toolshim:$PATH"
 
                 export CC=/usr/bin/clang
                 export CXX=/usr/bin/clang++
