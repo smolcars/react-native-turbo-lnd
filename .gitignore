@@ -98,3 +98,4 @@ example-electrobun/dist/
 example-electrobun/artifacts/
 
 # Nix
+.direnv/
