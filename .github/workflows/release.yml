@@ -316,7 +316,7 @@ jobs:
     needs:
       - build-android
       - build-ios
-    runs-on: ubuntu-self-hosted
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
