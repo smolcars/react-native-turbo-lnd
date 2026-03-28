@@ -98,41 +98,52 @@ jobs:
         run: |
           nix develop --command bash -c '
             set -euo pipefail
-            cd "${GITHUB_WORKSPACE}/.cache/lnd-cgo/lnrpc"
+            build_root="${GITHUB_WORKSPACE}/.cache/lnd-cgo"
+
+            case "${{ matrix.target }}" in
+              ios|macos|macos-shared)
+                short_root="/tmp/lnd-cgo-${{ matrix.target }}"
+                rm -rf "$short_root"
+                cp -R "${GITHUB_WORKSPACE}/.cache/lnd-cgo" "$short_root"
+                build_root="$short_root"
+                ;;
+            esac
+
+            cd "$build_root/lnrpc"
             bash ./install_gen_tools.sh
 
             mkdir -p "${GITHUB_WORKSPACE}/dist"
-            cd "${GITHUB_WORKSPACE}/.cache/lnd-cgo"
+            cd "$build_root"
 
             case "${{ matrix.target }}" in
               android)
                 make android-cgo MOBILE_RPC_MODE=local
-                artifact_root="${GITHUB_WORKSPACE}/.cache/lnd-cgo/mobile/build/cgo/android"
+                artifact_root="$build_root/mobile/build/cgo/android"
                 asset_name="liblnd-android.zip"
                 ;;
               ios)
                 make ios-cgo MOBILE_RPC_MODE=local
-                artifact_root="${GITHUB_WORKSPACE}/.cache/lnd-cgo/mobile/build/cgo/ios"
+                artifact_root="$build_root/mobile/build/cgo/ios"
                 asset_name="liblnd-ios.zip"
                 ;;
               macos)
                 make macos-cgo MOBILE_RPC_MODE=local
-                artifact_root="${GITHUB_WORKSPACE}/.cache/lnd-cgo/mobile/build/cgo/macos"
+                artifact_root="$build_root/mobile/build/cgo/macos"
                 asset_name="liblnd-macos.zip"
                 ;;
               macos-shared)
                 make macos-cgo-shared MOBILE_RPC_MODE=local
-                artifact_root="${GITHUB_WORKSPACE}/.cache/lnd-cgo/mobile/build/cgo/macos"
+                artifact_root="$build_root/mobile/build/cgo/macos"
                 asset_name="liblnd-macos-dylib.zip"
                 ;;
               linux)
                 make linux-cgo MOBILE_RPC_MODE=local
-                artifact_root="${GITHUB_WORKSPACE}/.cache/lnd-cgo/mobile/build/cgo/linux"
+                artifact_root="$build_root/mobile/build/cgo/linux"
                 asset_name="liblnd-linux.zip"
                 ;;
               windows)
                 make windows-cgo MOBILE_RPC_MODE=local WINDOWS_CGO_CC=x86_64-w64-mingw32-gcc
-                artifact_root="${GITHUB_WORKSPACE}/.cache/lnd-cgo/mobile/build/cgo/windows"
+                artifact_root="$build_root/mobile/build/cgo/windows"
                 asset_name="liblnd-windows.zip"
                 ;;
               *)
