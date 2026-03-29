@@ -8,6 +8,7 @@ const { execFile } = require("child_process");
 const util = require("util");
 
 const execFilePromise = util.promisify(execFile);
+const ANSI_GREEN = "\x1b[32m";
 const ANSI_YELLOW = "\x1b[33m";
 const ANSI_RED = "\x1b[31m";
 const ANSI_RESET = "\x1b[0m";
@@ -208,6 +209,10 @@ async function verifyAssetChecksum(zipPath, assetName) {
       `Checksum mismatch for ${assetName}. Expected ${expectedChecksum}, got ${actualChecksum}`
     );
   }
+
+  console.log(
+    `${ANSI_GREEN}Verified checksum:${ANSI_RESET} ${assetName} (${actualChecksum})`
+  );
 }
 
 async function setupAndroidBinaries() {
