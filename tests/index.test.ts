@@ -100,4 +100,39 @@ describe("TurboLnd mock", () => {
     expect(invoice.addIndex).toBe(response.addIndex);
     expect(invoice.state).toBe(Invoice_InvoiceState.OPEN);
   });
+
+  test("deleteCanceledInvoice should match lnd validation and errors", async () => {
+    const { addInvoice, deleteCanceledInvoice } = await import("../src/mock");
+
+    const response = await addInvoice({
+      memo: "Delete invoice",
+      value: BigInt(1000),
+    });
+    const invoiceHash = Buffer.from(response.rHash).toString("hex");
+
+    await expect(deleteCanceledInvoice({})).rejects.toThrow(
+      "invoice hash must be provided"
+    );
+    await expect(
+      deleteCanceledInvoice({
+        invoiceHash: "bb02fbfa62983b6b62",
+      })
+    ).rejects.toThrow("invalid hash string length");
+    await expect(
+      deleteCanceledInvoice({
+        invoiceHash:
+          "bb02fbfa62983b6b621376bf8230732dd3a6dcea9f5df803c0935ae6ce7440dg",
+      })
+    ).rejects.toThrow("encoding/hex: invalid byte");
+    await expect(
+      deleteCanceledInvoice({
+        invoiceHash,
+      })
+    ).rejects.toThrow("invoice not canceled");
+    await expect(
+      deleteCanceledInvoice({
+        invoiceHash: "ab".repeat(32),
+      })
+    ).rejects.toThrow("unable to locate invoice");
+  });
 });

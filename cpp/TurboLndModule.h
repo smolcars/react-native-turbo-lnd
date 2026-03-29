@@ -109,6 +109,8 @@ class TurboLndModule : public NativeTurboLndCxxSpec<TurboLndModule> {
 
   facebook::jsi::Function subscribeInvoices(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError);
 
+  facebook::react::AsyncPromise<std::string> deleteCanceledInvoice(jsi::Runtime &rt, jsi::String data);
+
   facebook::react::AsyncPromise<std::string> decodePayReq(jsi::Runtime &rt, jsi::String data);
 
   facebook::react::AsyncPromise<std::string> listPayments(jsi::Runtime &rt, jsi::String data);
@@ -267,6 +269,8 @@ class TurboLndModule : public NativeTurboLndCxxSpec<TurboLndModule> {
 
   facebook::react::AsyncPromise<std::string> routerXDeleteLocalChanAliases(jsi::Runtime &rt, jsi::String data);
 
+  facebook::react::AsyncPromise<std::string> routerXFindBaseLocalChanAlias(jsi::Runtime &rt, jsi::String data);
+
   facebook::react::AsyncPromise<std::string> signerSignOutputRaw(jsi::Runtime &rt, jsi::String data);
 
   facebook::react::AsyncPromise<std::string> signerComputeInputScript(jsi::Runtime &rt, jsi::String data);
@@ -334,6 +338,8 @@ class TurboLndModule : public NativeTurboLndCxxSpec<TurboLndModule> {
   facebook::react::AsyncPromise<std::string> walletKitPendingSweeps(jsi::Runtime &rt, jsi::String data);
 
   facebook::react::AsyncPromise<std::string> walletKitBumpFee(jsi::Runtime &rt, jsi::String data);
+
+  facebook::react::AsyncPromise<std::string> walletKitBumpForceCloseFee(jsi::Runtime &rt, jsi::String data);
 
   facebook::react::AsyncPromise<std::string> walletKitListSweeps(jsi::Runtime &rt, jsi::String data);
 

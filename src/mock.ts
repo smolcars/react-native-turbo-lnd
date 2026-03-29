@@ -1016,10 +1016,10 @@ export function sendPayment(
 
 /**
    *
-   * SendPaymentSync is the synchronous non-streaming version of SendPayment.
-   * This RPC is intended to be consumed by clients of the REST proxy.
-   * Additionally, this RPC expects the destination's public key and the payment
-   * hash (if any) to be encoded as hex strings.
+   * Deprecated, use routerrpc.SendPaymentV2. SendPaymentSync is the synchronous
+   * non-streaming version of SendPayment. This RPC is intended to be consumed by
+   * clients of the REST proxy. Additionally, this RPC expects the destination's
+   * public key and the payment hash (if any) to be encoded as hex strings.
    *
    * @param [SendRequest]
    * @returns [SendResponse]
@@ -1090,8 +1090,9 @@ export function sendToRoute(
 
 /**
    *
-   * SendToRouteSync is a synchronous version of SendToRoute. It Will block
-   * until the payment either fails or succeeds.
+   * Deprecated, use routerrpc.SendToRouteV2. SendToRouteSync is a synchronous
+   * version of SendToRoute. It Will block until the payment either fails or
+   * succeeds.
    *
    * @param [SendToRouteRequest]
    * @returns [SendResponse]
@@ -1250,6 +1251,35 @@ export function subscribeInvoices(
 
 
   return TurboLnd.subscribeInvoices(requestB64, onResponseWrapper, onErrorWrapper);
+}
+
+
+/**
+   *
+   * DeleteCanceledInvoice removes a canceled invoice from the database. If the
+   * invoice is not in the canceled state, an error will be returned.
+   *
+   * @param [DelCanceledInvoiceReq]
+   * @returns [DelCanceledInvoiceResp]
+   *
+   */
+export async function deleteCanceledInvoice(
+  request: MessageInitShape<typeof lnrpc.DelCanceledInvoiceReqSchema>
+): Promise<lnrpc.DelCanceledInvoiceResp> {
+  const message = create(
+    lnrpc.DelCanceledInvoiceReqSchema,
+    request
+  );
+  const b64 = await TurboLnd.deleteCanceledInvoice(
+    base64Encode(
+      toBinary(lnrpc.DelCanceledInvoiceReqSchema, message)
+    )
+  );
+  const response = fromBinary(
+    lnrpc.DelCanceledInvoiceRespSchema,
+    base64Decode(b64)
+  );
+  return response;
 }
 
 
@@ -2036,9 +2066,10 @@ export async function listPermissions(
 
 /**
    *
-   * CheckMacaroonPermissions checks whether a request follows the constraints
-   * imposed on the macaroon and that the macaroon is authorized to follow the
-   * provided permissions.
+   * CheckMacaroonPermissions checks whether the provided macaroon contains all
+   * the provided permissions. If the macaroon is valid (e.g. all caveats are
+   * satisfied), and all permissions provided in the request are met, then
+   * this RPC returns true.
    *
    * @param [CheckMacPermRequest]
    * @returns [CheckMacPermResponse]
@@ -3768,8 +3799,10 @@ export async function routerXAddLocalChanAliases(
 
 /**
    *
-   * The key of this forwarded htlc. It defines the incoming channel id and
-   * the index in this channel.
+   * XDeleteLocalChanAliases is an experimental API that deletes a set of alias
+   * mappings. The final total set of aliases in the manager after the delete
+   * operation is returned. The deletion will not be communicated to the channel
+   * peer via any message.
    *
    * @param [DeleteAliasesRequest]
    * @returns [DeleteAliasesResponse]
@@ -3789,6 +3822,35 @@ export async function routerXDeleteLocalChanAliases(
   );
   const response = fromBinary(
     routerrpc.DeleteAliasesResponseSchema,
+    base64Decode(b64)
+  );
+  return response;
+}
+
+
+/**
+   *
+   * The key of this forwarded htlc. It defines the incoming channel id and
+   * the index in this channel.
+   *
+   * @param [FindBaseAliasRequest]
+   * @returns [FindBaseAliasResponse]
+   *
+   */
+export async function routerXFindBaseLocalChanAlias(
+  request: MessageInitShape<typeof routerrpc.FindBaseAliasRequestSchema>
+): Promise<routerrpc.FindBaseAliasResponse> {
+  const message = create(
+    routerrpc.FindBaseAliasRequestSchema,
+    request
+  );
+  const b64 = await TurboLnd.routerXFindBaseLocalChanAlias(
+    base64Encode(
+      toBinary(routerrpc.FindBaseAliasRequestSchema, message)
+    )
+  );
+  const response = fromBinary(
+    routerrpc.FindBaseAliasResponseSchema,
     base64Decode(b64)
   );
   return response;
@@ -4943,6 +5005,35 @@ export async function walletKitBumpFee(
   );
   const response = fromBinary(
     walletrpc.BumpFeeResponseSchema,
+    base64Decode(b64)
+  );
+  return response;
+}
+
+
+/**
+   *
+   * BumpForceCloseFee is an endpoint that allows users to bump the fee of a
+   * channel force close. This only works for channels with option_anchors.
+   *
+   * @param [BumpForceCloseFeeRequest]
+   * @returns [BumpForceCloseFeeResponse]
+   *
+   */
+export async function walletKitBumpForceCloseFee(
+  request: MessageInitShape<typeof walletrpc.BumpForceCloseFeeRequestSchema>
+): Promise<walletrpc.BumpForceCloseFeeResponse> {
+  const message = create(
+    walletrpc.BumpForceCloseFeeRequestSchema,
+    request
+  );
+  const b64 = await TurboLnd.walletKitBumpForceCloseFee(
+    base64Encode(
+      toBinary(walletrpc.BumpForceCloseFeeRequestSchema, message)
+    )
+  );
+  const response = fromBinary(
+    walletrpc.BumpForceCloseFeeResponseSchema,
     base64Decode(b64)
   );
   return response;

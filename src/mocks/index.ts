@@ -36,12 +36,22 @@ import {
   GetRecoveryInfoResponseSchema,
   GenSeedRequestSchema,
   GenSeedResponseSchema,
+  DelCanceledInvoiceReqSchema,
+  DelCanceledInvoiceRespSchema,
   InvoiceSchema,
   AddInvoiceResponseSchema,
   PaymentHashSchema,
   Invoice_InvoiceState,
   type Invoice,
 } from "../proto/lightning_pb";
+import {
+  FindBaseAliasRequestSchema,
+  FindBaseAliasResponseSchema,
+} from "../proto/routerrpc/router_pb";
+import {
+  BumpForceCloseFeeRequestSchema,
+  BumpForceCloseFeeResponseSchema,
+} from "../proto/walletrpc/walletkit_pb";
 import type {
   Spec,
   OnErrorCallback,
@@ -148,6 +158,32 @@ const createMockPaymentRequest = (
   const hashPrefix = uint8ArrayToHex(rHash).slice(0, 24);
 
   return `lnbc${amountSat}mockinvoice${addIndex}${hashPrefix}`;
+};
+
+const normalizeInvoiceHashString = (invoiceHash: string): string => {
+  if (invoiceHash === "") {
+    throw new Error("invoice hash must be provided");
+  }
+
+  if (invoiceHash.length !== 64) {
+    throw new Error("invalid hash string length");
+  }
+
+  const invalidChar = Array.from(invoiceHash).find(
+    (char) => !/[0-9a-fA-F]/.test(char)
+  );
+
+  if (invalidChar) {
+    const codePoint = invalidChar.codePointAt(0) ?? 0;
+    throw new Error(
+      `encoding/hex: invalid byte: U+${codePoint
+        .toString(16)
+        .toUpperCase()
+        .padStart(4, "0")} '${invalidChar}'`
+    );
+  }
+
+  return invoiceHash.toLowerCase();
 };
 
 const emitInvoice = (
@@ -659,6 +695,36 @@ const TurboLnd: Spec = {
           (cb) => cb !== subscription
         );
     };
+  },
+
+  deleteCanceledInvoice: async (_data) => {
+    const request = fromBinary(
+      DelCanceledInvoiceReqSchema,
+      base64Decode(_data)
+    );
+    const normalizedHash = normalizeInvoiceHashString(request.invoiceHash);
+    const invoiceIndex = mockInvoices.findIndex(
+      (invoice) => uint8ArrayToHex(invoice.rHash) === normalizedHash
+    );
+
+    if (invoiceIndex === -1) {
+      throw new Error("unable to locate invoice");
+    }
+
+    if (mockInvoices[invoiceIndex]?.state !== Invoice_InvoiceState.CANCELED) {
+      throw new Error("invoice not canceled");
+    }
+
+    mockInvoices.splice(invoiceIndex, 1);
+
+    return base64Encode(
+      toBinary(
+        DelCanceledInvoiceRespSchema,
+        create(DelCanceledInvoiceRespSchema, {
+          status: `canceled invoice deleted successfully: invoice hash ${normalizedHash}`,
+        })
+      )
+    );
   },
 
   decodePayReq: async (_data) => {
@@ -1215,6 +1281,19 @@ const TurboLnd: Spec = {
     throw new Error("routerXDeleteLocalChanAliases Not Implemented");
   },
 
+  routerXFindBaseLocalChanAlias: async (_data) => {
+    const request = fromBinary(FindBaseAliasRequestSchema, base64Decode(_data));
+
+    return base64Encode(
+      toBinary(
+        FindBaseAliasResponseSchema,
+        create(FindBaseAliasResponseSchema, {
+          base: request.alias,
+        })
+      )
+    );
+  },
+
   walletKitGetTransaction: async (_data) => {
     throw new Error("walletKitGetTransaction Not Implemented");
   },
@@ -1225,6 +1304,19 @@ const TurboLnd: Spec = {
 
   watchtowerClientDeactivateTower: async (_data) => {
     throw new Error("watchtowerClientDeactivateTower Not Implemented");
+  },
+
+  walletKitBumpForceCloseFee: async (_data) => {
+    fromBinary(BumpForceCloseFeeRequestSchema, base64Decode(_data));
+
+    return base64Encode(
+      toBinary(
+        BumpForceCloseFeeResponseSchema,
+        create(BumpForceCloseFeeResponseSchema, {
+          status: "queued",
+        })
+      )
+    );
   },
 
   watchtowerClientTerminateSession: async (_data) => {

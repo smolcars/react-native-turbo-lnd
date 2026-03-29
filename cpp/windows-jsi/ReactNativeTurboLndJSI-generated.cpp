@@ -254,6 +254,12 @@ static jsi::Value __hostFunction_NativeTurboLndCxxSpecJSI_subscribeInvoices(jsi:
     (count > 2 || (throw jsi::JSError(rt, "Expected argument in position 2 to be passed"), false), args[2].asObject(rt).asFunction(rt))
   );
 }
+static jsi::Value __hostFunction_NativeTurboLndCxxSpecJSI_deleteCanceledInvoice(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
+  return static_cast<NativeTurboLndCxxSpecJSI *>(&turboModule)->deleteCanceledInvoice(
+    rt,
+    (count > 0 || (throw jsi::JSError(rt, "Expected argument in position 0 to be passed"), false), args[0].asString(rt))
+  );
+}
 static jsi::Value __hostFunction_NativeTurboLndCxxSpecJSI_decodePayReq(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
   return static_cast<NativeTurboLndCxxSpecJSI *>(&turboModule)->decodePayReq(
     rt,
@@ -759,6 +765,12 @@ static jsi::Value __hostFunction_NativeTurboLndCxxSpecJSI_routerXDeleteLocalChan
     (count > 0 || (throw jsi::JSError(rt, "Expected argument in position 0 to be passed"), false), args[0].asString(rt))
   );
 }
+static jsi::Value __hostFunction_NativeTurboLndCxxSpecJSI_routerXFindBaseLocalChanAlias(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
+  return static_cast<NativeTurboLndCxxSpecJSI *>(&turboModule)->routerXFindBaseLocalChanAlias(
+    rt,
+    (count > 0 || (throw jsi::JSError(rt, "Expected argument in position 0 to be passed"), false), args[0].asString(rt))
+  );
+}
 static jsi::Value __hostFunction_NativeTurboLndCxxSpecJSI_signerSignOutputRaw(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
   return static_cast<NativeTurboLndCxxSpecJSI *>(&turboModule)->signerSignOutputRaw(
     rt,
@@ -963,6 +975,12 @@ static jsi::Value __hostFunction_NativeTurboLndCxxSpecJSI_walletKitBumpFee(jsi::
     (count > 0 || (throw jsi::JSError(rt, "Expected argument in position 0 to be passed"), false), args[0].asString(rt))
   );
 }
+static jsi::Value __hostFunction_NativeTurboLndCxxSpecJSI_walletKitBumpForceCloseFee(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
+  return static_cast<NativeTurboLndCxxSpecJSI *>(&turboModule)->walletKitBumpForceCloseFee(
+    rt,
+    (count > 0 || (throw jsi::JSError(rt, "Expected argument in position 0 to be passed"), false), args[0].asString(rt))
+  );
+}
 static jsi::Value __hostFunction_NativeTurboLndCxxSpecJSI_walletKitListSweeps(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
   return static_cast<NativeTurboLndCxxSpecJSI *>(&turboModule)->walletKitListSweeps(
     rt,
@@ -1088,6 +1106,7 @@ NativeTurboLndCxxSpecJSI::NativeTurboLndCxxSpecJSI(std::shared_ptr<CallInvoker> 
   methodMap_["listInvoices"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_listInvoices};
   methodMap_["lookupInvoice"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_lookupInvoice};
   methodMap_["subscribeInvoices"] = MethodMetadata {3, __hostFunction_NativeTurboLndCxxSpecJSI_subscribeInvoices};
+  methodMap_["deleteCanceledInvoice"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_deleteCanceledInvoice};
   methodMap_["decodePayReq"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_decodePayReq};
   methodMap_["listPayments"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_listPayments};
   methodMap_["deletePayment"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_deletePayment};
@@ -1167,6 +1186,7 @@ NativeTurboLndCxxSpecJSI::NativeTurboLndCxxSpecJSI(std::shared_ptr<CallInvoker> 
   methodMap_["routerUpdateChanStatus"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_routerUpdateChanStatus};
   methodMap_["routerXAddLocalChanAliases"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_routerXAddLocalChanAliases};
   methodMap_["routerXDeleteLocalChanAliases"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_routerXDeleteLocalChanAliases};
+  methodMap_["routerXFindBaseLocalChanAlias"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_routerXFindBaseLocalChanAlias};
   methodMap_["signerSignOutputRaw"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_signerSignOutputRaw};
   methodMap_["signerComputeInputScript"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_signerComputeInputScript};
   methodMap_["signerSignMessage"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_signerSignMessage};
@@ -1201,6 +1221,7 @@ NativeTurboLndCxxSpecJSI::NativeTurboLndCxxSpecJSI(std::shared_ptr<CallInvoker> 
   methodMap_["walletKitEstimateFee"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_walletKitEstimateFee};
   methodMap_["walletKitPendingSweeps"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_walletKitPendingSweeps};
   methodMap_["walletKitBumpFee"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_walletKitBumpFee};
+  methodMap_["walletKitBumpForceCloseFee"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_walletKitBumpForceCloseFee};
   methodMap_["walletKitListSweeps"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_walletKitListSweeps};
   methodMap_["walletKitLabelTransaction"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_walletKitLabelTransaction};
   methodMap_["walletKitFundPsbt"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_walletKitFundPsbt};

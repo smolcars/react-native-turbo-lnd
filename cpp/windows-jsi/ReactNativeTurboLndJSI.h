@@ -106,6 +106,7 @@ protected:
     methodMap_["listInvoices"] = MethodMetadata {.argCount = 1, .invoker = __listInvoices};
     methodMap_["lookupInvoice"] = MethodMetadata {.argCount = 1, .invoker = __lookupInvoice};
     methodMap_["subscribeInvoices"] = MethodMetadata {.argCount = 3, .invoker = __subscribeInvoices};
+    methodMap_["deleteCanceledInvoice"] = MethodMetadata {.argCount = 1, .invoker = __deleteCanceledInvoice};
     methodMap_["decodePayReq"] = MethodMetadata {.argCount = 1, .invoker = __decodePayReq};
     methodMap_["listPayments"] = MethodMetadata {.argCount = 1, .invoker = __listPayments};
     methodMap_["deletePayment"] = MethodMetadata {.argCount = 1, .invoker = __deletePayment};
@@ -185,6 +186,7 @@ protected:
     methodMap_["routerUpdateChanStatus"] = MethodMetadata {.argCount = 1, .invoker = __routerUpdateChanStatus};
     methodMap_["routerXAddLocalChanAliases"] = MethodMetadata {.argCount = 1, .invoker = __routerXAddLocalChanAliases};
     methodMap_["routerXDeleteLocalChanAliases"] = MethodMetadata {.argCount = 1, .invoker = __routerXDeleteLocalChanAliases};
+    methodMap_["routerXFindBaseLocalChanAlias"] = MethodMetadata {.argCount = 1, .invoker = __routerXFindBaseLocalChanAlias};
     methodMap_["signerSignOutputRaw"] = MethodMetadata {.argCount = 1, .invoker = __signerSignOutputRaw};
     methodMap_["signerComputeInputScript"] = MethodMetadata {.argCount = 1, .invoker = __signerComputeInputScript};
     methodMap_["signerSignMessage"] = MethodMetadata {.argCount = 1, .invoker = __signerSignMessage};
@@ -219,6 +221,7 @@ protected:
     methodMap_["walletKitEstimateFee"] = MethodMetadata {.argCount = 1, .invoker = __walletKitEstimateFee};
     methodMap_["walletKitPendingSweeps"] = MethodMetadata {.argCount = 1, .invoker = __walletKitPendingSweeps};
     methodMap_["walletKitBumpFee"] = MethodMetadata {.argCount = 1, .invoker = __walletKitBumpFee};
+    methodMap_["walletKitBumpForceCloseFee"] = MethodMetadata {.argCount = 1, .invoker = __walletKitBumpForceCloseFee};
     methodMap_["walletKitListSweeps"] = MethodMetadata {.argCount = 1, .invoker = __walletKitListSweeps};
     methodMap_["walletKitLabelTransaction"] = MethodMetadata {.argCount = 1, .invoker = __walletKitLabelTransaction};
     methodMap_["walletKitFundPsbt"] = MethodMetadata {.argCount = 1, .invoker = __walletKitFundPsbt};
@@ -553,6 +556,14 @@ private:
       count <= 0 ? throw jsi::JSError(rt, "Expected argument in position 0 to be passed") : args[0].asString(rt),
       count <= 1 ? throw jsi::JSError(rt, "Expected argument in position 1 to be passed") : args[1].asObject(rt).asFunction(rt),
       count <= 2 ? throw jsi::JSError(rt, "Expected argument in position 2 to be passed") : args[2].asObject(rt).asFunction(rt));
+  }
+
+  static jsi::Value __deleteCanceledInvoice(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
+    static_assert(
+      bridging::getParameterCount(&T::deleteCanceledInvoice) == 2,
+      "Expected deleteCanceledInvoice(...) to have 2 parameters");
+    return bridging::callFromJs<jsi::Value>(rt, &T::deleteCanceledInvoice,  static_cast<NativeTurboLndCxxSpec*>(&turboModule)->jsInvoker_, static_cast<T*>(&turboModule),
+      count <= 0 ? throw jsi::JSError(rt, "Expected argument in position 0 to be passed") : args[0].asString(rt));
   }
 
   static jsi::Value __decodePayReq(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
@@ -1218,6 +1229,14 @@ private:
       count <= 0 ? throw jsi::JSError(rt, "Expected argument in position 0 to be passed") : args[0].asString(rt));
   }
 
+  static jsi::Value __routerXFindBaseLocalChanAlias(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
+    static_assert(
+      bridging::getParameterCount(&T::routerXFindBaseLocalChanAlias) == 2,
+      "Expected routerXFindBaseLocalChanAlias(...) to have 2 parameters");
+    return bridging::callFromJs<jsi::Value>(rt, &T::routerXFindBaseLocalChanAlias,  static_cast<NativeTurboLndCxxSpec*>(&turboModule)->jsInvoker_, static_cast<T*>(&turboModule),
+      count <= 0 ? throw jsi::JSError(rt, "Expected argument in position 0 to be passed") : args[0].asString(rt));
+  }
+
   static jsi::Value __signerSignOutputRaw(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
     static_assert(
       bridging::getParameterCount(&T::signerSignOutputRaw) == 2,
@@ -1487,6 +1506,14 @@ private:
       bridging::getParameterCount(&T::walletKitBumpFee) == 2,
       "Expected walletKitBumpFee(...) to have 2 parameters");
     return bridging::callFromJs<jsi::Value>(rt, &T::walletKitBumpFee,  static_cast<NativeTurboLndCxxSpec*>(&turboModule)->jsInvoker_, static_cast<T*>(&turboModule),
+      count <= 0 ? throw jsi::JSError(rt, "Expected argument in position 0 to be passed") : args[0].asString(rt));
+  }
+
+  static jsi::Value __walletKitBumpForceCloseFee(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
+    static_assert(
+      bridging::getParameterCount(&T::walletKitBumpForceCloseFee) == 2,
+      "Expected walletKitBumpForceCloseFee(...) to have 2 parameters");
+    return bridging::callFromJs<jsi::Value>(rt, &T::walletKitBumpForceCloseFee,  static_cast<NativeTurboLndCxxSpec*>(&turboModule)->jsInvoker_, static_cast<T*>(&turboModule),
       count <= 0 ? throw jsi::JSError(rt, "Expected argument in position 0 to be passed") : args[0].asString(rt));
   }
 

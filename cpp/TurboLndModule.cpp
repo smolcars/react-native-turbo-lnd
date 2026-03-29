@@ -868,6 +868,24 @@ facebook::jsi::Function TurboLndModule::subscribeInvoices(jsi::Runtime &rt, jsi:
 }
 
 
+facebook::react::AsyncPromise<std::string> TurboLndModule::deleteCanceledInvoice(jsi::Runtime &rt, jsi::String data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+
+    CCallback callback = {
+        .onResponse = &promiseOnResponseStatic,
+        .onError = &promiseOnErrorStatic,
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
+    };
+
+    std::string decodedData = base64::from_base64(data.utf8(rt));
+    ::deleteCanceledInvoice(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+
+    return *promise;
+}
+
+
 facebook::react::AsyncPromise<std::string> TurboLndModule::decodePayReq(jsi::Runtime &rt, jsi::String data) {
     auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
     uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
@@ -2459,6 +2477,24 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::routerXDeleteLocalCha
 }
 
 
+facebook::react::AsyncPromise<std::string> TurboLndModule::routerXFindBaseLocalChanAlias(jsi::Runtime &rt, jsi::String data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+
+    CCallback callback = {
+        .onResponse = &promiseOnResponseStatic,
+        .onError = &promiseOnErrorStatic,
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
+    };
+
+    std::string decodedData = base64::from_base64(data.utf8(rt));
+    ::routerXFindBaseLocalChanAlias(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+
+    return *promise;
+}
+
+
 facebook::react::AsyncPromise<std::string> TurboLndModule::signerSignOutputRaw(jsi::Runtime &rt, jsi::String data) {
     auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
     uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
@@ -3066,6 +3102,24 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitBumpFee(jsi:
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
     ::walletKitBumpFee(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+
+    return *promise;
+}
+
+
+facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitBumpForceCloseFee(jsi::Runtime &rt, jsi::String data) {
+    auto promise = std::make_shared<facebook::react::AsyncPromise<std::string>>(rt, jsInvoker_);
+    uint64_t promiseId = PromiseKeeper::getInstance().addPromise(promise);
+
+    CCallback callback = {
+        .onResponse = &promiseOnResponseStatic,
+        .onError = &promiseOnErrorStatic,
+        .responseContext = static_cast<uintptr_t>(promiseId),
+        .errorContext = static_cast<uintptr_t>(promiseId)
+    };
+
+    std::string decodedData = base64::from_base64(data.utf8(rt));
+    ::walletKitBumpForceCloseFee(decodedData.data(), static_cast<int>(decodedData.size()), callback);
 
     return *promise;
 }
