@@ -101,6 +101,61 @@ describe("TurboLnd mock", () => {
     expect(invoice.state).toBe(Invoice_InvoiceState.OPEN);
   });
 
+  test("decodePayReq should decode a mock-created invoice", async () => {
+    const { addInvoice, decodePayReq } = await import("../src/mock");
+
+    const response = await addInvoice({
+      memo: "Decode invoice",
+      value: BigInt(1234),
+      expiry: BigInt(1800),
+      fallbackAddr: "bc1qexamplefallback",
+      cltvExpiry: BigInt(40),
+    });
+
+    const payReq = await decodePayReq({
+      payReq: response.paymentRequest,
+    });
+
+    expect(payReq.paymentHash).toBe(
+      Buffer.from(response.rHash).toString("hex")
+    );
+    expect(payReq.numSatoshis).toBe(BigInt(1234));
+    expect(payReq.numMsat).toBe(BigInt(1234000));
+    expect(payReq.description).toBe("Decode invoice");
+    expect(payReq.expiry).toBe(BigInt(1800));
+    expect(payReq.fallbackAddr).toBe("bc1qexamplefallback");
+    expect(payReq.cltvExpiry).toBe(BigInt(40));
+    expect(payReq.paymentAddr).toEqual(response.paymentAddr);
+  });
+
+  test("decodePayReq should decode a real bolt11 payment request", async () => {
+    const { decodePayReq } = await import("../src/mock");
+
+    const payReqString =
+      "lnbc20u1p3y0x3hpp5743k2g0fsqqxj7n8qzuhns5gmkk4djeejk3wkp64ppevgekvc0jsdqcve5kzar2v9nr5gpqd4hkuetesp5ez2g297jduwc20t6lmqlsg3man0vf2jfd8ar9fh8fhn2g8yttfkqxqy9gcqcqzys9qrsgqrzjqtx3k77yrrav9hye7zar2rtqlfkytl094dsp0ms5majzth6gt7ca6uhdkxl983uywgqqqqlgqqqvx5qqjqrzjqd98kxkpyw0l9tyy8r8q57k7zpy9zjmh6sez752wj6gcumqnj3yxzhdsmg6qq56utgqqqqqqqqqqqeqqjq7jd56882gtxhrjm03c93aacyfy306m4fq0tskf83c0nmet8zc2lxyyg3saz8x6vwcp26xnrlagf9semau3qm2glysp7sv95693fphvsp54l567";
+
+    const payReq = await decodePayReq({
+      payReq: payReqString,
+    });
+
+    expect(payReq.paymentHash).toBe(
+      "f5636521e98000697a6700b979c288ddad56cb3995a2eb07550872c466ccc3e5"
+    );
+    expect(payReq.numSatoshis).toBe(BigInt(2000));
+    expect(payReq.numMsat).toBe(BigInt(2000000));
+    expect(payReq.timestamp).toBe(BigInt(1648859703));
+    expect(payReq.expiry).toBe(BigInt(172800));
+    expect(payReq.description).toBe("fiatjaf:  money");
+    expect(payReq.cltvExpiry).toBe(BigInt(144));
+    expect(payReq.paymentAddr).toEqual(
+      Buffer.from(
+        "c8948517d26f1d853d7afec1f8223becdec4aa4969fa32a6e74de6a41c8b5a6c",
+        "hex"
+      )
+    );
+    expect(payReq.routeHints.length).toBeGreaterThan(0);
+  });
+
   test("deleteCanceledInvoice should match lnd validation and errors", async () => {
     const { addInvoice, deleteCanceledInvoice } = await import("../src/mock");
 

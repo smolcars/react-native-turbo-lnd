@@ -38,6 +38,8 @@ import {
   GenSeedResponseSchema,
   DelCanceledInvoiceReqSchema,
   DelCanceledInvoiceRespSchema,
+  PayReqStringSchema,
+  PayReqSchema,
   InvoiceSchema,
   AddInvoiceResponseSchema,
   PaymentHashSchema,
@@ -69,6 +71,7 @@ import {
   generateMockTxid,
   mockPendingChannelsResponse,
 } from "./responses";
+import { decodeBolt11 } from "./bolt11";
 
 let currentState: WalletState = WalletState.LOCKED;
 let subscribeStateOnResponseCallbacks: {
@@ -184,6 +187,71 @@ const normalizeInvoiceHashString = (invoiceHash: string): string => {
   }
 
   return invoiceHash.toLowerCase();
+};
+
+const BOLT11_FEATURE_NAMES = [
+  "option_data_loss_protect",
+  "option_data_loss_protect",
+  "initial_routing_sync",
+  "initial_routing_sync",
+  "option_upfront_shutdown_script",
+  "option_upfront_shutdown_script",
+  "gossip_queries",
+  "gossip_queries",
+  "var_onion_optin",
+  "var_onion_optin",
+  "gossip_queries_ex",
+  "gossip_queries_ex",
+  "option_static_remotekey",
+  "option_static_remotekey",
+  "payment_secret",
+  "payment_secret",
+  "basic_mpp",
+  "basic_mpp",
+  "option_support_large_channel",
+  "option_support_large_channel",
+] as const;
+
+const mapDecodedBolt11Features = (
+  featureBits: Record<number, "required" | "supported">
+) => {
+  return Object.fromEntries(
+    Object.entries(featureBits).map(([bitKey, status]) => {
+      const bit = Number(bitKey);
+      const knownName = BOLT11_FEATURE_NAMES[bit] ?? "";
+
+      return [
+        bit,
+        {
+          name: knownName,
+          isRequired: status === "required",
+          isKnown: knownName !== "",
+        },
+      ];
+    })
+  );
+};
+
+const mapDecodedBolt11RouteHints = (
+  routeHints: Array<
+    Array<{
+      pubkey: string;
+      shortChannelId: string;
+      feeBaseMsat: number;
+      feeProportionalMillionths: number;
+      cltvExpiryDelta: number;
+    }>
+  >
+) => {
+  return routeHints.map((route) => ({
+    hopHints: route.map((hop) => ({
+      nodeId: hop.pubkey,
+      chanId: BigInt(`0x${hop.shortChannelId}`).toString(),
+      feeBaseMsat: hop.feeBaseMsat,
+      feeProportionalMillionths: hop.feeProportionalMillionths,
+      cltvExpiryDelta: hop.cltvExpiryDelta,
+    })),
+  }));
 };
 
 const emitInvoice = (
@@ -728,7 +796,67 @@ const TurboLnd: Spec = {
   },
 
   decodePayReq: async (_data) => {
-    throw new Error("decodePayReq Not Implemented");
+    const request = fromBinary(PayReqStringSchema, base64Decode(_data));
+    try {
+      const decoded = decodeBolt11(request.payReq);
+      const numMsat = decoded.millisatoshis
+        ? BigInt(decoded.millisatoshis)
+        : 0n;
+
+      return base64Encode(
+        toBinary(
+          PayReqSchema,
+          create(PayReqSchema, {
+            destination: decoded.payee ?? "",
+            paymentHash: decoded.paymentHash ?? "",
+            numSatoshis: numMsat / 1000n,
+            timestamp: BigInt(decoded.timestamp),
+            expiry: BigInt(decoded.expiry ?? 3600),
+            description: decoded.description ?? "",
+            descriptionHash: decoded.descriptionHash ?? "",
+            fallbackAddr: "",
+            cltvExpiry: BigInt(decoded.minFinalCltvExpiry ?? 9),
+            routeHints: mapDecodedBolt11RouteHints(decoded.routeHints),
+            paymentAddr: decoded.paymentSecret
+              ? hexToUint8Array(decoded.paymentSecret)
+              : new Uint8Array(32),
+            numMsat,
+            features: mapDecodedBolt11Features(decoded.featureBits),
+            blindedPaths: [],
+          })
+        )
+      );
+    } catch {
+      const invoice = mockInvoices.find(
+        (candidate) => candidate.paymentRequest === request.payReq
+      );
+
+      if (!invoice) {
+        throw new Error("unable to decode payment request");
+      }
+
+      return base64Encode(
+        toBinary(
+          PayReqSchema,
+          create(PayReqSchema, {
+            destination: mockGetInfoResponse.identityPubkey,
+            paymentHash: uint8ArrayToHex(invoice.rHash),
+            numSatoshis: invoice.value,
+            timestamp: invoice.creationDate,
+            expiry: invoice.expiry,
+            description: invoice.memo,
+            descriptionHash: uint8ArrayToHex(invoice.descriptionHash),
+            fallbackAddr: invoice.fallbackAddr,
+            cltvExpiry: invoice.cltvExpiry,
+            routeHints: invoice.routeHints,
+            paymentAddr: invoice.paymentAddr,
+            numMsat: invoice.valueMsat,
+            features: invoice.features,
+            blindedPaths: [],
+          })
+        )
+      );
+    }
   },
 
   listPayments: async (_data) => {
