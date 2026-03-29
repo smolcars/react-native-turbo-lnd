@@ -8,7 +8,7 @@ const isWindows = os.platform() === "win32";
 if (isWindows) {
   const repoRoot = process.cwd();
   const hooksDir = path.join(repoRoot, ".git", "hooks");
-  const hookNames = ["pre-commit", "commit-msg"];
+  const hookNames = ["pre-commit", "commit-msg", "prepare-commit-msg"];
   const marker = "# Lefthook Windows Bin Fix";
 
   const patchBlock = `${marker}
