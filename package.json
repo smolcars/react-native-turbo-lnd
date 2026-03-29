@@ -161,6 +161,7 @@
     "prepack": "bun run build",
     "release": "release-it",
     "release:ci": "release-it --ci",
+    "sync-lnd-protos": "node ./scripts/sync-lnd-protos.cjs",
     "generate-codegen-specs": "node ./scripts/generate-codegen-specs.cjs",
     "generate-bindings": "bun run --cwd protoc-generator generate",
     "example-electrobun": "bun run --cwd example-electrobun",
