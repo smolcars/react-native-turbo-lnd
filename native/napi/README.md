@@ -3,9 +3,9 @@ package path.
 
 Layout:
 
-- `win32-x64/turbolnd_electrobun_napi.node`
-- `darwin-arm64/turbolnd_electrobun_napi.node`
-- `linux-x64/turbolnd_electrobun_napi.node`
+- `win32-x64/turbolnd_napi.node`
+- `darwin-arm64/turbolnd_napi.node`
+- `linux-x64/turbolnd_napi.node`
 
 The filename stays constant. Platform and architecture are encoded in the parent
 directory name.

@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const ADDON_FILENAME = "turbolnd_electrobun_napi.node";
+const ADDON_FILENAME = "turbolnd_napi.node";
 
 function getPlatformArchDir() {
   if (

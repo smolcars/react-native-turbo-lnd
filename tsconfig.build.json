@@ -1,14 +1,21 @@
 {
   "extends": "./tsconfig",
   "compilerOptions": {
+    "baseUrl": ".",
     "lib": ["esnext", "dom"],
     "noImplicitReturns": false,
     "noEmit": true,
     "outDir": "lib/typescript",
     "declaration": false,
-    "emitDeclarationOnly": false
+    "emitDeclarationOnly": false,
+    "types": ["node"],
+    "paths": {
+      "": ["./src/index"],
+      "electrobun/bun": ["./src/types/electrobun-bun.d.ts"],
+      "electrobun/view": ["./src/types/electrobun-view.d.ts"]
+    }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.d.ts"],
   "exclude": [
     "example",
     "protoc-generator",

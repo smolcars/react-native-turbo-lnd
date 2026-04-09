@@ -1,6 +1,6 @@
 import type { ElectrobunConfig } from "electrobun";
 
-const NAPI_ADDON_FILENAME = "turbolnd_electrobun_napi.node";
+const NAPI_ADDON_FILENAME = "turbolnd_napi.node";
 
 function isNapiBackendEnabled(): boolean {
   return process.env.TURBOLND_ELECTROBUN_BACKEND === "napi";

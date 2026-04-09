@@ -1,7 +1,7 @@
 {
   "targets": [
     {
-      "target_name": "turbolnd_electrobun_napi",
+      "target_name": "turbolnd_napi",
       "sources": [
         "src/addon.cc",
         "src/addon_api.cc",
