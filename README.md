@@ -35,7 +35,10 @@ lnd embedded inside an app.
 ✅ Jest mocks (all gRPC methods not yet mocked)
 ```
 
-An opinionated API `react-native-turbo-lnd` using protobuf-es bindings is
+> [!NOTE]
+> iOS Simulator is not supported right now.
+
+An opinionated API `react-native-turbo-lnd` using `protobuf-es` bindings is
 provided for lnd's protobufs, giving auto-complete and type-safety for all
 protobufs and gRPC methods.
 
