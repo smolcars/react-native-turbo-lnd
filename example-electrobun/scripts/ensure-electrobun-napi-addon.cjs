@@ -2,9 +2,9 @@ const fs = require("fs");
 const path = require("path");
 const { createRequire } = require("module");
 
-const ADDON_FILENAME = "turbolnd_electrobun_napi.node";
+const ADDON_FILENAME = "turbolnd_napi.node";
 const NAPI_BACKEND_NAME = "napi";
-const NAPI_ADDON_OVERRIDE_ENV_VAR = "TURBOLND_ELECTROBUN_NAPI_ADDON_PATH";
+const NAPI_ADDON_OVERRIDE_ENV_VAR = "TURBOLND_NAPI_ADDON_PATH";
 
 function getPlatformArchDir() {
   if (
