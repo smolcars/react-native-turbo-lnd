@@ -36,7 +36,8 @@ lnd embedded inside an app.
 ```
 
 > [!NOTE]
-> iOS Simulator is not supported right now.
+> Apple binaries are packaged as `Lndmobile.xcframework`. The iOS artifact
+> includes an `arm64` device slice and `arm64`/`x86_64` simulator slices.
 
 An opinionated API `react-native-turbo-lnd` using `protobuf-es` bindings is
 provided for lnd's protobufs, giving auto-complete and type-safety for all
@@ -142,13 +143,15 @@ defaultConfig {
 
 Download the latest `liblnd-ios.zip` or `liblnd-macos.zip` file from
 [smolcars/react-native-turbo-lnd/releases](https://github.com/smolcars/react-native-turbo-lnd/releases)
-and unzip it. Then rename `liblnd-fat.a` to `liblnd.a` and place it in
-`<project root>/node_modules/react-native-turbo-lnd/{ios|macos}/liblnd.a`.
-Then rerun `pod install` so CocoaPods picks up the vendored archive
+and unzip it. Then place `Lndmobile.xcframework` in
+`<project root>/node_modules/react-native-turbo-lnd/{ios|macos}/Lndmobile.xcframework`.
+Then rerun `pod install` so CocoaPods picks up the vendored XCFramework
 automatically.
 
-> Note: iOS Simulator is currently not supported by the CGO `lnd` bindings used here.
-> The current iOS archive is for real devices only.
+If your iOS app target is Objective-C-only and the linker fails with
+`__swift_FORCE_LOAD_$_swiftCompatibility56`, add an empty Swift file to the
+app target and choose `No` if Xcode asks to create a bridging header. Apps
+that already contain Swift usually do not need any extra setup.
 
 ### Windows:
 
@@ -315,7 +318,7 @@ For desktop runtimes, install the shared library for the current platform:
 - Linux: place `liblnd.so` where your runtime/addon can load it
 - macOS: place `liblnd.dylib` where your runtime/addon can load it
 
-The static Apple archive in `liblnd-macos.zip` is for React Native Apple builds
+The static Apple XCFramework in `liblnd-macos.zip` is for React Native Apple builds
 and cannot be loaded directly by the Electrobun desktop runtimes. Use
 `liblnd-macos-dylib.zip` on macOS instead.
 

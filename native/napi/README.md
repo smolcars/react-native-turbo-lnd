@@ -22,7 +22,7 @@ Runtime notes:
 - Windows uses `liblnd.dll`.
 - Linux uses `liblnd.so`.
 - macOS uses `liblnd.dylib`.
-- The static `liblnd-fat.a` archive used by the React Native Apple targets is
+- The static `Lndmobile.xcframework` bundle used by the React Native Apple targets is
   not sufficient for the N-API or Bun FFI runtimes on macOS.
 
 Release artifact notes:
@@ -31,6 +31,6 @@ Release artifact notes:
   React Native Windows flow.
 - `liblnd-linux.zip` contains the Linux desktop shared library.
 - `liblnd-macos-dylib.zip` contains the macOS desktop shared library.
-- `liblnd-macos.zip` contains the static Apple archive for the React Native
+- `liblnd-macos.zip` contains the static Apple XCFramework for the React Native
   Apple/macOS targets and cannot be loaded directly by the desktop N-API or
   Bun FFI runtimes.

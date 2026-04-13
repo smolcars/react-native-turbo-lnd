@@ -83,8 +83,9 @@ lib/
 
 # lnd
 liblnd.so
-liblnd.a
 liblnd.dll
+ios/Lndmobile.xcframework/
+macos/Lndmobile.xcframework/
 windows/ReactNativeTurboLnd/generated-liblnd/
 
 

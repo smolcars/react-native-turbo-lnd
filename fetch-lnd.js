@@ -160,6 +160,12 @@ async function replaceFile(sourcePath, targetPath) {
   console.log(`Copied ${sourcePath} to ${targetPath}`);
 }
 
+async function replaceDirectory(sourcePath, targetPath) {
+  await fsp.rm(targetPath, { recursive: true, force: true });
+  await fsp.cp(sourcePath, targetPath, { recursive: true });
+  console.log(`Copied ${sourcePath} to ${targetPath}`);
+}
+
 function warn(message) {
   console.warn(`${ANSI_YELLOW}Warning:${ANSI_RESET} ${message}`);
 }
@@ -273,11 +279,11 @@ async function setupAndroidBinaries() {
 }
 
 async function setupIOSBinaries() {
-  await setupAppleBinaries("ios", "liblnd-ios.zip");
+  await setupAppleXCFramework("ios", "liblnd-ios.zip");
 }
 
 async function setupMacOSBinaries() {
-  await setupAppleBinaries("macos", "liblnd-macos.zip");
+  await setupAppleXCFramework("macos", "liblnd-macos.zip");
 }
 
 async function setupMacOSDylibBinaries() {
@@ -291,7 +297,7 @@ async function setupLinuxBinaries() {
   await setupDesktopSharedLibraryBinaries("liblnd-linux.zip", "liblnd.so");
 }
 
-async function setupAppleBinaries(targetDir, artifactName) {
+async function setupAppleXCFramework(targetDir, artifactName) {
   const platformPath = path.join(packageRoot, targetDir);
   await fsp.mkdir(platformPath, { recursive: true });
 
@@ -301,15 +307,12 @@ async function setupAppleBinaries(targetDir, artifactName) {
     await verifyAssetChecksum(zipPath, artifactName);
     await unzip(zipPath, tempDir);
 
-    const sourcePath = path.join(tempDir, "liblnd-fat.a");
-    const targetPath = path.join(platformPath, "liblnd.a");
+    const sourcePath = path.join(tempDir, "Lndmobile.xcframework");
+    const targetPath = path.join(platformPath, "Lndmobile.xcframework");
 
     try {
       await fsp.access(sourcePath);
-      await replaceFile(sourcePath, targetPath);
-
-      const hPath = path.join(tempDir, "liblnd.h");
-      await removeFile(hPath);
+      await replaceDirectory(sourcePath, targetPath);
     } catch {
       warn(`Expected file ${sourcePath} not found`);
     }

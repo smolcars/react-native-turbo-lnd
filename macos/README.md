@@ -1,2 +1,2 @@
-This directory holds the optional macOS `liblnd.a` archive for React Native
-macOS builds.
+This directory holds the optional macOS `Lndmobile.xcframework` bundle for
+React Native macOS builds.
