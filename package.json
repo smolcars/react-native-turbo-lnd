@@ -1,6 +1,6 @@
 {
   "name": "react-native-turbo-lnd",
-  "version": "0.0.18",
+  "version": "0.0.19",
   "description": "C++ TurboModule for lnd! ⚡️",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
