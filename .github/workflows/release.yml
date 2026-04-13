@@ -211,9 +211,9 @@ jobs:
             bun run generate-bindings
             bun run generate-codegen-specs
 
-            rm -f ios/liblnd.a
+            rm -rf ios/Lndmobile.xcframework
             unzip -q "${RUNNER_TEMP}/native-ios/liblnd-ios.zip" -d "${RUNNER_TEMP}/native-ios/unpacked"
-            mv "${RUNNER_TEMP}/native-ios/unpacked/liblnd-fat.a" ios/liblnd.a
+            mv "${RUNNER_TEMP}/native-ios/unpacked/Lndmobile.xcframework" ios/Lndmobile.xcframework
 
             cd example/ios
             pod install
@@ -257,9 +257,9 @@ jobs:
   #     - name: Install macOS native artifact
   #       shell: bash
   #       run: |
-  #         rm -f macos/liblnd.a
-  #         unzip -q "${RUNNER_TEMP}/native-macos/liblnd-mac.zip" -d "${RUNNER_TEMP}/native-macos/unpacked"
-  #         mv "${RUNNER_TEMP}/native-macos/unpacked/liblnd-fat.a" macos/liblnd.a
+  #         rm -rf macos/Lndmobile.xcframework
+  #         unzip -q "${RUNNER_TEMP}/native-macos/liblnd-macos.zip" -d "${RUNNER_TEMP}/native-macos/unpacked"
+  #         mv "${RUNNER_TEMP}/native-macos/unpacked/Lndmobile.xcframework" macos/Lndmobile.xcframework
   #
   #     - name: Install CocoaPods for macOS example
   #       shell: bash
