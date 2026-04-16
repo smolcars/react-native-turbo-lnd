@@ -35,10 +35,6 @@ lnd embedded inside an app.
 ✅ Jest mocks (all gRPC methods not yet mocked)
 ```
 
-> [!NOTE]
-> Apple binaries are packaged as `Lndmobile.xcframework`. The iOS artifact
-> includes an `arm64` device slice and `arm64`/`x86_64` simulator slices.
-
 An opinionated API `react-native-turbo-lnd` using `protobuf-es` bindings is
 provided for lnd's protobufs, giving auto-complete and type-safety for all
 protobufs and gRPC methods.
