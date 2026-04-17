@@ -5,7 +5,8 @@
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
   "types": "lib/typescript/commonjs/src/index.d.ts",
-  "react-native": "src/index",
+  "react-native": "./lib/module/index",
+  "browser": "./lib/module/index.browser.js",
   "source": "src/index",
   "files": [
     "src",
@@ -35,6 +36,18 @@
   ],
   "exports": {
     ".": {
+      "browser": {
+        "import": {
+          "types": "./lib/typescript/module/src/index.browser.d.ts",
+          "default": "./lib/module/index.browser.js"
+        },
+        "require": {
+          "types": "./lib/typescript/commonjs/src/index.web.d.ts",
+          "default": "./lib/commonjs/index.web.js"
+        },
+        "default": "./lib/module/index.browser.js"
+      },
+      "react-native": "./lib/module/index.js",
       "require": {
         "types": "./lib/typescript/commonjs/src/index.d.ts",
         "default": "./lib/commonjs/index.js"
@@ -49,6 +62,18 @@
       "import": "./package.json"
     },
     "./core": {
+      "browser": {
+        "import": {
+          "types": "./lib/typescript/module/src/core/NativeTurboLnd.web.d.ts",
+          "default": "./lib/module/core/NativeTurboLnd.web.js"
+        },
+        "require": {
+          "types": "./lib/typescript/commonjs/src/core/NativeTurboLnd.metro-web.d.ts",
+          "default": "./lib/commonjs/core/NativeTurboLnd.metro-web.js"
+        },
+        "default": "./lib/module/core/NativeTurboLnd.web.js"
+      },
+      "react-native": "./lib/module/core/NativeTurboLnd.js",
       "require": {
         "types": "./lib/typescript/commonjs/src/core/NativeTurboLnd.d.ts",
         "default": "./lib/commonjs/core/NativeTurboLnd"
@@ -56,6 +81,28 @@
       "import": {
         "types": "./lib/typescript/module/src/core/NativeTurboLnd.d.ts",
         "default": "./lib/module/core/NativeTurboLnd"
+      }
+    },
+    "./wasm-load": {
+      "browser": {
+        "import": {
+          "types": "./lib/typescript/module/src/wasm-load.browser.d.ts",
+          "default": "./lib/module/wasm-load.browser.js"
+        },
+        "require": {
+          "types": "./lib/typescript/commonjs/src/wasm-load.web.d.ts",
+          "default": "./lib/commonjs/wasm-load.web.js"
+        },
+        "default": "./lib/module/wasm-load.browser.js"
+      },
+      "react-native": "./lib/module/wasm-load.js",
+      "require": {
+        "types": "./lib/typescript/commonjs/src/wasm-load.d.ts",
+        "default": "./lib/commonjs/wasm-load.js"
+      },
+      "import": {
+        "types": "./lib/typescript/module/src/wasm-load.d.ts",
+        "default": "./lib/module/wasm-load.js"
       }
     },
     "./mock": {
@@ -151,6 +198,8 @@
   },
   "scripts": {
     "example": "bun run --cwd example",
+    "example:web": "bun run --cwd example web",
+    "example:web:metro": "bun run --cwd example web:metro",
     "build": "bun run generate-bindings && bun run generate-codegen-specs && bun run bob",
     "bob": "bob build",
     "test": "bun test ./tests",

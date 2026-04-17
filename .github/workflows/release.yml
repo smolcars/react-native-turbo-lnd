@@ -30,6 +30,7 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   LND_REPOSITORY: hsjoberg/lnd
   LND_REF: 6fc085be1a4d434758b8f2f99bec21f00d167471
+  LND_WASM_REF: 74e4a26ea8df1ba677c2e023002bf8afeee0be10
 
 jobs:
   validate:
@@ -158,6 +159,45 @@ jobs:
         with:
           name: native-${{ matrix.target }}
           path: dist/${{ matrix.asset_name }}
+          if-no-files-found: error
+
+  wasm-artifact:
+    needs: validate
+    runs-on: ubuntu-self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Checkout pinned lnd wasm fork
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.LND_REPOSITORY }}
+          ref: ${{ env.LND_WASM_REF }}
+          path: .cache/lnd-wasm
+
+      - name: Build wasm artifact
+        shell: bash
+        run: |
+          nix develop --command bash -c '
+            set -euo pipefail
+            build_root="${GITHUB_WORKSPACE}/.cache/lnd-wasm"
+
+            cd "$build_root/lnrpc"
+            bash ./install_gen_tools.sh
+
+            mkdir -p "${GITHUB_WORKSPACE}/dist"
+            cd "$build_root"
+            make wasm
+
+            cd "$build_root/wasm/build"
+            zip -jq "${GITHUB_WORKSPACE}/dist/liblnd-web.zip" lndmobile.wasm wasm_exec.js
+          '
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wasm-web
+          path: dist/liblnd-web.zip
           if-no-files-found: error
 
   build-android:
@@ -316,6 +356,7 @@ jobs:
     needs:
       - build-android
       - build-ios
+      - wasm-artifact
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -356,6 +397,12 @@ jobs:
         with:
           pattern: native-*
           merge-multiple: true
+          path: ${{ runner.temp }}/release-assets
+
+      - name: Download wasm artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: wasm-web
           path: ${{ runner.temp }}/release-assets
 
       - name: Run release-it

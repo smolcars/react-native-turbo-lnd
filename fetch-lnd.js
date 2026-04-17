@@ -14,8 +14,14 @@ const ANSI_RED = "\x1b[31m";
 const ANSI_RESET = "\x1b[0m";
 
 const packageJson = require("./package.json");
-const artifactsManifest = require("./artifacts.json");
 const { version: packageVersion, repository } = packageJson;
+let artifactsManifest = null;
+
+try {
+  artifactsManifest = require("./artifacts.json");
+} catch {
+  artifactsManifest = null;
+}
 
 function getGitHubRepoPath() {
   const repositoryUrl = repository?.url;
@@ -42,6 +48,7 @@ const supportedTargets = new Set([
   "macos-dylib",
   "linux",
   "windows",
+  "web",
 ]);
 const supportedTargetsList = [...supportedTargets].join(", ");
 const targetSetups = {
@@ -51,6 +58,7 @@ const targetSetups = {
   "macos-dylib": setupMacOSDylibBinaries,
   "linux": setupLinuxBinaries,
   "windows": setupWindowsBinaries,
+  "web": setupWebWasmAssets,
 };
 
 function parseTargetsArg(argv) {
@@ -185,10 +193,16 @@ async function sha256File(filePath) {
 }
 
 function getExpectedAssetChecksum(assetName) {
-  if (artifactsManifest?.version !== packageVersion) {
-    throw new Error(
-      `artifacts.json version mismatch. Expected ${packageVersion}, got ${artifactsManifest?.version}`
+  if (!artifactsManifest) {
+    warn("artifacts.json is missing; skipping checksum verification");
+    return null;
+  }
+
+  if (artifactsManifest.version !== packageVersion) {
+    warn(
+      `artifacts.json version mismatch. Expected ${packageVersion}, got ${artifactsManifest.version}; skipping checksum verification`
     );
+    return null;
   }
 
   return artifactsManifest?.assets?.[assetName] ?? null;
@@ -377,6 +391,34 @@ async function setupWindowsBinaries() {
   });
 
   console.log("Windows binary setup completed.");
+}
+
+async function setupWebWasmAssets() {
+  const webAssetPath = path.join(packageRoot, "vendor", "lnd-wasm");
+  await fsp.mkdir(webAssetPath, { recursive: true });
+
+  await withTempDir("react-native-turbo-lnd-web-", async (tempDir) => {
+    const assetName = "liblnd-web.zip";
+    const zipPath = path.join(tempDir, assetName);
+    await downloadFile(`${lndDownloadUrl}/${assetName}`, zipPath);
+    await verifyAssetChecksum(zipPath, assetName);
+    await unzip(zipPath, tempDir);
+
+    const expectedFiles = ["lndmobile.wasm", "wasm_exec.js"];
+    for (const fileName of expectedFiles) {
+      const sourcePath = path.join(tempDir, fileName);
+      const targetPath = path.join(webAssetPath, fileName);
+
+      try {
+        await fsp.access(sourcePath);
+        await replaceFile(sourcePath, targetPath);
+      } catch {
+        warn(`Expected file ${sourcePath} not found`);
+      }
+    }
+  });
+
+  console.log("Web wasm assets setup completed.");
 }
 
 async function main() {

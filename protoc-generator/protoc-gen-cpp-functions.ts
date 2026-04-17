@@ -131,7 +131,10 @@ function generateCode(request: any): {
   cppHeaderContent: string;
   turboSpec: string;
   protobufEsWrapper: string;
+  protobufEsWrapperBrowser: string;
+  protobufEsWrapperWeb: string;
   protobufEsWrapperMock: string;
+  browserCoreManifest: string;
   protobufEsWrapperElectrobun: string;
   electrobunViewCore: string;
   electrobunBun: string;
@@ -144,6 +147,7 @@ function generateCode(request: any): {
   const electrobunUnaryMethods: string[] = [];
   const electrobunServerStreamingMethods: string[] = [];
   const electrobunBidiStreamingMethods: string[] = [];
+  const browserRpcMethodEntries = new Map<string, string>();
 
   const comments: Record<string, string> = {};
   request.proto_file.forEach((protoFile: ProtoFile) => {
@@ -179,6 +183,14 @@ function generateCode(request: any): {
               method.output_type.split(".");
             const isServerStreaming = method.server_streaming;
             const isClientStreaming = method.client_streaming;
+            const rpcMethodName =
+              serviceName === "Lightning" ||
+              serviceName === "WalletUnlocker" ||
+              serviceName === "State"
+                ? method.name
+                : serviceName + method.name;
+
+            browserRpcMethodEntries.set(methodName, rpcMethodName);
 
             if (!isServerStreaming && !isClientStreaming) {
               electrobunUnaryMethods.push(methodName);
@@ -598,6 +610,18 @@ export default TurboModuleRegistry.getEnforcing<Spec>("TurboLndModuleCxx");
     rootPrefix: ".",
     methodsSource,
   });
+  const protobufEsWrapperBrowser = buildProtobufEsWrapper({
+    contributorNotice,
+    backendModulePath: "./core/NativeTurboLnd.web",
+    rootPrefix: ".",
+    methodsSource,
+  });
+  const protobufEsWrapperWeb = buildProtobufEsWrapper({
+    contributorNotice,
+    backendModulePath: "./core/NativeTurboLnd.metro-web",
+    rootPrefix: ".",
+    methodsSource,
+  });
   const protobufEsWrapperMock = buildProtobufEsWrapper({
     contributorNotice,
     backendModulePath: "./mocks/index",
@@ -628,13 +652,37 @@ export default TurboModuleRegistry.getEnforcing<Spec>("TurboLndModuleCxx");
     serverStreamingMethods: uniqueServerStreamingMethods,
     bidiStreamingMethods: uniqueBidiStreamingMethods,
   });
+  const browserCoreManifest = `${contributorNotice}
+/* eslint-disable */
+
+export const unaryMethods = ${JSON.stringify(uniqueUnaryMethods, null, 2)} as const;
+export const serverStreamingMethods = ${JSON.stringify(
+    uniqueServerStreamingMethods,
+    null,
+    2
+  )} as const;
+export const bidiStreamingMethods = ${JSON.stringify(
+    uniqueBidiStreamingMethods,
+    null,
+    2
+  )} as const;
+
+export const rpcMethodNames = ${JSON.stringify(
+    Object.fromEntries(browserRpcMethodEntries),
+    null,
+    2
+  )} as const;
+`;
 
   return {
     cppContent,
     cppHeaderContent,
     turboSpec,
     protobufEsWrapper,
+    protobufEsWrapperBrowser,
+    protobufEsWrapperWeb,
     protobufEsWrapperMock,
+    browserCoreManifest,
     protobufEsWrapperElectrobun,
     electrobunViewCore,
     electrobunBun,
@@ -660,7 +708,10 @@ async function main() {
       cppHeaderContent,
       turboSpec,
       protobufEsWrapper,
+      protobufEsWrapperBrowser,
+      protobufEsWrapperWeb,
       protobufEsWrapperMock,
+      browserCoreManifest,
       protobufEsWrapperElectrobun,
       electrobunViewCore,
       electrobunBun,
@@ -686,8 +737,20 @@ async function main() {
           content: protobufEsWrapper,
         },
         {
+          name: "index.browser.ts",
+          content: protobufEsWrapperBrowser,
+        },
+        {
+          name: "index.web.ts",
+          content: protobufEsWrapperWeb,
+        },
+        {
           name: "mock.ts",
           content: protobufEsWrapperMock,
+        },
+        {
+          name: "core/NativeTurboLnd.browser-manifest.ts",
+          content: browserCoreManifest,
         },
         {
           name: "electrobun/view.ts",

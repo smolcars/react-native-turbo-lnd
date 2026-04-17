@@ -47,6 +47,10 @@ cp \
 cp \
   ./build/index.ts ../src/index.ts && \
 cp \
+  ./build/index.browser.ts ../src/index.browser.ts && \
+cp \
+  ./build/index.web.ts ../src/index.web.ts && \
+cp \
   ./build/mock.ts ../src/mock.ts && \
 cp \
   ./build/electrobun/view.ts ../src/electrobun/view.ts && \
@@ -58,6 +62,8 @@ cp \
   ./build/electrobun/rpc-schema.ts ../src/electrobun/rpc-schema.ts && \
 cp \
   ./build/core/NativeTurboLnd.ts ../src/core/NativeTurboLnd.ts && \
+cp \
+  ./build/core/NativeTurboLnd.browser-manifest.ts ../src/core/NativeTurboLnd.browser-manifest.ts && \
 cp -r \
   ./build/proto ../src/
 

@@ -86,12 +86,11 @@ liblnd.so
 liblnd.a
 liblnd.dll
 windows/ReactNativeTurboLnd/generated-liblnd/
-
+vendor/lnd-wasm
 
 # Generated files
 /example/src/proto
 /src/proto
-/src/core
 
 # example-electrobun
 example-electrobun/dist/
@@ -99,3 +98,6 @@ example-electrobun/artifacts/
 
 # Nix
 .direnv/
+
+# example web
+example/dist

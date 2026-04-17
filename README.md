@@ -30,8 +30,8 @@ lnd embedded inside an app.
 ✅ iOS
 ✅ macOS
 ✅ Windows
+✅ Web (worker + OPFS)
 ✅ Electrobun (Windows, Linux, macOS) [WIP]
-🚫 Web
 ✅ Jest mocks (all gRPC methods not yet mocked)
 ```
 
@@ -85,10 +85,10 @@ package-owned paths under `node_modules/react-native-turbo-lnd`.
 You can override that with `--targets=...`, for example:
 
 ```sh
-node node_modules/react-native-turbo-lnd/fetch-lnd.js --targets=android,ios,macos,macos-dylib,linux,windows
+node node_modules/react-native-turbo-lnd/fetch-lnd.js --targets=android,ios,macos,macos-dylib,linux,windows,web
 ```
 
-Supported targets are `android`, `ios`, `macos`, `macos-dylib`, `linux`, and `windows`.
+Supported targets are `android`, `ios`, `macos`, `macos-dylib`, `linux`, `windows`, and `web`.
 
 <details>
 <summary>Download and place libs yourself</summary>
@@ -210,12 +210,52 @@ export default function App() {
 
 ```
 
+## Web usage
+
+Browser support uses a dedicated Web Worker plus OPFS. Load the wasm runtime
+explicitly before calling any lnd API:
+
+```ts
+import { loadWasmRuntime } from "react-native-turbo-lnd/wasm-load";
+import { getInfo, start } from "react-native-turbo-lnd";
+
+await loadWasmRuntime();
+
+await start(
+  `--lnddir="/lnd/" --noseedbackup --nolisten --bitcoin.active --bitcoin.mainnet --bitcoin.node=neutrino --norest --no-rest-tls --nobootstrap --no-macaroons --tlsdisableautofill --rpclisten=127.0.0.1:10009 --restlisten=127.0.0.1:8080 --tor.socks=127.0.0.1:9050 --tor.control=127.0.0.1:9051`
+);
+
+const info = await getInfo({});
+console.log(info.syncedToChain);
+```
+
+Notes:
+
+- Web currently supports the worker + OPFS runtime only.
+- Call `loadWasmRuntime()` once during app startup before using the main API.
+- If the wasm assets were not installed yet, run
+  `node node_modules/react-native-turbo-lnd/fetch-lnd.js --targets=web`.
+- Vite/Webpack are the primary browser targets today.
+- Expo Web / Metro Web currently require extra static-asset config. See
+  [docs/wasm.md](./docs/wasm.md).
+- Web support is still experimental and browser persistence should not be
+  treated as fully durable user storage.
+- See [docs/wasm.md](./docs/wasm.md) for browser runtime details, WebSocket
+  proxying, OPFS behavior, and logging flags.
+
 ## Building your own lnd binaries
 
 > [!NOTE]
 > If you wish to compile your own lnd binaries, you can follow the instructions
 > [here](https://github.com/hsjoberg/lnd/tree/cgo/mobile#cgo-build).
 > The lnd CGO backend is still a work in progress and subject to change.
+
+> [!NOTE]
+> To build the web artifact manually, use the wasm-enabled lnd branch at
+> [github.com/hsjoberg/lnd/tree/wasm](https://github.com/hsjoberg/lnd/tree/wasm),
+> run `make wasm`, then copy `wasm/build/lndmobile.wasm` and
+> `wasm/build/wasm_exec.js` into
+> `node_modules/react-native-turbo-lnd/vendor/lnd-wasm/`.
 
 ## Electrobun
 

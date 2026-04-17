@@ -42,10 +42,33 @@ function walk(dir) {
   });
 }
 
+function isWindowsModuleSpecFile(filePath) {
+  const fileName = path.basename(filePath);
+
+  if (!/\.(ts|tsx)$/.test(fileName) || !fileName.startsWith("Native")) {
+    return false;
+  }
+
+  if (
+    fileName.includes(".web.") ||
+    fileName.includes(".metro-web.") ||
+    fileName.includes(".browser-manifest.")
+  ) {
+    return false;
+  }
+
+  const source = fs.readFileSync(filePath, "utf8");
+
+  return (
+    /interface\s+Spec\s+extends\s+TurboModule\b/.test(source) &&
+    /TurboModuleRegistry\.getEnforcing<\s*Spec\s*>/.test(source)
+  );
+}
+
 function getWindowsSpecFiles() {
   return walk(codegenSrcDir)
-    .filter((filePath) => /\.(ts|tsx)$/.test(filePath))
-    .filter((filePath) => path.basename(filePath).startsWith("Native"))
+    .filter(isWindowsModuleSpecFile)
+    .sort()
     .map((filePath) => path.relative(projectRoot, filePath));
 }
 

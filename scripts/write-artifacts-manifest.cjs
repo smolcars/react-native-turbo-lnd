@@ -11,6 +11,7 @@ const ARTIFACT_FILENAMES = [
   "liblnd-macos-dylib.zip",
   "liblnd-linux.zip",
   "liblnd-windows.zip",
+  "liblnd-web.zip",
 ];
 
 function sha256File(filePath) {

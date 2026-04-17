@@ -6,6 +6,10 @@
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "start": "react-native start",
+    "web:metro": "react-native start --config metro.web.config.js --port 8081",
+    "web": "vite",
+    "web:build": "vite build",
+    "web:preview": "vite preview",
     "build:android": "cd android && ./gradlew assembleDebug --no-daemon --console=plain -PreactNativeArchitectures=arm64-v8a",
     "build:ios": "cd ios && xcodebuild -workspace TurboLndExample.xcworkspace -scheme TurboLndExample -configuration Debug -sdk iphonesimulator CC=clang CPLUSPLUS=clang++ LD=clang LDPLUSPLUS=clang++ GCC_OPTIMIZATION_LEVEL=0 GCC_PRECOMPILE_PREFIX_HEADER=YES ASSETCATALOG_COMPILER_OPTIMIZATION=time DEBUG_INFORMATION_FORMAT=dwarf COMPILER_INDEX_STORE_ENABLE=NO",
     "generate-protos": "@bufbuild/buf generate",
@@ -16,10 +20,13 @@
     "@bufbuild/buf": "^1.66.0",
     "@bufbuild/protobuf": "^2.0.0",
     "@bufbuild/protoc-gen-es": "^2.0.0",
+    "react-native-turbo-lnd": "file:..",
     "base64-js": "^1.5.1",
     "fast-text-encoding": "^1.0.6",
     "react": "19.2.3",
+    "react-dom": "19.2.3",
     "react-native": "0.84.1",
+    "react-native-web": "^0.21.2",
     "@react-native/codegen": "0.84.1",
     "react-native-windows": "0.82.1"
   },
@@ -36,8 +43,12 @@
     "@react-native/metro-config": "0.84.1",
     "@react-native/typescript-config": "0.84.1",
     "babel-plugin-module-resolver": "^5.0.0",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
     "react-native-monorepo-config": "^0.3.3",
-    "@rnx-kit/jest-preset": "^0.1.17"
+    "@rnx-kit/jest-preset": "^0.1.17",
+    "typescript": "^5.8.3",
+    "vite": "^8.0.2"
   },
   "engines": {
     "node": ">= 22.11.0"
