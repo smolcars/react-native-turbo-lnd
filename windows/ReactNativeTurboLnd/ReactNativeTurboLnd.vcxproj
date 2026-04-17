@@ -171,7 +171,9 @@
       Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)generate-liblnd-importlib.ps1&quot; -DllPath &quot;$(LndDllPath)&quot; -OutDefPath &quot;$(GeneratedLndDefPath)&quot; -OutLibPath &quot;$(GeneratedLndImportLibPath)&quot; -VCToolsInstallDir &quot;$(NormalizedVCToolsInstallDir)&quot; -ToolArch &quot;$(LndToolArch)&quot; -Machine &quot;$(LndLibMachine)&quot;" />
   </Target>
   <Target Name="CopyLndRuntime" AfterTargets="Build" Condition="'$(LndDllPath)' != '' and Exists('$(LndDllPath)')">
+    <MakeDir Directories="$(OutDir)$(MSBuildProjectName)\" />
     <Copy SourceFiles="$(LndDllPath)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(LndDllPath)" DestinationFolder="$(OutDir)$(MSBuildProjectName)\" SkipUnchangedFiles="true" />
   </Target>
   <Target Name="ReportLndArtifacts" BeforeTargets="PrepareForBuild">
     <Message Importance="High" Text="[react-native-turbo-lnd] Windows build using $(ResolvedLndImportLibPath) and $(LndDllPath)" />
