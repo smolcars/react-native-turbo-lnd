@@ -647,22 +647,6 @@ const TurboLnd: Spec = {
     throw new Error("abandonChannel Not Implemented");
   },
 
-  sendPayment: (_onResponse, _onError) => {
-    throw new Error("sendPayment Not Implemented");
-  },
-
-  sendPaymentSync: async (_data) => {
-    throw new Error("sendPaymentSync Not Implemented");
-  },
-
-  sendToRoute: (_onResponse, _onError) => {
-    throw new Error("sendToRoute Not Implemented");
-  },
-
-  sendToRouteSync: async (_data) => {
-    throw new Error("sendToRouteSync Not Implemented");
-  },
-
   addInvoice: async (_data) => {
     const request = fromBinary(InvoiceSchema, base64Decode(_data));
     const addIndex = nextInvoiceAddIndex;
@@ -992,6 +976,14 @@ const TurboLnd: Spec = {
     return () => {};
   },
 
+  sendOnionMessage: async (_data) => {
+    throw new Error("sendOnionMessage Not Implemented");
+  },
+
+  subscribeOnionMessages: (_data, _onResponse, _onError) => {
+    throw new Error("subscribeOnionMessages Not Implemented");
+  },
+
   listAliases: async (_data) => {
     throw new Error("listAliases Not Implemented");
   },
@@ -1158,10 +1150,6 @@ const TurboLnd: Spec = {
     throw new Error("routerEstimateRouteFee Not Implemented");
   },
 
-  routerSendToRoute: async (_data) => {
-    throw new Error("routerSendToRoute Not Implemented");
-  },
-
   routerSendToRouteV2: async (_data) => {
     throw new Error("routerSendToRouteV2 Not Implemented");
   },
@@ -1196,14 +1184,6 @@ const TurboLnd: Spec = {
 
   routerSubscribeHtlcEvents: (_data, _onResponse, _onError) => {
     throw new Error("routerSubscribeHtlcEvents Not Implemented");
-  },
-
-  routerSendPayment: (_data, _onResponse, _onError) => {
-    throw new Error("routerSendPayment Not Implemented");
-  },
-
-  routerTrackPayment: (_data, _onResponse, _onError) => {
-    throw new Error("routerTrackPayment Not Implemented");
   },
 
   routerHtlcInterceptor: (_onResponse, _onError) => {
@@ -1244,6 +1224,14 @@ const TurboLnd: Spec = {
 
   signerMuSig2RegisterNonces: async (_data) => {
     throw new Error("signerMuSig2RegisterNonces Not Implemented");
+  },
+
+  signerMuSig2RegisterCombinedNonce: async (_data) => {
+    throw new Error("signerMuSig2RegisterCombinedNonce Not Implemented");
+  },
+
+  signerMuSig2GetCombinedNonce: async (_data) => {
+    throw new Error("signerMuSig2GetCombinedNonce Not Implemented");
   },
 
   signerMuSig2Sign: async (_data) => {
@@ -1420,6 +1408,10 @@ const TurboLnd: Spec = {
         })
       )
     );
+  },
+
+  routerDeleteForwardingHistory: async (_data) => {
+    throw new Error("routerDeleteForwardingHistory Not Implemented");
   },
 
   walletKitGetTransaction: async (_data) => {

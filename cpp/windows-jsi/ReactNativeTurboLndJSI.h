@@ -98,10 +98,6 @@ protected:
     methodMap_["channelAcceptor"] = MethodMetadata {.argCount = 2, .invoker = __channelAcceptor};
     methodMap_["closeChannel"] = MethodMetadata {.argCount = 3, .invoker = __closeChannel};
     methodMap_["abandonChannel"] = MethodMetadata {.argCount = 1, .invoker = __abandonChannel};
-    methodMap_["sendPayment"] = MethodMetadata {.argCount = 2, .invoker = __sendPayment};
-    methodMap_["sendPaymentSync"] = MethodMetadata {.argCount = 1, .invoker = __sendPaymentSync};
-    methodMap_["sendToRoute"] = MethodMetadata {.argCount = 2, .invoker = __sendToRoute};
-    methodMap_["sendToRouteSync"] = MethodMetadata {.argCount = 1, .invoker = __sendToRouteSync};
     methodMap_["addInvoice"] = MethodMetadata {.argCount = 1, .invoker = __addInvoice};
     methodMap_["listInvoices"] = MethodMetadata {.argCount = 1, .invoker = __listInvoices};
     methodMap_["lookupInvoice"] = MethodMetadata {.argCount = 1, .invoker = __lookupInvoice};
@@ -136,6 +132,8 @@ protected:
     methodMap_["registerRPCMiddleware"] = MethodMetadata {.argCount = 2, .invoker = __registerRPCMiddleware};
     methodMap_["sendCustomMessage"] = MethodMetadata {.argCount = 1, .invoker = __sendCustomMessage};
     methodMap_["subscribeCustomMessages"] = MethodMetadata {.argCount = 3, .invoker = __subscribeCustomMessages};
+    methodMap_["sendOnionMessage"] = MethodMetadata {.argCount = 1, .invoker = __sendOnionMessage};
+    methodMap_["subscribeOnionMessages"] = MethodMetadata {.argCount = 3, .invoker = __subscribeOnionMessages};
     methodMap_["listAliases"] = MethodMetadata {.argCount = 1, .invoker = __listAliases};
     methodMap_["lookupHtlcResolution"] = MethodMetadata {.argCount = 1, .invoker = __lookupHtlcResolution};
     methodMap_["genSeed"] = MethodMetadata {.argCount = 1, .invoker = __genSeed};
@@ -170,7 +168,6 @@ protected:
     methodMap_["routerTrackPaymentV2"] = MethodMetadata {.argCount = 3, .invoker = __routerTrackPaymentV2};
     methodMap_["routerTrackPayments"] = MethodMetadata {.argCount = 3, .invoker = __routerTrackPayments};
     methodMap_["routerEstimateRouteFee"] = MethodMetadata {.argCount = 1, .invoker = __routerEstimateRouteFee};
-    methodMap_["routerSendToRoute"] = MethodMetadata {.argCount = 1, .invoker = __routerSendToRoute};
     methodMap_["routerSendToRouteV2"] = MethodMetadata {.argCount = 1, .invoker = __routerSendToRouteV2};
     methodMap_["routerResetMissionControl"] = MethodMetadata {.argCount = 1, .invoker = __routerResetMissionControl};
     methodMap_["routerQueryMissionControl"] = MethodMetadata {.argCount = 1, .invoker = __routerQueryMissionControl};
@@ -180,13 +177,12 @@ protected:
     methodMap_["routerQueryProbability"] = MethodMetadata {.argCount = 1, .invoker = __routerQueryProbability};
     methodMap_["routerBuildRoute"] = MethodMetadata {.argCount = 1, .invoker = __routerBuildRoute};
     methodMap_["routerSubscribeHtlcEvents"] = MethodMetadata {.argCount = 3, .invoker = __routerSubscribeHtlcEvents};
-    methodMap_["routerSendPayment"] = MethodMetadata {.argCount = 3, .invoker = __routerSendPayment};
-    methodMap_["routerTrackPayment"] = MethodMetadata {.argCount = 3, .invoker = __routerTrackPayment};
     methodMap_["routerHtlcInterceptor"] = MethodMetadata {.argCount = 2, .invoker = __routerHtlcInterceptor};
     methodMap_["routerUpdateChanStatus"] = MethodMetadata {.argCount = 1, .invoker = __routerUpdateChanStatus};
     methodMap_["routerXAddLocalChanAliases"] = MethodMetadata {.argCount = 1, .invoker = __routerXAddLocalChanAliases};
     methodMap_["routerXDeleteLocalChanAliases"] = MethodMetadata {.argCount = 1, .invoker = __routerXDeleteLocalChanAliases};
     methodMap_["routerXFindBaseLocalChanAlias"] = MethodMetadata {.argCount = 1, .invoker = __routerXFindBaseLocalChanAlias};
+    methodMap_["routerDeleteForwardingHistory"] = MethodMetadata {.argCount = 1, .invoker = __routerDeleteForwardingHistory};
     methodMap_["signerSignOutputRaw"] = MethodMetadata {.argCount = 1, .invoker = __signerSignOutputRaw};
     methodMap_["signerComputeInputScript"] = MethodMetadata {.argCount = 1, .invoker = __signerComputeInputScript};
     methodMap_["signerSignMessage"] = MethodMetadata {.argCount = 1, .invoker = __signerSignMessage};
@@ -195,6 +191,8 @@ protected:
     methodMap_["signerMuSig2CombineKeys"] = MethodMetadata {.argCount = 1, .invoker = __signerMuSig2CombineKeys};
     methodMap_["signerMuSig2CreateSession"] = MethodMetadata {.argCount = 1, .invoker = __signerMuSig2CreateSession};
     methodMap_["signerMuSig2RegisterNonces"] = MethodMetadata {.argCount = 1, .invoker = __signerMuSig2RegisterNonces};
+    methodMap_["signerMuSig2RegisterCombinedNonce"] = MethodMetadata {.argCount = 1, .invoker = __signerMuSig2RegisterCombinedNonce};
+    methodMap_["signerMuSig2GetCombinedNonce"] = MethodMetadata {.argCount = 1, .invoker = __signerMuSig2GetCombinedNonce};
     methodMap_["signerMuSig2Sign"] = MethodMetadata {.argCount = 1, .invoker = __signerMuSig2Sign};
     methodMap_["signerMuSig2CombineSig"] = MethodMetadata {.argCount = 1, .invoker = __signerMuSig2CombineSig};
     methodMap_["signerMuSig2Cleanup"] = MethodMetadata {.argCount = 1, .invoker = __signerMuSig2Cleanup};
@@ -490,40 +488,6 @@ private:
       count <= 0 ? throw jsi::JSError(rt, "Expected argument in position 0 to be passed") : args[0].asString(rt));
   }
 
-  static jsi::Value __sendPayment(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
-    static_assert(
-      bridging::getParameterCount(&T::sendPayment) == 3,
-      "Expected sendPayment(...) to have 3 parameters");
-    return bridging::callFromJs<jsi::Object>(rt, &T::sendPayment,  static_cast<NativeTurboLndCxxSpec*>(&turboModule)->jsInvoker_, static_cast<T*>(&turboModule),
-      count <= 0 ? throw jsi::JSError(rt, "Expected argument in position 0 to be passed") : args[0].asObject(rt).asFunction(rt),
-      count <= 1 ? throw jsi::JSError(rt, "Expected argument in position 1 to be passed") : args[1].asObject(rt).asFunction(rt));
-  }
-
-  static jsi::Value __sendPaymentSync(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
-    static_assert(
-      bridging::getParameterCount(&T::sendPaymentSync) == 2,
-      "Expected sendPaymentSync(...) to have 2 parameters");
-    return bridging::callFromJs<jsi::Value>(rt, &T::sendPaymentSync,  static_cast<NativeTurboLndCxxSpec*>(&turboModule)->jsInvoker_, static_cast<T*>(&turboModule),
-      count <= 0 ? throw jsi::JSError(rt, "Expected argument in position 0 to be passed") : args[0].asString(rt));
-  }
-
-  static jsi::Value __sendToRoute(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
-    static_assert(
-      bridging::getParameterCount(&T::sendToRoute) == 3,
-      "Expected sendToRoute(...) to have 3 parameters");
-    return bridging::callFromJs<jsi::Object>(rt, &T::sendToRoute,  static_cast<NativeTurboLndCxxSpec*>(&turboModule)->jsInvoker_, static_cast<T*>(&turboModule),
-      count <= 0 ? throw jsi::JSError(rt, "Expected argument in position 0 to be passed") : args[0].asObject(rt).asFunction(rt),
-      count <= 1 ? throw jsi::JSError(rt, "Expected argument in position 1 to be passed") : args[1].asObject(rt).asFunction(rt));
-  }
-
-  static jsi::Value __sendToRouteSync(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
-    static_assert(
-      bridging::getParameterCount(&T::sendToRouteSync) == 2,
-      "Expected sendToRouteSync(...) to have 2 parameters");
-    return bridging::callFromJs<jsi::Value>(rt, &T::sendToRouteSync,  static_cast<NativeTurboLndCxxSpec*>(&turboModule)->jsInvoker_, static_cast<T*>(&turboModule),
-      count <= 0 ? throw jsi::JSError(rt, "Expected argument in position 0 to be passed") : args[0].asString(rt));
-  }
-
   static jsi::Value __addInvoice(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
     static_assert(
       bridging::getParameterCount(&T::addInvoice) == 2,
@@ -800,6 +764,24 @@ private:
       bridging::getParameterCount(&T::subscribeCustomMessages) == 4,
       "Expected subscribeCustomMessages(...) to have 4 parameters");
     return bridging::callFromJs<jsi::Function>(rt, &T::subscribeCustomMessages,  static_cast<NativeTurboLndCxxSpec*>(&turboModule)->jsInvoker_, static_cast<T*>(&turboModule),
+      count <= 0 ? throw jsi::JSError(rt, "Expected argument in position 0 to be passed") : args[0].asString(rt),
+      count <= 1 ? throw jsi::JSError(rt, "Expected argument in position 1 to be passed") : args[1].asObject(rt).asFunction(rt),
+      count <= 2 ? throw jsi::JSError(rt, "Expected argument in position 2 to be passed") : args[2].asObject(rt).asFunction(rt));
+  }
+
+  static jsi::Value __sendOnionMessage(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
+    static_assert(
+      bridging::getParameterCount(&T::sendOnionMessage) == 2,
+      "Expected sendOnionMessage(...) to have 2 parameters");
+    return bridging::callFromJs<jsi::Value>(rt, &T::sendOnionMessage,  static_cast<NativeTurboLndCxxSpec*>(&turboModule)->jsInvoker_, static_cast<T*>(&turboModule),
+      count <= 0 ? throw jsi::JSError(rt, "Expected argument in position 0 to be passed") : args[0].asString(rt));
+  }
+
+  static jsi::Value __subscribeOnionMessages(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
+    static_assert(
+      bridging::getParameterCount(&T::subscribeOnionMessages) == 4,
+      "Expected subscribeOnionMessages(...) to have 4 parameters");
+    return bridging::callFromJs<jsi::Function>(rt, &T::subscribeOnionMessages,  static_cast<NativeTurboLndCxxSpec*>(&turboModule)->jsInvoker_, static_cast<T*>(&turboModule),
       count <= 0 ? throw jsi::JSError(rt, "Expected argument in position 0 to be passed") : args[0].asString(rt),
       count <= 1 ? throw jsi::JSError(rt, "Expected argument in position 1 to be passed") : args[1].asObject(rt).asFunction(rt),
       count <= 2 ? throw jsi::JSError(rt, "Expected argument in position 2 to be passed") : args[2].asObject(rt).asFunction(rt));
@@ -1094,14 +1076,6 @@ private:
       count <= 0 ? throw jsi::JSError(rt, "Expected argument in position 0 to be passed") : args[0].asString(rt));
   }
 
-  static jsi::Value __routerSendToRoute(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
-    static_assert(
-      bridging::getParameterCount(&T::routerSendToRoute) == 2,
-      "Expected routerSendToRoute(...) to have 2 parameters");
-    return bridging::callFromJs<jsi::Value>(rt, &T::routerSendToRoute,  static_cast<NativeTurboLndCxxSpec*>(&turboModule)->jsInvoker_, static_cast<T*>(&turboModule),
-      count <= 0 ? throw jsi::JSError(rt, "Expected argument in position 0 to be passed") : args[0].asString(rt));
-  }
-
   static jsi::Value __routerSendToRouteV2(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
     static_assert(
       bridging::getParameterCount(&T::routerSendToRouteV2) == 2,
@@ -1176,26 +1150,6 @@ private:
       count <= 2 ? throw jsi::JSError(rt, "Expected argument in position 2 to be passed") : args[2].asObject(rt).asFunction(rt));
   }
 
-  static jsi::Value __routerSendPayment(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
-    static_assert(
-      bridging::getParameterCount(&T::routerSendPayment) == 4,
-      "Expected routerSendPayment(...) to have 4 parameters");
-    return bridging::callFromJs<jsi::Function>(rt, &T::routerSendPayment,  static_cast<NativeTurboLndCxxSpec*>(&turboModule)->jsInvoker_, static_cast<T*>(&turboModule),
-      count <= 0 ? throw jsi::JSError(rt, "Expected argument in position 0 to be passed") : args[0].asString(rt),
-      count <= 1 ? throw jsi::JSError(rt, "Expected argument in position 1 to be passed") : args[1].asObject(rt).asFunction(rt),
-      count <= 2 ? throw jsi::JSError(rt, "Expected argument in position 2 to be passed") : args[2].asObject(rt).asFunction(rt));
-  }
-
-  static jsi::Value __routerTrackPayment(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
-    static_assert(
-      bridging::getParameterCount(&T::routerTrackPayment) == 4,
-      "Expected routerTrackPayment(...) to have 4 parameters");
-    return bridging::callFromJs<jsi::Function>(rt, &T::routerTrackPayment,  static_cast<NativeTurboLndCxxSpec*>(&turboModule)->jsInvoker_, static_cast<T*>(&turboModule),
-      count <= 0 ? throw jsi::JSError(rt, "Expected argument in position 0 to be passed") : args[0].asString(rt),
-      count <= 1 ? throw jsi::JSError(rt, "Expected argument in position 1 to be passed") : args[1].asObject(rt).asFunction(rt),
-      count <= 2 ? throw jsi::JSError(rt, "Expected argument in position 2 to be passed") : args[2].asObject(rt).asFunction(rt));
-  }
-
   static jsi::Value __routerHtlcInterceptor(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
     static_assert(
       bridging::getParameterCount(&T::routerHtlcInterceptor) == 3,
@@ -1234,6 +1188,14 @@ private:
       bridging::getParameterCount(&T::routerXFindBaseLocalChanAlias) == 2,
       "Expected routerXFindBaseLocalChanAlias(...) to have 2 parameters");
     return bridging::callFromJs<jsi::Value>(rt, &T::routerXFindBaseLocalChanAlias,  static_cast<NativeTurboLndCxxSpec*>(&turboModule)->jsInvoker_, static_cast<T*>(&turboModule),
+      count <= 0 ? throw jsi::JSError(rt, "Expected argument in position 0 to be passed") : args[0].asString(rt));
+  }
+
+  static jsi::Value __routerDeleteForwardingHistory(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
+    static_assert(
+      bridging::getParameterCount(&T::routerDeleteForwardingHistory) == 2,
+      "Expected routerDeleteForwardingHistory(...) to have 2 parameters");
+    return bridging::callFromJs<jsi::Value>(rt, &T::routerDeleteForwardingHistory,  static_cast<NativeTurboLndCxxSpec*>(&turboModule)->jsInvoker_, static_cast<T*>(&turboModule),
       count <= 0 ? throw jsi::JSError(rt, "Expected argument in position 0 to be passed") : args[0].asString(rt));
   }
 
@@ -1298,6 +1260,22 @@ private:
       bridging::getParameterCount(&T::signerMuSig2RegisterNonces) == 2,
       "Expected signerMuSig2RegisterNonces(...) to have 2 parameters");
     return bridging::callFromJs<jsi::Value>(rt, &T::signerMuSig2RegisterNonces,  static_cast<NativeTurboLndCxxSpec*>(&turboModule)->jsInvoker_, static_cast<T*>(&turboModule),
+      count <= 0 ? throw jsi::JSError(rt, "Expected argument in position 0 to be passed") : args[0].asString(rt));
+  }
+
+  static jsi::Value __signerMuSig2RegisterCombinedNonce(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
+    static_assert(
+      bridging::getParameterCount(&T::signerMuSig2RegisterCombinedNonce) == 2,
+      "Expected signerMuSig2RegisterCombinedNonce(...) to have 2 parameters");
+    return bridging::callFromJs<jsi::Value>(rt, &T::signerMuSig2RegisterCombinedNonce,  static_cast<NativeTurboLndCxxSpec*>(&turboModule)->jsInvoker_, static_cast<T*>(&turboModule),
+      count <= 0 ? throw jsi::JSError(rt, "Expected argument in position 0 to be passed") : args[0].asString(rt));
+  }
+
+  static jsi::Value __signerMuSig2GetCombinedNonce(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
+    static_assert(
+      bridging::getParameterCount(&T::signerMuSig2GetCombinedNonce) == 2,
+      "Expected signerMuSig2GetCombinedNonce(...) to have 2 parameters");
+    return bridging::callFromJs<jsi::Value>(rt, &T::signerMuSig2GetCombinedNonce,  static_cast<NativeTurboLndCxxSpec*>(&turboModule)->jsInvoker_, static_cast<T*>(&turboModule),
       count <= 0 ? throw jsi::JSError(rt, "Expected argument in position 0 to be passed") : args[0].asString(rt));
   }
 

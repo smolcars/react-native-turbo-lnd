@@ -202,32 +202,6 @@ static jsi::Value __hostFunction_NativeTurboLndCxxSpecJSI_abandonChannel(jsi::Ru
     (count > 0 || (throw jsi::JSError(rt, "Expected argument in position 0 to be passed"), false), args[0].asString(rt))
   );
 }
-static jsi::Value __hostFunction_NativeTurboLndCxxSpecJSI_sendPayment(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
-  return static_cast<NativeTurboLndCxxSpecJSI *>(&turboModule)->sendPayment(
-    rt,
-    (count > 0 || (throw jsi::JSError(rt, "Expected argument in position 0 to be passed"), false), args[0].asObject(rt).asFunction(rt)),
-    (count > 1 || (throw jsi::JSError(rt, "Expected argument in position 1 to be passed"), false), args[1].asObject(rt).asFunction(rt))
-  );
-}
-static jsi::Value __hostFunction_NativeTurboLndCxxSpecJSI_sendPaymentSync(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
-  return static_cast<NativeTurboLndCxxSpecJSI *>(&turboModule)->sendPaymentSync(
-    rt,
-    (count > 0 || (throw jsi::JSError(rt, "Expected argument in position 0 to be passed"), false), args[0].asString(rt))
-  );
-}
-static jsi::Value __hostFunction_NativeTurboLndCxxSpecJSI_sendToRoute(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
-  return static_cast<NativeTurboLndCxxSpecJSI *>(&turboModule)->sendToRoute(
-    rt,
-    (count > 0 || (throw jsi::JSError(rt, "Expected argument in position 0 to be passed"), false), args[0].asObject(rt).asFunction(rt)),
-    (count > 1 || (throw jsi::JSError(rt, "Expected argument in position 1 to be passed"), false), args[1].asObject(rt).asFunction(rt))
-  );
-}
-static jsi::Value __hostFunction_NativeTurboLndCxxSpecJSI_sendToRouteSync(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
-  return static_cast<NativeTurboLndCxxSpecJSI *>(&turboModule)->sendToRouteSync(
-    rt,
-    (count > 0 || (throw jsi::JSError(rt, "Expected argument in position 0 to be passed"), false), args[0].asString(rt))
-  );
-}
 static jsi::Value __hostFunction_NativeTurboLndCxxSpecJSI_addInvoice(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
   return static_cast<NativeTurboLndCxxSpecJSI *>(&turboModule)->addInvoice(
     rt,
@@ -435,6 +409,20 @@ static jsi::Value __hostFunction_NativeTurboLndCxxSpecJSI_sendCustomMessage(jsi:
 }
 static jsi::Value __hostFunction_NativeTurboLndCxxSpecJSI_subscribeCustomMessages(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
   return static_cast<NativeTurboLndCxxSpecJSI *>(&turboModule)->subscribeCustomMessages(
+    rt,
+    (count > 0 || (throw jsi::JSError(rt, "Expected argument in position 0 to be passed"), false), args[0].asString(rt)),
+    (count > 1 || (throw jsi::JSError(rt, "Expected argument in position 1 to be passed"), false), args[1].asObject(rt).asFunction(rt)),
+    (count > 2 || (throw jsi::JSError(rt, "Expected argument in position 2 to be passed"), false), args[2].asObject(rt).asFunction(rt))
+  );
+}
+static jsi::Value __hostFunction_NativeTurboLndCxxSpecJSI_sendOnionMessage(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
+  return static_cast<NativeTurboLndCxxSpecJSI *>(&turboModule)->sendOnionMessage(
+    rt,
+    (count > 0 || (throw jsi::JSError(rt, "Expected argument in position 0 to be passed"), false), args[0].asString(rt))
+  );
+}
+static jsi::Value __hostFunction_NativeTurboLndCxxSpecJSI_subscribeOnionMessages(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
+  return static_cast<NativeTurboLndCxxSpecJSI *>(&turboModule)->subscribeOnionMessages(
     rt,
     (count > 0 || (throw jsi::JSError(rt, "Expected argument in position 0 to be passed"), false), args[0].asString(rt)),
     (count > 1 || (throw jsi::JSError(rt, "Expected argument in position 1 to be passed"), false), args[1].asObject(rt).asFunction(rt)),
@@ -662,12 +650,6 @@ static jsi::Value __hostFunction_NativeTurboLndCxxSpecJSI_routerEstimateRouteFee
     (count > 0 || (throw jsi::JSError(rt, "Expected argument in position 0 to be passed"), false), args[0].asString(rt))
   );
 }
-static jsi::Value __hostFunction_NativeTurboLndCxxSpecJSI_routerSendToRoute(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
-  return static_cast<NativeTurboLndCxxSpecJSI *>(&turboModule)->routerSendToRoute(
-    rt,
-    (count > 0 || (throw jsi::JSError(rt, "Expected argument in position 0 to be passed"), false), args[0].asString(rt))
-  );
-}
 static jsi::Value __hostFunction_NativeTurboLndCxxSpecJSI_routerSendToRouteV2(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
   return static_cast<NativeTurboLndCxxSpecJSI *>(&turboModule)->routerSendToRouteV2(
     rt,
@@ -724,22 +706,6 @@ static jsi::Value __hostFunction_NativeTurboLndCxxSpecJSI_routerSubscribeHtlcEve
     (count > 2 || (throw jsi::JSError(rt, "Expected argument in position 2 to be passed"), false), args[2].asObject(rt).asFunction(rt))
   );
 }
-static jsi::Value __hostFunction_NativeTurboLndCxxSpecJSI_routerSendPayment(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
-  return static_cast<NativeTurboLndCxxSpecJSI *>(&turboModule)->routerSendPayment(
-    rt,
-    (count > 0 || (throw jsi::JSError(rt, "Expected argument in position 0 to be passed"), false), args[0].asString(rt)),
-    (count > 1 || (throw jsi::JSError(rt, "Expected argument in position 1 to be passed"), false), args[1].asObject(rt).asFunction(rt)),
-    (count > 2 || (throw jsi::JSError(rt, "Expected argument in position 2 to be passed"), false), args[2].asObject(rt).asFunction(rt))
-  );
-}
-static jsi::Value __hostFunction_NativeTurboLndCxxSpecJSI_routerTrackPayment(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
-  return static_cast<NativeTurboLndCxxSpecJSI *>(&turboModule)->routerTrackPayment(
-    rt,
-    (count > 0 || (throw jsi::JSError(rt, "Expected argument in position 0 to be passed"), false), args[0].asString(rt)),
-    (count > 1 || (throw jsi::JSError(rt, "Expected argument in position 1 to be passed"), false), args[1].asObject(rt).asFunction(rt)),
-    (count > 2 || (throw jsi::JSError(rt, "Expected argument in position 2 to be passed"), false), args[2].asObject(rt).asFunction(rt))
-  );
-}
 static jsi::Value __hostFunction_NativeTurboLndCxxSpecJSI_routerHtlcInterceptor(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
   return static_cast<NativeTurboLndCxxSpecJSI *>(&turboModule)->routerHtlcInterceptor(
     rt,
@@ -767,6 +733,12 @@ static jsi::Value __hostFunction_NativeTurboLndCxxSpecJSI_routerXDeleteLocalChan
 }
 static jsi::Value __hostFunction_NativeTurboLndCxxSpecJSI_routerXFindBaseLocalChanAlias(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
   return static_cast<NativeTurboLndCxxSpecJSI *>(&turboModule)->routerXFindBaseLocalChanAlias(
+    rt,
+    (count > 0 || (throw jsi::JSError(rt, "Expected argument in position 0 to be passed"), false), args[0].asString(rt))
+  );
+}
+static jsi::Value __hostFunction_NativeTurboLndCxxSpecJSI_routerDeleteForwardingHistory(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
+  return static_cast<NativeTurboLndCxxSpecJSI *>(&turboModule)->routerDeleteForwardingHistory(
     rt,
     (count > 0 || (throw jsi::JSError(rt, "Expected argument in position 0 to be passed"), false), args[0].asString(rt))
   );
@@ -815,6 +787,18 @@ static jsi::Value __hostFunction_NativeTurboLndCxxSpecJSI_signerMuSig2CreateSess
 }
 static jsi::Value __hostFunction_NativeTurboLndCxxSpecJSI_signerMuSig2RegisterNonces(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
   return static_cast<NativeTurboLndCxxSpecJSI *>(&turboModule)->signerMuSig2RegisterNonces(
+    rt,
+    (count > 0 || (throw jsi::JSError(rt, "Expected argument in position 0 to be passed"), false), args[0].asString(rt))
+  );
+}
+static jsi::Value __hostFunction_NativeTurboLndCxxSpecJSI_signerMuSig2RegisterCombinedNonce(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
+  return static_cast<NativeTurboLndCxxSpecJSI *>(&turboModule)->signerMuSig2RegisterCombinedNonce(
+    rt,
+    (count > 0 || (throw jsi::JSError(rt, "Expected argument in position 0 to be passed"), false), args[0].asString(rt))
+  );
+}
+static jsi::Value __hostFunction_NativeTurboLndCxxSpecJSI_signerMuSig2GetCombinedNonce(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
+  return static_cast<NativeTurboLndCxxSpecJSI *>(&turboModule)->signerMuSig2GetCombinedNonce(
     rt,
     (count > 0 || (throw jsi::JSError(rt, "Expected argument in position 0 to be passed"), false), args[0].asString(rt))
   );
@@ -1098,10 +1082,6 @@ NativeTurboLndCxxSpecJSI::NativeTurboLndCxxSpecJSI(std::shared_ptr<CallInvoker> 
   methodMap_["channelAcceptor"] = MethodMetadata {2, __hostFunction_NativeTurboLndCxxSpecJSI_channelAcceptor};
   methodMap_["closeChannel"] = MethodMetadata {3, __hostFunction_NativeTurboLndCxxSpecJSI_closeChannel};
   methodMap_["abandonChannel"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_abandonChannel};
-  methodMap_["sendPayment"] = MethodMetadata {2, __hostFunction_NativeTurboLndCxxSpecJSI_sendPayment};
-  methodMap_["sendPaymentSync"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_sendPaymentSync};
-  methodMap_["sendToRoute"] = MethodMetadata {2, __hostFunction_NativeTurboLndCxxSpecJSI_sendToRoute};
-  methodMap_["sendToRouteSync"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_sendToRouteSync};
   methodMap_["addInvoice"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_addInvoice};
   methodMap_["listInvoices"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_listInvoices};
   methodMap_["lookupInvoice"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_lookupInvoice};
@@ -1136,6 +1116,8 @@ NativeTurboLndCxxSpecJSI::NativeTurboLndCxxSpecJSI(std::shared_ptr<CallInvoker> 
   methodMap_["registerRPCMiddleware"] = MethodMetadata {2, __hostFunction_NativeTurboLndCxxSpecJSI_registerRPCMiddleware};
   methodMap_["sendCustomMessage"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_sendCustomMessage};
   methodMap_["subscribeCustomMessages"] = MethodMetadata {3, __hostFunction_NativeTurboLndCxxSpecJSI_subscribeCustomMessages};
+  methodMap_["sendOnionMessage"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_sendOnionMessage};
+  methodMap_["subscribeOnionMessages"] = MethodMetadata {3, __hostFunction_NativeTurboLndCxxSpecJSI_subscribeOnionMessages};
   methodMap_["listAliases"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_listAliases};
   methodMap_["lookupHtlcResolution"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_lookupHtlcResolution};
   methodMap_["genSeed"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_genSeed};
@@ -1170,7 +1152,6 @@ NativeTurboLndCxxSpecJSI::NativeTurboLndCxxSpecJSI(std::shared_ptr<CallInvoker> 
   methodMap_["routerTrackPaymentV2"] = MethodMetadata {3, __hostFunction_NativeTurboLndCxxSpecJSI_routerTrackPaymentV2};
   methodMap_["routerTrackPayments"] = MethodMetadata {3, __hostFunction_NativeTurboLndCxxSpecJSI_routerTrackPayments};
   methodMap_["routerEstimateRouteFee"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_routerEstimateRouteFee};
-  methodMap_["routerSendToRoute"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_routerSendToRoute};
   methodMap_["routerSendToRouteV2"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_routerSendToRouteV2};
   methodMap_["routerResetMissionControl"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_routerResetMissionControl};
   methodMap_["routerQueryMissionControl"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_routerQueryMissionControl};
@@ -1180,13 +1161,12 @@ NativeTurboLndCxxSpecJSI::NativeTurboLndCxxSpecJSI(std::shared_ptr<CallInvoker> 
   methodMap_["routerQueryProbability"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_routerQueryProbability};
   methodMap_["routerBuildRoute"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_routerBuildRoute};
   methodMap_["routerSubscribeHtlcEvents"] = MethodMetadata {3, __hostFunction_NativeTurboLndCxxSpecJSI_routerSubscribeHtlcEvents};
-  methodMap_["routerSendPayment"] = MethodMetadata {3, __hostFunction_NativeTurboLndCxxSpecJSI_routerSendPayment};
-  methodMap_["routerTrackPayment"] = MethodMetadata {3, __hostFunction_NativeTurboLndCxxSpecJSI_routerTrackPayment};
   methodMap_["routerHtlcInterceptor"] = MethodMetadata {2, __hostFunction_NativeTurboLndCxxSpecJSI_routerHtlcInterceptor};
   methodMap_["routerUpdateChanStatus"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_routerUpdateChanStatus};
   methodMap_["routerXAddLocalChanAliases"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_routerXAddLocalChanAliases};
   methodMap_["routerXDeleteLocalChanAliases"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_routerXDeleteLocalChanAliases};
   methodMap_["routerXFindBaseLocalChanAlias"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_routerXFindBaseLocalChanAlias};
+  methodMap_["routerDeleteForwardingHistory"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_routerDeleteForwardingHistory};
   methodMap_["signerSignOutputRaw"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_signerSignOutputRaw};
   methodMap_["signerComputeInputScript"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_signerComputeInputScript};
   methodMap_["signerSignMessage"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_signerSignMessage};
@@ -1195,6 +1175,8 @@ NativeTurboLndCxxSpecJSI::NativeTurboLndCxxSpecJSI(std::shared_ptr<CallInvoker> 
   methodMap_["signerMuSig2CombineKeys"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_signerMuSig2CombineKeys};
   methodMap_["signerMuSig2CreateSession"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_signerMuSig2CreateSession};
   methodMap_["signerMuSig2RegisterNonces"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_signerMuSig2RegisterNonces};
+  methodMap_["signerMuSig2RegisterCombinedNonce"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_signerMuSig2RegisterCombinedNonce};
+  methodMap_["signerMuSig2GetCombinedNonce"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_signerMuSig2GetCombinedNonce};
   methodMap_["signerMuSig2Sign"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_signerMuSig2Sign};
   methodMap_["signerMuSig2CombineSig"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_signerMuSig2CombineSig};
   methodMap_["signerMuSig2Cleanup"] = MethodMetadata {1, __hostFunction_NativeTurboLndCxxSpecJSI_signerMuSig2Cleanup};

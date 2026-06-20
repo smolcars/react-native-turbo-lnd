@@ -29,7 +29,7 @@ concurrency:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   LND_REPOSITORY: hsjoberg/lnd
-  LND_REF: 7946c5f8699d97344602eaeb34fcb52fbbca919b
+  LND_REF: 167f679c164a72477470e483bdaccbbdc391b438
 
 jobs:
   validate:

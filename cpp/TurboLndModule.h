@@ -93,14 +93,6 @@ class TurboLndModule : public NativeTurboLndCxxSpec<TurboLndModule> {
 
   facebook::react::AsyncPromise<std::string> abandonChannel(jsi::Runtime &rt, jsi::String data);
 
-  jsi::Object sendPayment(jsi::Runtime &rt, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError);
-
-  facebook::react::AsyncPromise<std::string> sendPaymentSync(jsi::Runtime &rt, jsi::String data);
-
-  jsi::Object sendToRoute(jsi::Runtime &rt, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError);
-
-  facebook::react::AsyncPromise<std::string> sendToRouteSync(jsi::Runtime &rt, jsi::String data);
-
   facebook::react::AsyncPromise<std::string> addInvoice(jsi::Runtime &rt, jsi::String data);
 
   facebook::react::AsyncPromise<std::string> listInvoices(jsi::Runtime &rt, jsi::String data);
@@ -168,6 +160,10 @@ class TurboLndModule : public NativeTurboLndCxxSpec<TurboLndModule> {
   facebook::react::AsyncPromise<std::string> sendCustomMessage(jsi::Runtime &rt, jsi::String data);
 
   facebook::jsi::Function subscribeCustomMessages(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError);
+
+  facebook::react::AsyncPromise<std::string> sendOnionMessage(jsi::Runtime &rt, jsi::String data);
+
+  facebook::jsi::Function subscribeOnionMessages(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError);
 
   facebook::react::AsyncPromise<std::string> listAliases(jsi::Runtime &rt, jsi::String data);
 
@@ -237,8 +233,6 @@ class TurboLndModule : public NativeTurboLndCxxSpec<TurboLndModule> {
 
   facebook::react::AsyncPromise<std::string> routerEstimateRouteFee(jsi::Runtime &rt, jsi::String data);
 
-  facebook::react::AsyncPromise<std::string> routerSendToRoute(jsi::Runtime &rt, jsi::String data);
-
   facebook::react::AsyncPromise<std::string> routerSendToRouteV2(jsi::Runtime &rt, jsi::String data);
 
   facebook::react::AsyncPromise<std::string> routerResetMissionControl(jsi::Runtime &rt, jsi::String data);
@@ -257,10 +251,6 @@ class TurboLndModule : public NativeTurboLndCxxSpec<TurboLndModule> {
 
   facebook::jsi::Function routerSubscribeHtlcEvents(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError);
 
-  facebook::jsi::Function routerSendPayment(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError);
-
-  facebook::jsi::Function routerTrackPayment(jsi::Runtime &rt, jsi::String data, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError);
-
   jsi::Object routerHtlcInterceptor(jsi::Runtime &rt, AsyncCallback<std::string> onResponse, AsyncCallback<std::string> onError);
 
   facebook::react::AsyncPromise<std::string> routerUpdateChanStatus(jsi::Runtime &rt, jsi::String data);
@@ -270,6 +260,8 @@ class TurboLndModule : public NativeTurboLndCxxSpec<TurboLndModule> {
   facebook::react::AsyncPromise<std::string> routerXDeleteLocalChanAliases(jsi::Runtime &rt, jsi::String data);
 
   facebook::react::AsyncPromise<std::string> routerXFindBaseLocalChanAlias(jsi::Runtime &rt, jsi::String data);
+
+  facebook::react::AsyncPromise<std::string> routerDeleteForwardingHistory(jsi::Runtime &rt, jsi::String data);
 
   facebook::react::AsyncPromise<std::string> signerSignOutputRaw(jsi::Runtime &rt, jsi::String data);
 
@@ -286,6 +278,10 @@ class TurboLndModule : public NativeTurboLndCxxSpec<TurboLndModule> {
   facebook::react::AsyncPromise<std::string> signerMuSig2CreateSession(jsi::Runtime &rt, jsi::String data);
 
   facebook::react::AsyncPromise<std::string> signerMuSig2RegisterNonces(jsi::Runtime &rt, jsi::String data);
+
+  facebook::react::AsyncPromise<std::string> signerMuSig2RegisterCombinedNonce(jsi::Runtime &rt, jsi::String data);
+
+  facebook::react::AsyncPromise<std::string> signerMuSig2GetCombinedNonce(jsi::Runtime &rt, jsi::String data);
 
   facebook::react::AsyncPromise<std::string> signerMuSig2Sign(jsi::Runtime &rt, jsi::String data);
 

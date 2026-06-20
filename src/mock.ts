@@ -975,151 +975,6 @@ export async function abandonChannel(
 
 /**
    *
-   * Deprecated, use SendPaymentV2. SendPayment attempts to route a payment
-   * described by the passed PaymentRequest to the final destination. The call
-   * returns a stream of payment status updates.
-   *
-   * @param [SendRequest]
-   * @returns [SendResponse]
-   *
-   */
-export function sendPayment(
-  onResponse: (response: lnrpc.SendResponse) => void,
-  onError: (error: string) => void
-) {
-  const onResponseWrapper: OnResponseCallback = (responseB64) => {
-    onResponse(fromBinary(
-      lnrpc.SendResponseSchema,
-      base64Decode(responseB64)
-    ));
-  }
-  const onErrorWrapper: OnErrorCallback = (error: string) => onError(error);
-
-  const writeableStream = TurboLnd.sendPayment(onResponseWrapper, onErrorWrapper);
-
-  return {
-    send: (response: MessageInitShape<typeof lnrpc.SendRequestSchema>) => {
-      const message = create(
-        lnrpc.SendRequestSchema,
-        response
-      );
-      const responseB64 = base64Encode(
-        toBinary(lnrpc.SendRequestSchema, message)
-      );
-      writeableStream.send(responseB64);
-    },
-    close: () => {
-      writeableStream.stop();
-    }
-  }
-}
-
-/**
-   *
-   * Deprecated, use routerrpc.SendPaymentV2. SendPaymentSync is the synchronous
-   * non-streaming version of SendPayment. This RPC is intended to be consumed by
-   * clients of the REST proxy. Additionally, this RPC expects the destination's
-   * public key and the payment hash (if any) to be encoded as hex strings.
-   *
-   * @param [SendRequest]
-   * @returns [SendResponse]
-   *
-   */
-export async function sendPaymentSync(
-  request: MessageInitShape<typeof lnrpc.SendRequestSchema>
-): Promise<lnrpc.SendResponse> {
-  const message = create(
-    lnrpc.SendRequestSchema,
-    request
-  );
-  const b64 = await TurboLnd.sendPaymentSync(
-    base64Encode(
-      toBinary(lnrpc.SendRequestSchema, message)
-    )
-  );
-  const response = fromBinary(
-    lnrpc.SendResponseSchema,
-    base64Decode(b64)
-  );
-  return response;
-}
-
-
-/**
-   *
-   * Deprecated, use SendToRouteV2. SendToRoute attempts to make a payment via
-   * the specified route. This method differs from SendPayment in that it
-   * allows users to specify a full route manually. This can be used for
-   * things like rebalancing, and atomic swaps. It differs from the newer
-   * SendToRouteV2 in that it doesn't return the full HTLC information.
-   *
-   * @param [SendToRouteRequest]
-   * @returns [SendResponse]
-   *
-   */
-export function sendToRoute(
-  onResponse: (response: lnrpc.SendResponse) => void,
-  onError: (error: string) => void
-) {
-  const onResponseWrapper: OnResponseCallback = (responseB64) => {
-    onResponse(fromBinary(
-      lnrpc.SendResponseSchema,
-      base64Decode(responseB64)
-    ));
-  }
-  const onErrorWrapper: OnErrorCallback = (error: string) => onError(error);
-
-  const writeableStream = TurboLnd.sendToRoute(onResponseWrapper, onErrorWrapper);
-
-  return {
-    send: (response: MessageInitShape<typeof lnrpc.SendToRouteRequestSchema>) => {
-      const message = create(
-        lnrpc.SendToRouteRequestSchema,
-        response
-      );
-      const responseB64 = base64Encode(
-        toBinary(lnrpc.SendToRouteRequestSchema, message)
-      );
-      writeableStream.send(responseB64);
-    },
-    close: () => {
-      writeableStream.stop();
-    }
-  }
-}
-
-/**
-   *
-   * Deprecated, use routerrpc.SendToRouteV2. SendToRouteSync is a synchronous
-   * version of SendToRoute. It Will block until the payment either fails or
-   * succeeds.
-   *
-   * @param [SendToRouteRequest]
-   * @returns [SendResponse]
-   *
-   */
-export async function sendToRouteSync(
-  request: MessageInitShape<typeof lnrpc.SendToRouteRequestSchema>
-): Promise<lnrpc.SendResponse> {
-  const message = create(
-    lnrpc.SendToRouteRequestSchema,
-    request
-  );
-  const b64 = await TurboLnd.sendToRouteSync(
-    base64Encode(
-      toBinary(lnrpc.SendToRouteRequestSchema, message)
-    )
-  );
-  const response = fromBinary(
-    lnrpc.SendResponseSchema,
-    base64Decode(b64)
-  );
-  return response;
-}
-
-
-/**
-   *
    * AddInvoice attempts to add a new invoice to the invoice database. Any
    * duplicated invoices are rejected, therefore all invoices *must* have a
    * unique payment preimage.
@@ -2209,6 +2064,68 @@ export function subscribeCustomMessages(
 
 
   return TurboLnd.subscribeCustomMessages(requestB64, onResponseWrapper, onErrorWrapper);
+}
+
+
+/**
+   *
+   * SendOnionMessage sends an onion message to a peer.
+   *
+   * @param [SendOnionMessageRequest]
+   * @returns [SendOnionMessageResponse]
+   *
+   */
+export async function sendOnionMessage(
+  request: MessageInitShape<typeof lnrpc.SendOnionMessageRequestSchema>
+): Promise<lnrpc.SendOnionMessageResponse> {
+  const message = create(
+    lnrpc.SendOnionMessageRequestSchema,
+    request
+  );
+  const b64 = await TurboLnd.sendOnionMessage(
+    base64Encode(
+      toBinary(lnrpc.SendOnionMessageRequestSchema, message)
+    )
+  );
+  const response = fromBinary(
+    lnrpc.SendOnionMessageResponseSchema,
+    base64Decode(b64)
+  );
+  return response;
+}
+
+
+/**
+   *
+   * SubscribeOnionMessages subscribes to a stream of incoming onion messages.
+   *
+   * @param [SubscribeOnionMessagesRequest]
+   * @returns [OnionMessageUpdate]
+   *
+   */
+export function subscribeOnionMessages(
+  request: MessageInitShape<typeof lnrpc.SubscribeOnionMessagesRequestSchema>,
+  onResponse: (response: lnrpc.OnionMessageUpdate) => void,
+  onError: (error: string) => void
+): UnsubscribeFromStream {
+  const message = create(
+    lnrpc.SubscribeOnionMessagesRequestSchema,
+    request
+  );
+  const requestB64 = base64Encode(
+    toBinary(lnrpc.SubscribeOnionMessagesRequestSchema, message)
+  );
+
+  const onResponseWrapper: OnResponseCallback = (responseB64) => {
+    onResponse(fromBinary(
+      lnrpc.OnionMessageUpdateSchema,
+      base64Decode(responseB64)
+    ));
+  }
+  const onErrorWrapper: OnErrorCallback = (error: string) => onError(error);
+
+
+  return TurboLnd.subscribeOnionMessages(requestB64, onResponseWrapper, onErrorWrapper);
 }
 
 
@@ -3312,38 +3229,6 @@ export async function routerEstimateRouteFee(
 
 /**
    *
-   * Deprecated, use SendToRouteV2. SendToRoute attempts to make a payment via
-   * the specified route. This method differs from SendPayment in that it
-   * allows users to specify a full route manually. This can be used for
-   * things like rebalancing, and atomic swaps. It differs from the newer
-   * SendToRouteV2 in that it doesn't return the full HTLC information.
-   *
-   * @param [SendToRouteRequest]
-   * @returns [SendToRouteResponse]
-   *
-   */
-export async function routerSendToRoute(
-  request: MessageInitShape<typeof routerrpc.SendToRouteRequestSchema>
-): Promise<routerrpc.SendToRouteResponse> {
-  const message = create(
-    routerrpc.SendToRouteRequestSchema,
-    request
-  );
-  const b64 = await TurboLnd.routerSendToRoute(
-    base64Encode(
-      toBinary(routerrpc.SendToRouteRequestSchema, message)
-    )
-  );
-  const response = fromBinary(
-    routerrpc.SendToRouteResponseSchema,
-    base64Decode(b64)
-  );
-  return response;
-}
-
-
-/**
-   *
    * SendToRouteV2 attempts to make a payment via the specified route. This
    * method differs from SendPayment in that it allows users to specify a full
    * route manually. This can be used for things like rebalancing, and atomic
@@ -3621,77 +3506,6 @@ export function routerSubscribeHtlcEvents(
 
 /**
    *
-   * Deprecated, use SendPaymentV2. SendPayment attempts to route a payment
-   * described by the passed PaymentRequest to the final destination. The call
-   * returns a stream of payment status updates.
-   *
-   * @param [SendPaymentRequest]
-   * @returns [PaymentStatus]
-   *
-   */
-export function routerSendPayment(
-  request: MessageInitShape<typeof routerrpc.SendPaymentRequestSchema>,
-  onResponse: (response: routerrpc.PaymentStatus) => void,
-  onError: (error: string) => void
-): UnsubscribeFromStream {
-  const message = create(
-    routerrpc.SendPaymentRequestSchema,
-    request
-  );
-  const requestB64 = base64Encode(
-    toBinary(routerrpc.SendPaymentRequestSchema, message)
-  );
-
-  const onResponseWrapper: OnResponseCallback = (responseB64) => {
-    onResponse(fromBinary(
-      routerrpc.PaymentStatusSchema,
-      base64Decode(responseB64)
-    ));
-  }
-  const onErrorWrapper: OnErrorCallback = (error: string) => onError(error);
-
-
-  return TurboLnd.routerSendPayment(requestB64, onResponseWrapper, onErrorWrapper);
-}
-
-
-/**
-   *
-   * Deprecated, use TrackPaymentV2. TrackPayment returns an update stream for
-   * the payment identified by the payment hash.
-   *
-   * @param [TrackPaymentRequest]
-   * @returns [PaymentStatus]
-   *
-   */
-export function routerTrackPayment(
-  request: MessageInitShape<typeof routerrpc.TrackPaymentRequestSchema>,
-  onResponse: (response: routerrpc.PaymentStatus) => void,
-  onError: (error: string) => void
-): UnsubscribeFromStream {
-  const message = create(
-    routerrpc.TrackPaymentRequestSchema,
-    request
-  );
-  const requestB64 = base64Encode(
-    toBinary(routerrpc.TrackPaymentRequestSchema, message)
-  );
-
-  const onResponseWrapper: OnResponseCallback = (responseB64) => {
-    onResponse(fromBinary(
-      routerrpc.PaymentStatusSchema,
-      base64Decode(responseB64)
-    ));
-  }
-  const onErrorWrapper: OnErrorCallback = (error: string) => onError(error);
-
-
-  return TurboLnd.routerTrackPayment(requestB64, onResponseWrapper, onErrorWrapper);
-}
-
-
-/**
-   *
    * HtlcInterceptor dispatches a bi-directional streaming RPC in which
    * Forwarded HTLC requests are sent to the client and the client responds with
    * a boolean that tells LND if this htlc should be intercepted.
@@ -3830,8 +3644,8 @@ export async function routerXDeleteLocalChanAliases(
 
 /**
    *
-   * The key of this forwarded htlc. It defines the incoming channel id and
-   * the index in this channel.
+   * XFindBaseLocalChanAlias is an experimental API that looks up the base scid
+   * for a local chan alias that was registered during the current runtime.
    *
    * @param [FindBaseAliasRequest]
    * @returns [FindBaseAliasResponse]
@@ -3851,6 +3665,35 @@ export async function routerXFindBaseLocalChanAlias(
   );
   const response = fromBinary(
     routerrpc.FindBaseAliasResponseSchema,
+    base64Decode(b64)
+  );
+  return response;
+}
+
+
+/**
+   *
+   * The key of this forwarded htlc. It defines the incoming channel id and
+   * the index in this channel.
+   *
+   * @param [DeleteForwardingHistoryRequest]
+   * @returns [DeleteForwardingHistoryResponse]
+   *
+   */
+export async function routerDeleteForwardingHistory(
+  request: MessageInitShape<typeof routerrpc.DeleteForwardingHistoryRequestSchema>
+): Promise<routerrpc.DeleteForwardingHistoryResponse> {
+  const message = create(
+    routerrpc.DeleteForwardingHistoryRequestSchema,
+    request
+  );
+  const b64 = await TurboLnd.routerDeleteForwardingHistory(
+    base64Encode(
+      toBinary(routerrpc.DeleteForwardingHistoryRequestSchema, message)
+    )
+  );
+  const response = fromBinary(
+    routerrpc.DeleteForwardingHistoryResponseSchema,
     base64Decode(b64)
   );
   return response;
@@ -4131,6 +3974,78 @@ export async function signerMuSig2RegisterNonces(
   );
   const response = fromBinary(
     signrpc.MuSig2RegisterNoncesResponseSchema,
+    base64Decode(b64)
+  );
+  return response;
+}
+
+
+/**
+   *
+   * MuSig2RegisterCombinedNonce (experimental!) registers a pre-aggregated
+   * combined nonce for a signing session. This is an alternative to
+   * MuSig2RegisterNonces and is used when a coordinator has already aggregated
+   * all individual nonces and wants to distribute the combined nonce to
+   * participants.
+   *
+   * NOTE: This method is mutually exclusive with MuSig2RegisterNonces for the
+   * same session. The MuSig2 BIP is not final yet and therefore this API must
+   * be considered to be HIGHLY EXPERIMENTAL and subject to change in upcoming
+   * releases. Backward compatibility is not guaranteed!
+   *
+   * @param [MuSig2RegisterCombinedNonceRequest]
+   * @returns [MuSig2RegisterCombinedNonceResponse]
+   *
+   */
+export async function signerMuSig2RegisterCombinedNonce(
+  request: MessageInitShape<typeof signrpc.MuSig2RegisterCombinedNonceRequestSchema>
+): Promise<signrpc.MuSig2RegisterCombinedNonceResponse> {
+  const message = create(
+    signrpc.MuSig2RegisterCombinedNonceRequestSchema,
+    request
+  );
+  const b64 = await TurboLnd.signerMuSig2RegisterCombinedNonce(
+    base64Encode(
+      toBinary(signrpc.MuSig2RegisterCombinedNonceRequestSchema, message)
+    )
+  );
+  const response = fromBinary(
+    signrpc.MuSig2RegisterCombinedNonceResponseSchema,
+    base64Decode(b64)
+  );
+  return response;
+}
+
+
+/**
+   *
+   * MuSig2GetCombinedNonce (experimental!) retrieves the combined nonce for a
+   * signing session. This will be available after either all individual nonces
+   * have been registered via MuSig2RegisterNonces, or a combined nonce has been
+   * registered via MuSig2RegisterCombinedNonce.
+   *
+   * NOTE: The MuSig2 BIP is not final yet and therefore this API must be
+   * considered to be HIGHLY EXPERIMENTAL and subject to change in upcoming
+   * releases. Backward compatibility is not guaranteed!
+   *
+   * @param [MuSig2GetCombinedNonceRequest]
+   * @returns [MuSig2GetCombinedNonceResponse]
+   *
+   */
+export async function signerMuSig2GetCombinedNonce(
+  request: MessageInitShape<typeof signrpc.MuSig2GetCombinedNonceRequestSchema>
+): Promise<signrpc.MuSig2GetCombinedNonceResponse> {
+  const message = create(
+    signrpc.MuSig2GetCombinedNonceRequestSchema,
+    request
+  );
+  const b64 = await TurboLnd.signerMuSig2GetCombinedNonce(
+    base64Encode(
+      toBinary(signrpc.MuSig2GetCombinedNonceRequestSchema, message)
+    )
+  );
+  const response = fromBinary(
+    signrpc.MuSig2GetCombinedNonceResponseSchema,
     base64Decode(b64)
   );
   return response;
