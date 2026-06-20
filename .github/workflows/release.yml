@@ -28,6 +28,11 @@ concurrency:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  # Self-hosted runners persist /nix/store; avoid stale Magic Nix Cache hooks/proxies.
+  NIX_CONFIG: |
+    post-build-hook =
+    extra-substituters =
+    substituters = https://cache.nixos.org/
   LND_REPOSITORY: hsjoberg/lnd
   LND_REF: 167f679c164a72477470e483bdaccbbdc391b438
 
