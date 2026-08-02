@@ -202,7 +202,7 @@
     "@eslint/js": "^9.0.0",
     "@evilmartians/lefthook": "^2.1.2",
     "@react-native-community/cli": "20.1.2",
-    "@react-native-windows/codegen": "0.82.0",
+    "@react-native-windows/codegen": "0.84.0",
     "@react-native/babel-preset": "0.84.1",
     "@react-native/eslint-config": "0.84.1",
     "@react-native/eslint-plugin": "0.84.1",
@@ -228,7 +228,7 @@
     "react": "19.2.3",
     "react-native": "0.84.1",
     "react-native-builder-bob": "0.40.18",
-    "react-native-windows": "^0.82.0",
+    "react-native-windows": "^0.84.0",
     "release-it": "^19.2.4",
     "turbo": "^2.8.12",
     "typescript": "^5.8.3"
