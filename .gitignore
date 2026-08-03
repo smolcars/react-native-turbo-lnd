@@ -100,3 +100,6 @@ example-electrobun/artifacts/
 
 # Nix
 .direnv/
+
+# Managed lnd checkout used by `bun run sync-lnd`
+.cache/

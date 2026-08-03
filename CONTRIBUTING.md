@@ -22,6 +22,32 @@ In order to generate these files, you need [protoc](https://github.com/protocolb
 
 Once you have protoc, run `bun run generate-bindings` in the root directory.
 
+### Syncing with lnd
+
+The lnd repository and commit used for native release artifacts are pinned in
+`lnd-source.properties`. After updating that pin, synchronize the protobufs and
+all generated binding layers with one command:
+
+```sh
+bun run sync-lnd
+```
+
+The command maintains an ignored checkout under `.cache/lnd-sync`. To reuse an
+existing checkout instead, pass its path; its `HEAD` must match the pinned
+commit:
+
+```sh
+bun run sync-lnd ../lnd
+```
+
+On Windows, binding generation runs through MSYS2 and uses
+`C:\msys64\usr\bin\sh.exe` by default. Set `MSYS2_SH` if MSYS2 is installed
+elsewhere.
+
+CI performs the same synchronization and fails if it changes any tracked file,
+so the checked-in protobufs and generated sources cannot silently drift from
+the native lnd build.
+
 > Since the project relies on Bun workspaces, use Bun commands for development.
 
 The [example app](/example/) demonstrates usage of the library. You need to run it to test any changes you make.
@@ -114,11 +140,10 @@ The `package.json` file contains various scripts for common tasks:
 - `bun run generate-codegen-specs`: Generate TurboModule codegen specs
 - `bun run bob`: build the library using `react-native-builder-bob`.
 - `bun run build`: generate lnd bindings & C++ TurboModule codegen and build the library using `react-native-builder-bob`.
+- `bun run sync-lnd`: Sync protobufs and generated bindings with the lnd commit pinned in `lnd-source.properties`.
 - `bun run example start`: start the Metro server for the example app.
 - `bun run example android`: run the example app on Android.
 - `bun run example ios`: run the example app on iOS.
-
-
 
 ### Sending a pull request
 

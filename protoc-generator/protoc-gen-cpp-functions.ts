@@ -7,6 +7,7 @@ import { buildProtobufEsWrapper } from "./protobuf-es-wrapper-template.ts";
 import { buildElectrobunViewCore } from "./electrobun-view-core-template.ts";
 import { buildElectrobunBun } from "./electrobun-bun-template.ts";
 import { buildElectrobunRpcSchema } from "./electrobun-rpc-schema-template.ts";
+import { extractMethodComments } from "./extract-method-comments.ts";
 
 interface ProtoFile {
   name: string;
@@ -57,40 +58,7 @@ async function loadProtoFiles() {
 
 function extractComments(filePath: string): Record<string, string> {
   const content = readFileSync(path.join("..", "proto", filePath), "utf8");
-  const lines = content.split("\n");
-  const comments: Record<string, string> = {};
-  let currentComment: string[] = [];
-  let isInComment = false;
-  let currentMethod: string | null = null;
-
-  lines.forEach((line, index) => {
-    const trimmedLine = line.trim();
-    if (trimmedLine.startsWith("/*")) {
-      isInComment = true;
-      currentComment = [];
-    } else if (trimmedLine.endsWith("*/")) {
-      isInComment = false;
-      // Look ahead for the method name
-      for (let i = index + 1; i < lines.length; i++) {
-        const nextLine = lines[i].trim();
-        if (nextLine.startsWith("rpc ")) {
-          currentMethod = nextLine.split(" ")[1];
-          break;
-        }
-      }
-      if (currentMethod) {
-        comments[currentMethod] = currentComment.join("\n");
-      }
-    } else if (isInComment) {
-      // Remove leading "*"" if present, but keep the space after it
-      const commentLine = trimmedLine.startsWith("*")
-        ? " " + trimmedLine.slice(1)
-        : trimmedLine;
-      currentComment.push(commentLine);
-    }
-  });
-
-  return comments;
+  return extractMethodComments(content);
 }
 
 function formatComment(comment: string, method: Method): string {
@@ -751,4 +719,6 @@ function writeStdout(data: Uint8Array): Promise<void> {
   });
 }
 
-main();
+if (import.meta.main) {
+  void main();
+}
