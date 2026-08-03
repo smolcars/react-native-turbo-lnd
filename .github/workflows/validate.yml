@@ -23,14 +23,34 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Read pinned lnd source
+        id: lnd-source
+        shell: bash
+        run: cat lnd-source.properties >> "$GITHUB_OUTPUT"
+
+      - name: Checkout pinned lnd CGO fork
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ steps.lnd-source.outputs.repository }}
+          ref: ${{ steps.lnd-source.outputs.ref }}
+          path: .cache/lnd-cgo
+
       - name: Validate in Nix shell
         shell: bash
         run: |
           nix develop --command bash -c '
             set -euo pipefail
             bun install --frozen-lockfile --ignore-scripts
-            bun run generate-bindings
-            bun run generate-codegen-specs
+            bun run sync-lnd .cache/lnd-cgo
+
+            sync_status="$(git status --porcelain --untracked-files=all)"
+            if [[ -n "$sync_status" ]]; then
+              echo "lnd protobufs or generated sources are out of date:" >&2
+              echo "$sync_status" >&2
+              git diff -- .
+              exit 1
+            fi
+
             bun run lint
             bun run typecheck
             bun run test
