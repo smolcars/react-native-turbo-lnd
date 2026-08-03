@@ -34,7 +34,7 @@ env:
     extra-substituters =
     substituters = https://cache.nixos.org/
   LND_REPOSITORY: hsjoberg/lnd
-  LND_REF: 167f679c164a72477470e483bdaccbbdc391b438
+  LND_REF: ae185f27e097a4106d04437f0a2be6edacf40910
 
 jobs:
   validate:
