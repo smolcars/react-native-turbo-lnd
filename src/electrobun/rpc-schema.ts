@@ -126,6 +126,7 @@ export type TurboLndElectrobunUnaryMethod =
   | "walletKitImportPublicKey"
   | "walletKitImportTapscript"
   | "walletKitPublishTransaction"
+  | "walletKitSubmitPackage"
   | "walletKitRemoveTransaction"
   | "walletKitSendOutputs"
   | "walletKitEstimateFee"

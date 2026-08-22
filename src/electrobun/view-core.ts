@@ -374,6 +374,7 @@ const TurboLndElectrobunView = {
   async walletKitImportPublicKey(data: ProtobufBase64) { return invokeUnary("walletKitImportPublicKey", data); },
   async walletKitImportTapscript(data: ProtobufBase64) { return invokeUnary("walletKitImportTapscript", data); },
   async walletKitPublishTransaction(data: ProtobufBase64) { return invokeUnary("walletKitPublishTransaction", data); },
+  async walletKitSubmitPackage(data: ProtobufBase64) { return invokeUnary("walletKitSubmitPackage", data); },
   async walletKitRemoveTransaction(data: ProtobufBase64) { return invokeUnary("walletKitRemoveTransaction", data); },
   async walletKitSendOutputs(data: ProtobufBase64) { return invokeUnary("walletKitSendOutputs", data); },
   async walletKitEstimateFee(data: ProtobufBase64) { return invokeUnary("walletKitEstimateFee", data); },

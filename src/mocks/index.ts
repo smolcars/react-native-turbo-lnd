@@ -1314,6 +1314,10 @@ const TurboLnd: Spec = {
     throw new Error("walletKitPublishTransaction Not Implemented");
   },
 
+  walletKitSubmitPackage: async (_data) => {
+    throw new Error("walletKitSubmitPackage Not Implemented");
+  },
+
   walletKitSendOutputs: async (_data) => {
     throw new Error("walletKitSendOutputs Not Implemented");
   },

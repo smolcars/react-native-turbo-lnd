@@ -214,6 +214,7 @@ protected:
     methodMap_["walletKitImportPublicKey"] = MethodMetadata {.argCount = 1, .invoker = __walletKitImportPublicKey};
     methodMap_["walletKitImportTapscript"] = MethodMetadata {.argCount = 1, .invoker = __walletKitImportTapscript};
     methodMap_["walletKitPublishTransaction"] = MethodMetadata {.argCount = 1, .invoker = __walletKitPublishTransaction};
+    methodMap_["walletKitSubmitPackage"] = MethodMetadata {.argCount = 1, .invoker = __walletKitSubmitPackage};
     methodMap_["walletKitRemoveTransaction"] = MethodMetadata {.argCount = 1, .invoker = __walletKitRemoveTransaction};
     methodMap_["walletKitSendOutputs"] = MethodMetadata {.argCount = 1, .invoker = __walletKitSendOutputs};
     methodMap_["walletKitEstimateFee"] = MethodMetadata {.argCount = 1, .invoker = __walletKitEstimateFee};
@@ -1444,6 +1445,14 @@ private:
       bridging::getParameterCount(&T::walletKitPublishTransaction) == 2,
       "Expected walletKitPublishTransaction(...) to have 2 parameters");
     return bridging::callFromJs<jsi::Value>(rt, &T::walletKitPublishTransaction,  static_cast<NativeTurboLndCxxSpec*>(&turboModule)->jsInvoker_, static_cast<T*>(&turboModule),
+      count <= 0 ? throw jsi::JSError(rt, "Expected argument in position 0 to be passed") : args[0].asString(rt));
+  }
+
+  static jsi::Value __walletKitSubmitPackage(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value* args, size_t count) {
+    static_assert(
+      bridging::getParameterCount(&T::walletKitSubmitPackage) == 2,
+      "Expected walletKitSubmitPackage(...) to have 2 parameters");
+    return bridging::callFromJs<jsi::Value>(rt, &T::walletKitSubmitPackage,  static_cast<NativeTurboLndCxxSpec*>(&turboModule)->jsInvoker_, static_cast<T*>(&turboModule),
       count <= 0 ? throw jsi::JSError(rt, "Expected argument in position 0 to be passed") : args[0].asString(rt));
   }
 

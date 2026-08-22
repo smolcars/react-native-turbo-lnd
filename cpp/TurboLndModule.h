@@ -325,6 +325,8 @@ class TurboLndModule : public NativeTurboLndCxxSpec<TurboLndModule> {
 
   facebook::react::AsyncPromise<std::string> walletKitPublishTransaction(jsi::Runtime &rt, jsi::String data);
 
+  facebook::react::AsyncPromise<std::string> walletKitSubmitPackage(jsi::Runtime &rt, jsi::String data);
+
   facebook::react::AsyncPromise<std::string> walletKitRemoveTransaction(jsi::Runtime &rt, jsi::String data);
 
   facebook::react::AsyncPromise<std::string> walletKitSendOutputs(jsi::Runtime &rt, jsi::String data);

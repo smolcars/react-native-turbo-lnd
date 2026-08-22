@@ -771,6 +771,7 @@ extern void walletKitImportAccount(char* data, int length, CCallback callback);
 extern void walletKitImportPublicKey(char* data, int length, CCallback callback);
 extern void walletKitImportTapscript(char* data, int length, CCallback callback);
 extern void walletKitPublishTransaction(char* data, int length, CCallback callback);
+extern void walletKitSubmitPackage(char* data, int length, CCallback callback);
 extern void walletKitRemoveTransaction(char* data, int length, CCallback callback);
 extern void walletKitSendOutputs(char* data, int length, CCallback callback);
 extern void walletKitEstimateFee(char* data, int length, CCallback callback);

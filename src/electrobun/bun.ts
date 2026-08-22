@@ -140,6 +140,7 @@ export const ELECTROBUN_UNARY_METHODS = [
   "walletKitImportPublicKey",
   "walletKitImportTapscript",
   "walletKitPublishTransaction",
+  "walletKitSubmitPackage",
   "walletKitRemoveTransaction",
   "walletKitSendOutputs",
   "walletKitEstimateFee",

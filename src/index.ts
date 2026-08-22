@@ -4748,6 +4748,43 @@ export async function walletKitPublishTransaction(
 
 /**
    *
+   * SubmitPackage submits a package of related transactions (topologically
+   * sorted, unconfirmed parents first and the child last) for atomic
+   * validation and acceptance. Real package submission is only performed by
+   * the bitcoind backend, via the node's submitpackage RPC, which lets a
+   * zero-fee v3/TRUC parent be accepted via its fee-paying CPFP child. The
+   * btcd backend does not support submitpackage and returns an error. A
+   * neutrino light client has no mempool and cannot atomically accept a
+   * package; as a best effort it broadcasts the transactions individually and
+   * relies on a peer's 1p1c package relay, returning an unverified result
+   * (not a package-accept verdict).
+   *
+   * @param [SubmitPackageRequest]
+   * @returns [SubmitPackageResponse]
+   *
+   */
+export async function walletKitSubmitPackage(
+  request: MessageInitShape<typeof walletrpc.SubmitPackageRequestSchema>
+): Promise<walletrpc.SubmitPackageResponse> {
+  const message = create(
+    walletrpc.SubmitPackageRequestSchema,
+    request
+  );
+  const b64 = await TurboLnd.walletKitSubmitPackage(
+    base64Encode(
+      toBinary(walletrpc.SubmitPackageRequestSchema, message)
+    )
+  );
+  const response = fromBinary(
+    walletrpc.SubmitPackageResponseSchema,
+    base64Decode(b64)
+  );
+  return response;
+}
+
+
+/**
+   *
    * RemoveTransaction attempts to remove the provided transaction from the
    * internal transaction store of the wallet.
    *
