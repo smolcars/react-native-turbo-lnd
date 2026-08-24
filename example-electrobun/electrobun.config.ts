@@ -3,7 +3,9 @@ import type { ElectrobunConfig } from "electrobun";
 const NAPI_ADDON_FILENAME = "turbolnd_napi.node";
 
 function isNapiBackendEnabled(): boolean {
-  return process.env.TURBOLND_ELECTROBUN_BACKEND === "napi";
+  const configuredBackend =
+    process.env.TURBOLND_ELECTROBUN_BACKEND?.trim().toLowerCase();
+  return !configuredBackend || configuredBackend === "napi";
 }
 
 function getNapiAddonCachePath(): string {
@@ -23,6 +25,10 @@ export default {
     version: "0.0.1",
   },
   build: {
+    mainProcess: "bun",
+    bun: {
+      entrypoint: "src/bun/index.ts",
+    },
     // Vite builds to dist/, we copy from there
     copy: {
       "dist/index.html": "views/mainview/index.html",

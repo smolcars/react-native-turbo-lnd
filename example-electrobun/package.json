@@ -4,16 +4,17 @@
   "private": true,
   "description": "Electrobun app with React, Tailwind CSS, and Vite HMR",
   "scripts": {
+    "prepare:electrobun": "electrobun prepare",
     "ensure:napi-addon": "bun ./scripts/ensure-electrobun-napi-addon.cjs",
-    "start": "bun run ensure:napi-addon && vite build && electrobun dev",
-    "dev": "bun run ensure:napi-addon && vite build && electrobun dev --watch",
-    "dev:hmr": "concurrently \"bun run hmr\" \"bun run start\"",
+    "start": "bun run prepare:electrobun && bun run start:prepared",
+    "start:prepared": "bun run ensure:napi-addon && vite build && electrobun dev",
+    "dev": "bun run prepare:electrobun && bun run ensure:napi-addon && vite build && electrobun dev --watch",
+    "dev:hmr": "bun run prepare:electrobun && concurrently \"bun run hmr\" \"bun run start:prepared\"",
     "hmr": "vite --port 5173",
-    "build:canary": "bun run ensure:napi-addon && vite build && electrobun build --env=canary"
+    "build:canary": "bun run prepare:electrobun && bun run ensure:napi-addon && vite build && electrobun build --env=canary"
   },
   "dependencies": {
     "@bufbuild/protobuf": "^2.0.0",
-    "electrobun": "1.16.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-native-turbo-lnd": "file:.."
@@ -26,6 +27,7 @@
     "@vitejs/plugin-react": "^6.0.1",
     "autoprefixer": "^10.4.20",
     "concurrently": "^9.1.0",
+    "electrobun": "2.0.1",
     "postcss": "^8.4.49",
     "tailwindcss": "^4.2.1",
     "typescript": "^5.7.2",

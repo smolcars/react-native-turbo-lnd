@@ -97,6 +97,8 @@ windows/ReactNativeTurboLnd/generated-liblnd/
 # example-electrobun
 example-electrobun/dist/
 example-electrobun/artifacts/
+.hutch/
+.cottontail-tmp/
 
 # Nix
 .direnv/

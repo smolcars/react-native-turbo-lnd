@@ -22,11 +22,37 @@ function getPlatformArchDir() {
 }
 
 function resolveTurboLndPackageRoot(exampleRoot) {
-  const requireFromExample = createRequire(path.join(exampleRoot, "package.json"));
-  const packageJsonPath = requireFromExample.resolve(
-    "react-native-turbo-lnd/package.json"
+  const requireFromExample = createRequire(
+    path.join(exampleRoot, "package.json")
   );
-  return path.dirname(packageJsonPath);
+  const candidates = [];
+
+  try {
+    const packageJsonPath = requireFromExample.resolve(
+      "react-native-turbo-lnd/package.json"
+    );
+    candidates.push(path.dirname(packageJsonPath));
+  } catch {
+    // Fall through to the workspace-root candidate below.
+  }
+
+  candidates.push(path.resolve(exampleRoot, ".."));
+
+  for (const candidate of candidates) {
+    const packageJsonPath = path.join(candidate, "package.json");
+    if (!fs.existsSync(packageJsonPath)) {
+      continue;
+    }
+
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
+    if (packageJson.name === "react-native-turbo-lnd") {
+      return candidate;
+    }
+  }
+
+  throw new Error(
+    'Unable to locate the "react-native-turbo-lnd" package root.'
+  );
 }
 
 function resolveAddonSourcePath(exampleRoot) {
@@ -44,13 +70,7 @@ function resolveAddonSourcePath(exampleRoot) {
   const packageRoot = resolveTurboLndPackageRoot(exampleRoot);
   const platformArchDir = getPlatformArchDir();
   const candidatePaths = [
-    path.join(
-      packageRoot,
-      "native",
-      "napi",
-      platformArchDir,
-      ADDON_FILENAME
-    ),
+    path.join(packageRoot, "native", "napi", platformArchDir, ADDON_FILENAME),
     path.join(
       packageRoot,
       "electrobun-napi-addon",
@@ -77,7 +97,9 @@ function resolveAddonSourcePath(exampleRoot) {
 }
 
 function main() {
-  if (process.env.TURBOLND_ELECTROBUN_BACKEND !== NAPI_BACKEND_NAME) {
+  const configuredBackend =
+    process.env.TURBOLND_ELECTROBUN_BACKEND?.trim().toLowerCase();
+  if (configuredBackend && configuredBackend !== NAPI_BACKEND_NAME) {
     return;
   }
 

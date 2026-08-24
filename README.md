@@ -30,7 +30,7 @@ lnd embedded inside an app.
 ✅ iOS
 ✅ macOS
 ✅ Windows
-✅ Electrobun (Windows, Linux, macOS) [WIP]
+✅ Electrobun 2 (Bun main process) (Windows, Linux, macOS)
 🚫 Web
 ✅ Jest mocks (all gRPC methods not yet mocked)
 ```
@@ -221,6 +221,11 @@ export default function App() {
 If you wish to use the [Electrobun](https://blackboard.sh/electrobun) backend,
 wire it up through an app-local Bun entrypoint plus your renderer build config.
 
+> [!NOTE]
+> Electrobun 2 is supported with `build.mainProcess` set to `"bun"`. Both the
+> default N-API backend and the opt-in `bun:ffi` backend run in this Bun process.
+> Electrobun's Cottontail main process is not currently supported.
+
 On the Bun side, create the shared RPC instance and pass it to your
 `BrowserWindow`. Create an app-local wrapper module around
 `defineTurboLndElectrobunRPC()` so you can add your own requests/messages in
@@ -228,7 +233,7 @@ one place:
 
 ```ts
 // src/bun/index.ts
-import { BrowserWindow } from "electrobun/bun";
+import { BrowserWindow } from "electrobun/main";
 import { defineTurboLndElectrobunRPC } from "react-native-turbo-lnd/electrobun/bun-rpc";
 
 export function defineAppRPC() {

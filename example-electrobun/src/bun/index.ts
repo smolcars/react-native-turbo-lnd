@@ -1,4 +1,4 @@
-import { BrowserWindow, Updater } from "electrobun/bun";
+import { BrowserWindow, Updater } from "electrobun/main";
 import { defineTurboLndElectrobunRPCForExample } from "./rpc";
 
 const DEV_SERVER_PORT = 5173;

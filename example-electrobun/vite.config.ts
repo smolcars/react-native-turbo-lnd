@@ -1,5 +1,7 @@
 import react from "@vitejs/plugin-react";
+import { resolve } from "node:path";
 import { defineConfig } from "vite";
+import { electrobunViteAliases } from "./.hutch/devkit/api/config/electrobun-vite";
 
 export default defineConfig({
   plugins: [react()],
@@ -7,6 +9,7 @@ export default defineConfig({
   resolve: {
     dedupe: ["react", "react-dom"],
     alias: [
+      ...electrobunViteAliases(resolve(__dirname, ".hutch/devkit")),
       {
         find: /^react-native-turbo-lnd$/,
         replacement: "react-native-turbo-lnd/electrobun/view",

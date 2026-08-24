@@ -1,4 +1,4 @@
-import { defineElectrobunRPC } from "electrobun/bun";
+import { defineElectrobunRPC } from "electrobun/main";
 import { defineTurboLndElectrobunRPCWithFactory } from "react-native-turbo-lnd/electrobun/bun-rpc-factory";
 
 export function defineTurboLndElectrobunRPCForExample() {
