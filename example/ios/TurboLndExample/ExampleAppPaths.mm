@@ -1,4 +1,5 @@
 #import <Foundation/Foundation.h>
+#import <TargetConditionals.h>
 
 #import <React/RCTBridgeModule.h>
 #import <ReactCommon/RCTTurboModule.h>
@@ -32,8 +33,18 @@ RCT_EXPORT_SYNCHRONOUS_TYPED_METHOD(NSString *, getLndDirectory)
   NSFileManager *fileManager = NSFileManager.defaultManager;
   NSString *libraryDirectory =
       NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES).firstObject;
+  NSString *applicationSupportDirectory =
+      [libraryDirectory stringByAppendingPathComponent:@"Application Support"];
+#if TARGET_OS_OSX
+  // macOS Application Support is shared with standalone lnd installations.
+  // Keep the example's config and wallet under its own application identifier.
+  NSString *applicationIdentifier =
+      NSBundle.mainBundle.bundleIdentifier ?: @"react-native-turbo-lnd-example";
+  applicationSupportDirectory =
+      [applicationSupportDirectory stringByAppendingPathComponent:applicationIdentifier];
+#endif
   NSString *primaryPath =
-      [[libraryDirectory stringByAppendingPathComponent:@"Application Support"] stringByAppendingPathComponent:@"lnd"];
+      [applicationSupportDirectory stringByAppendingPathComponent:@"lnd"];
 
   NSError *error = nil;
   if ([fileManager createDirectoryAtPath:primaryPath withIntermediateDirectories:YES attributes:nil error:&error]) {
