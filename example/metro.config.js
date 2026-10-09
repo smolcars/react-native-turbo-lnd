@@ -10,6 +10,9 @@ const modules = Object.keys({ ...pack.peerDependencies });
 const rnwPath = fs.realpathSync(
   path.resolve(require.resolve("react-native-windows/package.json"), "..")
 );
+const rnmacosPath = fs.realpathSync(
+  path.resolve(require.resolve("react-native-macos/package.json"), "..")
+);
 const packageRequire = createRequire(path.join(__dirname, "package.json"));
 const resolvePackageDir = (name) => {
   try {
@@ -59,7 +62,7 @@ const baseConfig = withMetroConfig(getDefaultConfig(__dirname), {
   dirname: __dirname,
 });
 const resolverPlatforms = Array.from(
-  new Set([...(baseConfig.resolver?.platforms ?? []), "windows"])
+  new Set([...(baseConfig.resolver?.platforms ?? []), "windows", "macos"])
 );
 const existingBlockList = Array.isArray(baseConfig.resolver?.blockList)
   ? baseConfig.resolver.blockList
@@ -83,6 +86,12 @@ const config = {
     blockList: [
       ...existingBlockList,
       new RegExp(
+        `^${escapePathForRegex(path.join(root, ".cache"))}(?:[/\\\\].*)?$`
+      ),
+      new RegExp(
+        `^${escapePathForRegex(path.join(__dirname, "macos"))}[/\\\\](?:Pods|build)(?:[/\\\\].*)?$`
+      ),
+      new RegExp(
         `^${escapePathForRegex(path.resolve(__dirname, "windows"))}(?:[/\\\\].*)?$`
       ),
       new RegExp(
@@ -101,8 +110,33 @@ const config = {
       }, {}),
       [pack.name]: root,
       "react-native-windows": rnwPath,
+      "react-native-macos": rnmacosPath,
+      "react-macos": resolvePackageDir("react-macos"),
     },
     resolveRequest: (context, moduleName, platform) => {
+      if (platform === "macos") {
+        if (
+          moduleName === "react-native" ||
+          moduleName.startsWith("react-native/")
+        ) {
+          return defaultResolveRequest(
+            context,
+            moduleName.replace(/^react-native/, "react-native-macos"),
+            platform
+          );
+        }
+
+        // RN macOS 0.83's renderer requires React 19.2.0 exactly; other
+        // platforms use the React version paired with RN 0.84.
+        if (moduleName === "react" || moduleName.startsWith("react/")) {
+          return defaultResolveRequest(
+            context,
+            moduleName.replace(/^react(?=\/|$)/, "react-macos"),
+            platform
+          );
+        }
+      }
+
       if (platform === "windows") {
         if (moduleName === "react-native") {
           return defaultResolveRequest(

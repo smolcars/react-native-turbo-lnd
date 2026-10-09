@@ -30,6 +30,33 @@ bun run android
 bun run ios
 ```
 
+### For macOS
+
+The macOS example uses React Native macOS 0.83.0 and the current SwiftUI template.
+It requires macOS 14 or newer and Xcode. Download `liblnd-macos.zip` from the
+[matching library release](https://github.com/smolcars/react-native-turbo-lnd/releases)
+and extract its `Lndmobile.xcframework` into the repository's `macos/` directory.
+Then run from the repository root:
+
+```bash
+bun install
+bun run generate-bindings
+pod install --project-directory=example/macos
+```
+
+From `example/`, start Metro with `bun run start:macos`, then run `bun run macos`
+in another terminal. To build a standalone Release app, run `bun run build:macos`.
+
+macOS uses Hermes and the New Architecture. The CLI and Metro configuration select
+`react-native-macos` for macOS. The `react-macos` alias supplies React 19.2.0,
+matching its renderer; Android, iOS, and Windows use the existing React Native
+0.84.1 and React 19.2.3 dependencies. Bun may report the macOS package's React
+Native peer mismatch because these platform versions share a workspace.
+
+The macOS example stores its node in
+`~/Library/Application Support/org.reactjs.native.TurboLndExample/lnd/`, keeping
+its regtest configuration separate from a standalone node's `lnd.conf`.
+
 If everything is set up _correctly_, you should see your new app running in your _Android Emulator_ or _iOS Simulator_ shortly provided you have set up your emulator/simulator correctly.
 
 This is one way to run your app — you can also run it directly from within Android Studio and Xcode respectively.

@@ -265,46 +265,38 @@ jobs:
               COMPILER_INDEX_STORE_ENABLE=NO
           '
 
-  # build-macos:
-  #   needs: native-artifacts
-  #   runs-on: macos-15
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v4
-  #
-  #     - name: Setup
-  #       uses: ./.github/actions/setup
-  #
-  #     - name: Download macOS native artifact
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: native-macos
-  #         path: ${{ runner.temp }}/native-macos
-  #
-  #     - name: Install macOS native artifact
-  #       shell: bash
-  #       run: |
-  #         rm -rf macos/Lndmobile.xcframework
-  #         unzip -q "${RUNNER_TEMP}/native-macos/liblnd-macos.zip" -d "${RUNNER_TEMP}/native-macos/unpacked"
-  #         mv "${RUNNER_TEMP}/native-macos/unpacked/Lndmobile.xcframework" macos/Lndmobile.xcframework
-  #
-  #     - name: Install CocoaPods for macOS example
-  #       shell: bash
-  #       run: |
-  #         cd example/macos
-  #         pod install
-  #
-  #     - name: Build example for macOS
-  #       shell: bash
-  #       run: |
-  #         cd example/macos
-  #         xcodebuild \
-  #           -workspace TurboLndExample.xcworkspace \
-  #           -scheme TurboLndExample-macOS \
-  #           -configuration Debug \
-  #           -sdk macosx \
-  #           CODE_SIGNING_ALLOWED=NO \
-  #           COMPILER_INDEX_STORE_ENABLE=NO
+  build-macos:
+    needs: native-artifacts
+    runs-on: macOS
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download macOS native artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: native-macos
+          path: ${{ runner.temp }}/native-macos
+
+      - name: Build macOS example in Nix shell
+        shell: bash
+        run: |
+          nix develop --command bash -c '
+            set -euo pipefail
+            bun install --frozen-lockfile --ignore-scripts
+            bun run generate-bindings
+
+            rm -rf macos/Lndmobile.xcframework
+            unzip -q "${RUNNER_TEMP}/native-macos/liblnd-macos.zip" -d "${RUNNER_TEMP}/native-macos/unpacked"
+            mv "${RUNNER_TEMP}/native-macos/unpacked/Lndmobile.xcframework" macos/Lndmobile.xcframework
+
+            pod install --project-directory=example/macos
+            bun run --cwd example build:macos -- \
+              CC=/usr/bin/clang \
+              CPLUSPLUS=/usr/bin/clang++ \
+              LD=/usr/bin/clang \
+              LDPLUSPLUS=/usr/bin/clang++
+          '
 
   build-windows:
     needs: native-artifacts
@@ -346,6 +338,7 @@ jobs:
     needs:
       - build-android
       - build-ios
+      - build-macos
       - build-windows
     runs-on: ubuntu-latest
     steps:
