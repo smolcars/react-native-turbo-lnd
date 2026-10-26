@@ -114,7 +114,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::start(jsi::Runtime &r
     std::string argsStr = args.utf8(rt);
     char* mutableArgs = const_cast<char*>(argsStr.c_str());
 
-    ::start(mutableArgs, callback);
+    ::start(mutableArgs, &callback);
 
     return *promise;
 }
@@ -133,7 +133,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletBalance(jsi::Ru
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletBalance(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::walletBalance(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -151,7 +151,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::channelBalance(jsi::R
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::channelBalance(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::channelBalance(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -169,7 +169,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::getTransactions(jsi::
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::getTransactions(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::getTransactions(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -187,7 +187,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::estimateFee(jsi::Runt
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::estimateFee(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::estimateFee(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -205,7 +205,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::sendCoins(jsi::Runtim
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::sendCoins(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::sendCoins(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -223,7 +223,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::listUnspent(jsi::Runt
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::listUnspent(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::listUnspent(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -242,7 +242,7 @@ facebook::jsi::Function TurboLndModule::subscribeTransactions(jsi::Runtime &rt, 
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::subscribeTransactions(decodedData.data(), static_cast<int>(decodedData.size()), recvStream);
+    ::subscribeTransactions(decodedData.data(), static_cast<int>(decodedData.size()), &recvStream);
 
     auto unsubscribeFunc = jsi::Function::createFromHostFunction(
         rt,
@@ -270,7 +270,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::sendMany(jsi::Runtime
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::sendMany(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::sendMany(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -288,7 +288,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::newAddress(jsi::Runti
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::newAddress(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::newAddress(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -306,7 +306,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::signMessage(jsi::Runt
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::signMessage(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::signMessage(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -324,7 +324,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::verifyMessage(jsi::Ru
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::verifyMessage(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::verifyMessage(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -342,7 +342,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::connectPeer(jsi::Runt
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::connectPeer(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::connectPeer(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -360,7 +360,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::disconnectPeer(jsi::R
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::disconnectPeer(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::disconnectPeer(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -378,7 +378,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::listPeers(jsi::Runtim
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::listPeers(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::listPeers(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -397,7 +397,7 @@ facebook::jsi::Function TurboLndModule::subscribePeerEvents(jsi::Runtime &rt, js
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::subscribePeerEvents(decodedData.data(), static_cast<int>(decodedData.size()), recvStream);
+    ::subscribePeerEvents(decodedData.data(), static_cast<int>(decodedData.size()), &recvStream);
 
     auto unsubscribeFunc = jsi::Function::createFromHostFunction(
         rt,
@@ -425,7 +425,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::getInfo(jsi::Runtime 
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::getInfo(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::getInfo(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -443,7 +443,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::getDebugInfo(jsi::Run
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::getDebugInfo(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::getDebugInfo(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -461,7 +461,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::getRecoveryInfo(jsi::
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::getRecoveryInfo(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::getRecoveryInfo(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -479,7 +479,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::pendingChannels(jsi::
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::pendingChannels(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::pendingChannels(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -497,7 +497,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::listChannels(jsi::Run
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::listChannels(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::listChannels(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -516,7 +516,7 @@ facebook::jsi::Function TurboLndModule::subscribeChannelEvents(jsi::Runtime &rt,
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::subscribeChannelEvents(decodedData.data(), static_cast<int>(decodedData.size()), recvStream);
+    ::subscribeChannelEvents(decodedData.data(), static_cast<int>(decodedData.size()), &recvStream);
 
     auto unsubscribeFunc = jsi::Function::createFromHostFunction(
         rt,
@@ -544,7 +544,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::closedChannels(jsi::R
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::closedChannels(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::closedChannels(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -562,7 +562,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::openChannelSync(jsi::
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::openChannelSync(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::openChannelSync(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -581,7 +581,7 @@ facebook::jsi::Function TurboLndModule::openChannel(jsi::Runtime &rt, jsi::Strin
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::openChannel(decodedData.data(), static_cast<int>(decodedData.size()), recvStream);
+    ::openChannel(decodedData.data(), static_cast<int>(decodedData.size()), &recvStream);
 
     auto unsubscribeFunc = jsi::Function::createFromHostFunction(
         rt,
@@ -609,7 +609,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::batchOpenChannel(jsi:
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::batchOpenChannel(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::batchOpenChannel(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -627,7 +627,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::fundingStateStep(jsi:
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::fundingStateStep(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::fundingStateStep(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -645,7 +645,7 @@ jsi::Object TurboLndModule::channelAcceptor(jsi::Runtime &rt, AsyncCallback<std:
         .errorContext = static_cast<uintptr_t>(callbackId),
     };
 
-    uintptr_t streamPtr = ::channelAcceptor(recvStream);
+    uintptr_t streamPtr = ::channelAcceptor(&recvStream);
 
     if (streamPtr != 0) {
         auto hostObject = std::make_shared<WritableStreamHostObject>(streamPtr, callbackId);
@@ -669,7 +669,7 @@ facebook::jsi::Function TurboLndModule::closeChannel(jsi::Runtime &rt, jsi::Stri
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::closeChannel(decodedData.data(), static_cast<int>(decodedData.size()), recvStream);
+    ::closeChannel(decodedData.data(), static_cast<int>(decodedData.size()), &recvStream);
 
     auto unsubscribeFunc = jsi::Function::createFromHostFunction(
         rt,
@@ -697,7 +697,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::abandonChannel(jsi::R
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::abandonChannel(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::abandonChannel(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -715,7 +715,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::addInvoice(jsi::Runti
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::addInvoice(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::addInvoice(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -733,7 +733,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::listInvoices(jsi::Run
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::listInvoices(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::listInvoices(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -751,7 +751,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::lookupInvoice(jsi::Ru
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::lookupInvoice(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::lookupInvoice(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -770,7 +770,7 @@ facebook::jsi::Function TurboLndModule::subscribeInvoices(jsi::Runtime &rt, jsi:
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::subscribeInvoices(decodedData.data(), static_cast<int>(decodedData.size()), recvStream);
+    ::subscribeInvoices(decodedData.data(), static_cast<int>(decodedData.size()), &recvStream);
 
     auto unsubscribeFunc = jsi::Function::createFromHostFunction(
         rt,
@@ -798,7 +798,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::deleteCanceledInvoice
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::deleteCanceledInvoice(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::deleteCanceledInvoice(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -816,7 +816,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::decodePayReq(jsi::Run
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::decodePayReq(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::decodePayReq(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -834,7 +834,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::listPayments(jsi::Run
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::listPayments(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::listPayments(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -852,7 +852,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::deletePayment(jsi::Ru
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::deletePayment(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::deletePayment(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -870,7 +870,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::deleteAllPayments(jsi
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::deleteAllPayments(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::deleteAllPayments(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -888,7 +888,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::describeGraph(jsi::Ru
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::describeGraph(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::describeGraph(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -906,7 +906,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::getNodeMetrics(jsi::R
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::getNodeMetrics(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::getNodeMetrics(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -924,7 +924,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::getChanInfo(jsi::Runt
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::getChanInfo(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::getChanInfo(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -942,7 +942,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::getNodeInfo(jsi::Runt
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::getNodeInfo(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::getNodeInfo(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -960,7 +960,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::queryRoutes(jsi::Runt
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::queryRoutes(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::queryRoutes(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -978,7 +978,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::getNetworkInfo(jsi::R
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::getNetworkInfo(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::getNetworkInfo(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -996,7 +996,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::stopDaemon(jsi::Runti
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::stopDaemon(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::stopDaemon(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -1015,7 +1015,7 @@ facebook::jsi::Function TurboLndModule::subscribeChannelGraph(jsi::Runtime &rt, 
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::subscribeChannelGraph(decodedData.data(), static_cast<int>(decodedData.size()), recvStream);
+    ::subscribeChannelGraph(decodedData.data(), static_cast<int>(decodedData.size()), &recvStream);
 
     auto unsubscribeFunc = jsi::Function::createFromHostFunction(
         rt,
@@ -1043,7 +1043,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::debugLevel(jsi::Runti
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::debugLevel(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::debugLevel(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -1061,7 +1061,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::feeReport(jsi::Runtim
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::feeReport(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::feeReport(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -1079,7 +1079,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::updateChannelPolicy(j
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::updateChannelPolicy(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::updateChannelPolicy(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -1097,7 +1097,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::forwardingHistory(jsi
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::forwardingHistory(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::forwardingHistory(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -1115,7 +1115,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::exportChannelBackup(j
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::exportChannelBackup(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::exportChannelBackup(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -1133,7 +1133,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::exportAllChannelBacku
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::exportAllChannelBackups(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::exportAllChannelBackups(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -1151,7 +1151,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::verifyChanBackup(jsi:
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::verifyChanBackup(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::verifyChanBackup(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -1169,7 +1169,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::restoreChannelBackups
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::restoreChannelBackups(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::restoreChannelBackups(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -1188,7 +1188,7 @@ facebook::jsi::Function TurboLndModule::subscribeChannelBackups(jsi::Runtime &rt
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::subscribeChannelBackups(decodedData.data(), static_cast<int>(decodedData.size()), recvStream);
+    ::subscribeChannelBackups(decodedData.data(), static_cast<int>(decodedData.size()), &recvStream);
 
     auto unsubscribeFunc = jsi::Function::createFromHostFunction(
         rt,
@@ -1216,7 +1216,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::bakeMacaroon(jsi::Run
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::bakeMacaroon(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::bakeMacaroon(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -1234,7 +1234,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::listMacaroonIDs(jsi::
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::listMacaroonIDs(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::listMacaroonIDs(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -1252,7 +1252,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::deleteMacaroonID(jsi:
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::deleteMacaroonID(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::deleteMacaroonID(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -1270,7 +1270,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::listPermissions(jsi::
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::listPermissions(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::listPermissions(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -1288,7 +1288,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::checkMacaroonPermissi
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::checkMacaroonPermissions(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::checkMacaroonPermissions(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -1306,7 +1306,7 @@ jsi::Object TurboLndModule::registerRPCMiddleware(jsi::Runtime &rt, AsyncCallbac
         .errorContext = static_cast<uintptr_t>(callbackId),
     };
 
-    uintptr_t streamPtr = ::registerRPCMiddleware(recvStream);
+    uintptr_t streamPtr = ::registerRPCMiddleware(&recvStream);
 
     if (streamPtr != 0) {
         auto hostObject = std::make_shared<WritableStreamHostObject>(streamPtr, callbackId);
@@ -1329,7 +1329,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::sendCustomMessage(jsi
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::sendCustomMessage(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::sendCustomMessage(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -1348,7 +1348,7 @@ facebook::jsi::Function TurboLndModule::subscribeCustomMessages(jsi::Runtime &rt
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::subscribeCustomMessages(decodedData.data(), static_cast<int>(decodedData.size()), recvStream);
+    ::subscribeCustomMessages(decodedData.data(), static_cast<int>(decodedData.size()), &recvStream);
 
     auto unsubscribeFunc = jsi::Function::createFromHostFunction(
         rt,
@@ -1376,7 +1376,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::sendOnionMessage(jsi:
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::sendOnionMessage(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::sendOnionMessage(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -1395,7 +1395,7 @@ facebook::jsi::Function TurboLndModule::subscribeOnionMessages(jsi::Runtime &rt,
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::subscribeOnionMessages(decodedData.data(), static_cast<int>(decodedData.size()), recvStream);
+    ::subscribeOnionMessages(decodedData.data(), static_cast<int>(decodedData.size()), &recvStream);
 
     auto unsubscribeFunc = jsi::Function::createFromHostFunction(
         rt,
@@ -1423,7 +1423,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::listAliases(jsi::Runt
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::listAliases(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::listAliases(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -1441,7 +1441,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::lookupHtlcResolution(
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::lookupHtlcResolution(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::lookupHtlcResolution(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -1459,7 +1459,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::genSeed(jsi::Runtime 
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::genSeed(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::genSeed(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -1477,7 +1477,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::initWallet(jsi::Runti
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::initWallet(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::initWallet(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -1495,7 +1495,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::unlockWallet(jsi::Run
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::unlockWallet(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::unlockWallet(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -1513,7 +1513,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::changePassword(jsi::R
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::changePassword(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::changePassword(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -1532,7 +1532,7 @@ facebook::jsi::Function TurboLndModule::subscribeState(jsi::Runtime &rt, jsi::St
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::subscribeState(decodedData.data(), static_cast<int>(decodedData.size()), recvStream);
+    ::subscribeState(decodedData.data(), static_cast<int>(decodedData.size()), &recvStream);
 
     auto unsubscribeFunc = jsi::Function::createFromHostFunction(
         rt,
@@ -1560,7 +1560,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::getState(jsi::Runtime
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::getState(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::getState(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -1578,7 +1578,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::autopilotStatus(jsi::
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::autopilotStatus(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::autopilotStatus(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -1596,7 +1596,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::autopilotModifyStatus
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::autopilotModifyStatus(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::autopilotModifyStatus(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -1614,7 +1614,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::autopilotQueryScores(
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::autopilotQueryScores(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::autopilotQueryScores(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -1632,7 +1632,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::autopilotSetScores(js
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::autopilotSetScores(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::autopilotSetScores(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -1651,7 +1651,7 @@ facebook::jsi::Function TurboLndModule::chainNotifierRegisterConfirmationsNtfn(j
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::chainNotifierRegisterConfirmationsNtfn(decodedData.data(), static_cast<int>(decodedData.size()), recvStream);
+    ::chainNotifierRegisterConfirmationsNtfn(decodedData.data(), static_cast<int>(decodedData.size()), &recvStream);
 
     auto unsubscribeFunc = jsi::Function::createFromHostFunction(
         rt,
@@ -1680,7 +1680,7 @@ facebook::jsi::Function TurboLndModule::chainNotifierRegisterSpendNtfn(jsi::Runt
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::chainNotifierRegisterSpendNtfn(decodedData.data(), static_cast<int>(decodedData.size()), recvStream);
+    ::chainNotifierRegisterSpendNtfn(decodedData.data(), static_cast<int>(decodedData.size()), &recvStream);
 
     auto unsubscribeFunc = jsi::Function::createFromHostFunction(
         rt,
@@ -1709,7 +1709,7 @@ facebook::jsi::Function TurboLndModule::chainNotifierRegisterBlockEpochNtfn(jsi:
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::chainNotifierRegisterBlockEpochNtfn(decodedData.data(), static_cast<int>(decodedData.size()), recvStream);
+    ::chainNotifierRegisterBlockEpochNtfn(decodedData.data(), static_cast<int>(decodedData.size()), &recvStream);
 
     auto unsubscribeFunc = jsi::Function::createFromHostFunction(
         rt,
@@ -1738,7 +1738,7 @@ facebook::jsi::Function TurboLndModule::invoicesSubscribeSingleInvoice(jsi::Runt
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::invoicesSubscribeSingleInvoice(decodedData.data(), static_cast<int>(decodedData.size()), recvStream);
+    ::invoicesSubscribeSingleInvoice(decodedData.data(), static_cast<int>(decodedData.size()), &recvStream);
 
     auto unsubscribeFunc = jsi::Function::createFromHostFunction(
         rt,
@@ -1766,7 +1766,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::invoicesCancelInvoice
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::invoicesCancelInvoice(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::invoicesCancelInvoice(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -1784,7 +1784,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::invoicesAddHoldInvoic
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::invoicesAddHoldInvoice(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::invoicesAddHoldInvoice(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -1802,7 +1802,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::invoicesSettleInvoice
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::invoicesSettleInvoice(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::invoicesSettleInvoice(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -1820,7 +1820,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::invoicesLookupInvoice
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::invoicesLookupInvoiceV2(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::invoicesLookupInvoiceV2(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -1838,7 +1838,7 @@ jsi::Object TurboLndModule::invoicesHtlcModifier(jsi::Runtime &rt, AsyncCallback
         .errorContext = static_cast<uintptr_t>(callbackId),
     };
 
-    uintptr_t streamPtr = ::invoicesHtlcModifier(recvStream);
+    uintptr_t streamPtr = ::invoicesHtlcModifier(&recvStream);
 
     if (streamPtr != 0) {
         auto hostObject = std::make_shared<WritableStreamHostObject>(streamPtr, callbackId);
@@ -1861,7 +1861,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::neutrinoKitStatus(jsi
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::neutrinoKitStatus(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::neutrinoKitStatus(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -1879,7 +1879,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::neutrinoKitAddPeer(js
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::neutrinoKitAddPeer(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::neutrinoKitAddPeer(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -1897,7 +1897,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::neutrinoKitDisconnect
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::neutrinoKitDisconnectPeer(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::neutrinoKitDisconnectPeer(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -1915,7 +1915,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::neutrinoKitIsBanned(j
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::neutrinoKitIsBanned(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::neutrinoKitIsBanned(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -1933,7 +1933,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::neutrinoKitGetBlockHe
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::neutrinoKitGetBlockHeader(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::neutrinoKitGetBlockHeader(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -1951,7 +1951,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::neutrinoKitGetBlock(j
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::neutrinoKitGetBlock(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::neutrinoKitGetBlock(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -1969,7 +1969,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::neutrinoKitGetCFilter
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::neutrinoKitGetCFilter(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::neutrinoKitGetCFilter(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -1987,7 +1987,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::neutrinoKitGetBlockHa
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::neutrinoKitGetBlockHash(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::neutrinoKitGetBlockHash(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2005,7 +2005,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::peersUpdateNodeAnnoun
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::peersUpdateNodeAnnouncement(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::peersUpdateNodeAnnouncement(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2024,7 +2024,7 @@ facebook::jsi::Function TurboLndModule::routerSendPaymentV2(jsi::Runtime &rt, js
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::routerSendPaymentV2(decodedData.data(), static_cast<int>(decodedData.size()), recvStream);
+    ::routerSendPaymentV2(decodedData.data(), static_cast<int>(decodedData.size()), &recvStream);
 
     auto unsubscribeFunc = jsi::Function::createFromHostFunction(
         rt,
@@ -2053,7 +2053,7 @@ facebook::jsi::Function TurboLndModule::routerTrackPaymentV2(jsi::Runtime &rt, j
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::routerTrackPaymentV2(decodedData.data(), static_cast<int>(decodedData.size()), recvStream);
+    ::routerTrackPaymentV2(decodedData.data(), static_cast<int>(decodedData.size()), &recvStream);
 
     auto unsubscribeFunc = jsi::Function::createFromHostFunction(
         rt,
@@ -2082,7 +2082,7 @@ facebook::jsi::Function TurboLndModule::routerTrackPayments(jsi::Runtime &rt, js
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::routerTrackPayments(decodedData.data(), static_cast<int>(decodedData.size()), recvStream);
+    ::routerTrackPayments(decodedData.data(), static_cast<int>(decodedData.size()), &recvStream);
 
     auto unsubscribeFunc = jsi::Function::createFromHostFunction(
         rt,
@@ -2110,7 +2110,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::routerEstimateRouteFe
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::routerEstimateRouteFee(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::routerEstimateRouteFee(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2128,7 +2128,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::routerSendToRouteV2(j
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::routerSendToRouteV2(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::routerSendToRouteV2(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2146,7 +2146,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::routerResetMissionCon
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::routerResetMissionControl(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::routerResetMissionControl(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2164,7 +2164,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::routerQueryMissionCon
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::routerQueryMissionControl(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::routerQueryMissionControl(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2182,7 +2182,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::routerXImportMissionC
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::routerXImportMissionControl(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::routerXImportMissionControl(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2200,7 +2200,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::routerGetMissionContr
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::routerGetMissionControlConfig(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::routerGetMissionControlConfig(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2218,7 +2218,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::routerSetMissionContr
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::routerSetMissionControlConfig(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::routerSetMissionControlConfig(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2236,7 +2236,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::routerQueryProbabilit
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::routerQueryProbability(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::routerQueryProbability(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2254,7 +2254,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::routerBuildRoute(jsi:
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::routerBuildRoute(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::routerBuildRoute(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2273,7 +2273,7 @@ facebook::jsi::Function TurboLndModule::routerSubscribeHtlcEvents(jsi::Runtime &
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::routerSubscribeHtlcEvents(decodedData.data(), static_cast<int>(decodedData.size()), recvStream);
+    ::routerSubscribeHtlcEvents(decodedData.data(), static_cast<int>(decodedData.size()), &recvStream);
 
     auto unsubscribeFunc = jsi::Function::createFromHostFunction(
         rt,
@@ -2301,7 +2301,7 @@ jsi::Object TurboLndModule::routerHtlcInterceptor(jsi::Runtime &rt, AsyncCallbac
         .errorContext = static_cast<uintptr_t>(callbackId),
     };
 
-    uintptr_t streamPtr = ::routerHtlcInterceptor(recvStream);
+    uintptr_t streamPtr = ::routerHtlcInterceptor(&recvStream);
 
     if (streamPtr != 0) {
         auto hostObject = std::make_shared<WritableStreamHostObject>(streamPtr, callbackId);
@@ -2324,7 +2324,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::routerUpdateChanStatu
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::routerUpdateChanStatus(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::routerUpdateChanStatus(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2342,7 +2342,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::routerXAddLocalChanAl
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::routerXAddLocalChanAliases(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::routerXAddLocalChanAliases(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2360,7 +2360,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::routerXDeleteLocalCha
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::routerXDeleteLocalChanAliases(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::routerXDeleteLocalChanAliases(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2378,7 +2378,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::routerXFindBaseLocalC
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::routerXFindBaseLocalChanAlias(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::routerXFindBaseLocalChanAlias(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2396,7 +2396,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::routerDeleteForwardin
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::routerDeleteForwardingHistory(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::routerDeleteForwardingHistory(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2414,7 +2414,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::signerSignOutputRaw(j
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::signerSignOutputRaw(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::signerSignOutputRaw(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2432,7 +2432,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::signerComputeInputScr
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::signerComputeInputScript(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::signerComputeInputScript(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2450,7 +2450,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::signerSignMessage(jsi
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::signerSignMessage(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::signerSignMessage(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2468,7 +2468,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::signerVerifyMessage(j
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::signerVerifyMessage(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::signerVerifyMessage(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2486,7 +2486,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::signerDeriveSharedKey
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::signerDeriveSharedKey(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::signerDeriveSharedKey(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2504,7 +2504,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::signerMuSig2CombineKe
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::signerMuSig2CombineKeys(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::signerMuSig2CombineKeys(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2522,7 +2522,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::signerMuSig2CreateSes
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::signerMuSig2CreateSession(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::signerMuSig2CreateSession(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2540,7 +2540,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::signerMuSig2RegisterN
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::signerMuSig2RegisterNonces(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::signerMuSig2RegisterNonces(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2558,7 +2558,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::signerMuSig2RegisterC
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::signerMuSig2RegisterCombinedNonce(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::signerMuSig2RegisterCombinedNonce(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2576,7 +2576,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::signerMuSig2GetCombin
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::signerMuSig2GetCombinedNonce(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::signerMuSig2GetCombinedNonce(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2594,7 +2594,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::signerMuSig2Sign(jsi:
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::signerMuSig2Sign(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::signerMuSig2Sign(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2612,7 +2612,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::signerMuSig2CombineSi
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::signerMuSig2CombineSig(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::signerMuSig2CombineSig(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2630,7 +2630,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::signerMuSig2Cleanup(j
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::signerMuSig2Cleanup(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::signerMuSig2Cleanup(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2648,7 +2648,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::versionerGetVersion(j
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::versionerGetVersion(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::versionerGetVersion(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2666,7 +2666,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitListUnspent(
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitListUnspent(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::walletKitListUnspent(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2684,7 +2684,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitLeaseOutput(
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitLeaseOutput(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::walletKitLeaseOutput(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2702,7 +2702,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitReleaseOutpu
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitReleaseOutput(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::walletKitReleaseOutput(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2720,7 +2720,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitListLeases(j
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitListLeases(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::walletKitListLeases(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2738,7 +2738,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitDeriveNextKe
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitDeriveNextKey(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::walletKitDeriveNextKey(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2756,7 +2756,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitDeriveKey(js
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitDeriveKey(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::walletKitDeriveKey(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2774,7 +2774,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitNextAddr(jsi
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitNextAddr(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::walletKitNextAddr(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2792,7 +2792,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitGetTransacti
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitGetTransaction(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::walletKitGetTransaction(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2810,7 +2810,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitListAccounts
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitListAccounts(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::walletKitListAccounts(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2828,7 +2828,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitRequiredRese
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitRequiredReserve(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::walletKitRequiredReserve(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2846,7 +2846,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitListAddresse
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitListAddresses(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::walletKitListAddresses(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2864,7 +2864,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitSignMessageW
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitSignMessageWithAddr(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::walletKitSignMessageWithAddr(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2882,7 +2882,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitVerifyMessag
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitVerifyMessageWithAddr(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::walletKitVerifyMessageWithAddr(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2900,7 +2900,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitImportAccoun
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitImportAccount(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::walletKitImportAccount(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2918,7 +2918,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitImportPublic
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitImportPublicKey(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::walletKitImportPublicKey(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2936,7 +2936,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitImportTapscr
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitImportTapscript(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::walletKitImportTapscript(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2954,7 +2954,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitPublishTrans
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitPublishTransaction(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::walletKitPublishTransaction(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2972,7 +2972,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitSubmitPackag
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitSubmitPackage(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::walletKitSubmitPackage(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -2990,7 +2990,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitRemoveTransa
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitRemoveTransaction(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::walletKitRemoveTransaction(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -3008,7 +3008,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitSendOutputs(
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitSendOutputs(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::walletKitSendOutputs(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -3026,7 +3026,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitEstimateFee(
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitEstimateFee(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::walletKitEstimateFee(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -3044,7 +3044,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitPendingSweep
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitPendingSweeps(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::walletKitPendingSweeps(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -3062,7 +3062,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitBumpFee(jsi:
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitBumpFee(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::walletKitBumpFee(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -3080,7 +3080,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitBumpForceClo
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitBumpForceCloseFee(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::walletKitBumpForceCloseFee(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -3098,7 +3098,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitListSweeps(j
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitListSweeps(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::walletKitListSweeps(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -3116,7 +3116,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitLabelTransac
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitLabelTransaction(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::walletKitLabelTransaction(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -3134,7 +3134,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitFundPsbt(jsi
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitFundPsbt(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::walletKitFundPsbt(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -3152,7 +3152,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitSignPsbt(jsi
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitSignPsbt(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::walletKitSignPsbt(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -3170,7 +3170,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::walletKitFinalizePsbt
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::walletKitFinalizePsbt(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::walletKitFinalizePsbt(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -3188,7 +3188,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::watchtowerGetInfo(jsi
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::watchtowerGetInfo(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::watchtowerGetInfo(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -3206,7 +3206,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::watchtowerClientAddTo
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::watchtowerClientAddTower(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::watchtowerClientAddTower(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -3224,7 +3224,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::watchtowerClientRemov
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::watchtowerClientRemoveTower(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::watchtowerClientRemoveTower(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -3242,7 +3242,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::watchtowerClientDeact
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::watchtowerClientDeactivateTower(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::watchtowerClientDeactivateTower(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -3260,7 +3260,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::watchtowerClientTermi
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::watchtowerClientTerminateSession(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::watchtowerClientTerminateSession(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -3278,7 +3278,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::watchtowerClientListT
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::watchtowerClientListTowers(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::watchtowerClientListTowers(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -3296,7 +3296,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::watchtowerClientGetTo
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::watchtowerClientGetTowerInfo(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::watchtowerClientGetTowerInfo(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -3314,7 +3314,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::watchtowerClientStats
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::watchtowerClientStats(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::watchtowerClientStats(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }
@@ -3332,7 +3332,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::watchtowerClientPolic
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::watchtowerClientPolicy(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::watchtowerClientPolicy(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }

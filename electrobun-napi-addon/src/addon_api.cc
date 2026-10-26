@@ -287,7 +287,7 @@ napi_value start_lnd(napi_env env, napi_callback_info info) {
     .errorContext = bridge,
   };
 
-  g_state.start(const_cast<char*>(args.c_str()), callback);
+  g_state.start(const_cast<char*>(args.c_str()), &callback);
   return promise;
 }
 
@@ -360,7 +360,7 @@ napi_value invoke_unary(napi_env env, napi_callback_info info) {
   unary_method(
     const_cast<char*>(payload.data()),
     static_cast<int>(payload.size()),
-    callback
+    &callback
   );
   return promise;
 }
@@ -460,7 +460,7 @@ napi_value open_server_stream(napi_env env, napi_callback_info info) {
   stream_method(
     const_cast<char*>(payload.data()),
     static_cast<int>(payload.size()),
-    stream
+    &stream
   );
 
   return make_uint32(env, subscription->id);
@@ -584,7 +584,7 @@ napi_value open_bidi_stream(napi_env env, napi_callback_info info) {
     .errorContext = subscription,
   };
 
-  subscription->stream_ptr = stream_method(stream);
+  subscription->stream_ptr = stream_method(&stream);
   if (subscription->stream_ptr == 0) {
     subscription->active.store(false);
     throw_error(

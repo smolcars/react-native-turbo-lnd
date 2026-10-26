@@ -1,5 +1,4 @@
-import { create, toBinary, toJson } from "@bufbuild/protobuf";
-import { base64Encode } from "@bufbuild/protobuf/wire";
+import { toJson } from "@bufbuild/protobuf";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   start,
@@ -15,7 +14,6 @@ import type { UnsubscribeFromStream } from "react-native-turbo-lnd/core";
 
 import {
   ChannelEventUpdateSchema,
-  GetInfoRequestSchema,
   PeerEventSchema,
   TransactionSchema,
   WalletState,
@@ -418,6 +416,7 @@ function App() {
     const recordSubscriptionError = () => {
       stats.subscriptionCallbackErrors += 1;
     };
+    let firstRequestFailure: string | null = null;
 
     const openSubscriptionWave = () => {
       for (let i = 0; i < subsPerMethod; i += 1) {
@@ -478,27 +477,31 @@ function App() {
     };
 
     const runRequestBurst = async () => {
-      const requestMessage = create(GetInfoRequestSchema, {});
-      const requestB64 = base64Encode(
-        toBinary(GetInfoRequestSchema, requestMessage)
-      );
-
       const tasks = Array.from({ length: requestBurst }, async () => {
+        let requestStage = "getState";
         try {
           const state = await getCurrentWalletState();
           if (
             state === WalletState.RPC_ACTIVE ||
             state === WalletState.SERVER_ACTIVE
           ) {
-            await TurboLndElectrobunViewCore.getInfo(requestB64);
+            requestStage = "getInfo";
+            await getInfo({});
           } else {
             stats.requestSkipped += 1;
           }
 
+          requestStage = "__ExamplePing";
           await examplePing();
           stats.requestSucceeded += 1;
-        } catch {
+        } catch (error) {
           stats.requestFailed += 1;
+          if (firstRequestFailure === null) {
+            firstRequestFailure = `${requestStage}: ${toErrorMessage(error)}`;
+            appendLog(
+              `stressSubscriptions(): first request failure: ${firstRequestFailure}`
+            );
+          }
         }
       });
 

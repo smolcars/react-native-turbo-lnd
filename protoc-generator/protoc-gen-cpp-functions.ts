@@ -183,7 +183,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::${methodName}(jsi::Ru
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::${methodName}(decodedData.data(), static_cast<int>(decodedData.size()), callback);
+    ::${methodName}(decodedData.data(), static_cast<int>(decodedData.size()), &callback);
 
     return *promise;
 }`;
@@ -226,7 +226,7 @@ facebook::jsi::Function TurboLndModule::${methodName}(jsi::Runtime &rt, jsi::Str
     };
 
     std::string decodedData = base64::from_base64(data.utf8(rt));
-    ::${methodName}(decodedData.data(), static_cast<int>(decodedData.size()), recvStream);
+    ::${methodName}(decodedData.data(), static_cast<int>(decodedData.size()), &recvStream);
 
     auto unsubscribeFunc = jsi::Function::createFromHostFunction(
         rt,
@@ -284,7 +284,7 @@ jsi::Object TurboLndModule::${methodName}(jsi::Runtime &rt, AsyncCallback<std::s
         .errorContext = static_cast<uintptr_t>(callbackId),
     };
 
-    uintptr_t streamPtr = ::${methodName}(recvStream);
+    uintptr_t streamPtr = ::${methodName}(&recvStream);
 
     if (streamPtr != 0) {
         auto hostObject = std::make_shared<WritableStreamHostObject>(streamPtr, callbackId);
@@ -502,7 +502,7 @@ facebook::react::AsyncPromise<std::string> TurboLndModule::start(jsi::Runtime &r
     std::string argsStr = args.utf8(rt);
     char* mutableArgs = const_cast<char*>(argsStr.c_str());
 
-    ::start(mutableArgs, callback);
+    ::start(mutableArgs, &callback);
 
     return *promise;
 }

@@ -19,10 +19,10 @@ struct CRecvStream {
   void* errorContext;
 };
 
-using StartFn = void (*)(char* args, CCallback callback);
+using StartFn = void (*)(char* args, CCallback* callback);
 using LndFreeFn = void (*)(void* ptr);
-using UnaryMethodFn = void (*)(char* data, int length, CCallback callback);
-using ServerStreamMethodFn = void (*)(char* data, int length, CRecvStream stream);
-using BidiStreamMethodFn = uintptr_t (*)(CRecvStream stream);
+using UnaryMethodFn = void (*)(char* data, int length, CCallback* callback);
+using ServerStreamMethodFn = void (*)(char* data, int length, CRecvStream* stream);
+using BidiStreamMethodFn = uintptr_t (*)(CRecvStream* stream);
 using SendStreamFn = int (*)(uintptr_t streamPtr, char* data, int length);
 using StopStreamFn = int (*)(uintptr_t streamPtr);
